@@ -171,7 +171,12 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   sizes.append(100);
   sizes.append(1000);
   ui.splitter->setSizes(sizes);
-
+  
+  statusBar()->setSizeGripEnabled(false);
+  connection_status_ = new QLabel("Not connected");
+  connection_status_->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  statusBar()->addPermanentWidget(connection_status_);
+  
   loadSettings();
 }
 
@@ -203,12 +208,12 @@ void ConsoleWindow::saveLogs()
   }
 }
 
-void ConsoleWindow::connected(bool connected)
+void ConsoleWindow::rosConnected(bool connected, const QString &master_uri)
 {
-  if (connected) {
-    statusBar()->showMessage("Connected to ROS Master");
+  if (connected) {    
+    connection_status_->setText(master_uri);
   } else {
-    statusBar()->showMessage("Disconnected from ROS Master");
+    connection_status_->setText("Not connected");
   }
 }
 

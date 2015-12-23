@@ -60,7 +60,7 @@ class ConsoleWindow : public QMainWindow {
   void clearAll();
   void clearMessages();
   void saveLogs();
-  void connected(bool);
+  void rosConnected(bool connected, const QString &master_uri);
   void setSeverityFilter();
   void nodeSelectionChanged();
   void messagesAdded();
@@ -106,6 +106,8 @@ private:
   LogDatabase *db_;
   LogDatabaseProxyModel *db_proxy_;
   NodeListModel *node_list_model_;
+
+  QLabel *connection_status_;
 };  // class ConsoleWindow
 }  // namespace swri_console
 

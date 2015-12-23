@@ -68,7 +68,8 @@ void ConsoleMaster::createNewWindow()
                    this, SLOT(createNewWindow()));
 
   QObject::connect(&ros_source_, SIGNAL(connected(bool, const QString&)),
-                   win, SLOT(connected(bool)));
+                   win, SLOT(rosConnected(bool, const QString&)));
+  win->rosConnected(ros_source_.isConnected(), ros_source_.masterUri());
 
   QObject::connect(this,
                    SIGNAL(fontChanged(const QFont &)),
