@@ -42,22 +42,18 @@ ConsoleMaster::ConsoleMaster(int argc, char** argv):
   connected_(false),
   window_font_(QFont("Ubuntu Mono", 9))
 {
-  // The RosThread takes advantage of queued connections when emitting log messages
-  // to ensure that the messages are processed in the console window's event thread.
-  // In order for that to work, we have to manually register the message type with
-  // Qt's QMetaType system.
-  qRegisterMetaType<rosgraph_msgs::LogConstPtr>("rosgraph_msgs::LogConstPtr");
-
   QObject::connect(&bag_reader_, SIGNAL(logReceived(const rosgraph_msgs::LogConstPtr& )),
                    &db_, SLOT(queueMessage(const rosgraph_msgs::LogConstPtr&) ));
   QObject::connect(&bag_reader_, SIGNAL(finishedReading()),
                    &db_, SLOT(processQueue()));
+
+  QObject::connect(&ros_source_, SIGNAL(logReceived(const rosgraph_msgs::LogConstPtr& )),
+                   &db_, SLOT(queueMessage(const rosgraph_msgs::LogConstPtr&) ));
+  ros_source_.start();
 }
 
 ConsoleMaster::~ConsoleMaster()
 {
-  ros_thread_.shutdown();
-  ros_thread_.wait();
 }
 
 void ConsoleMaster::createNewWindow()
@@ -71,7 +67,7 @@ void ConsoleMaster::createNewWindow()
   QObject::connect(win, SIGNAL(createNewWindow()),
                    this, SLOT(createNewWindow()));
 
-  QObject::connect(&ros_thread_, SIGNAL(connected(bool)),
+  QObject::connect(&ros_source_, SIGNAL(connected(bool, const QString&)),
                    win, SLOT(connected(bool)));
 
   QObject::connect(this,
@@ -83,21 +79,6 @@ void ConsoleMaster::createNewWindow()
 
   QObject::connect(win, SIGNAL(readBagFile()),
                    &bag_reader_, SLOT(promptForBagFile()));
-
-
-  if (!ros_thread_.isRunning())
-  {
-    // There's only one ROS thread, and it services every window.  We need to initialize
-    // it and its connections to the LogDatabase when we first create a window, but
-    // after that it doesn't need to be modified again.
-    QObject::connect(&ros_thread_, SIGNAL(logReceived(const rosgraph_msgs::LogConstPtr& )),
-                     &db_, SLOT(queueMessage(const rosgraph_msgs::LogConstPtr&) ));
-
-    QObject::connect(&ros_thread_, SIGNAL(spun()),
-                     &db_, SLOT(processQueue()));
-
-    ros_thread_.start();
-  }
 
   win->show();
 }

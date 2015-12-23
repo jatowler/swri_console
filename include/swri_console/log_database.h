@@ -75,6 +75,9 @@ public Q_SLOTS:
   void queueMessage(const rosgraph_msgs::LogConstPtr msg);
   void processQueue();
 
+ protected:
+  void timerEvent(QTimerEvent *);
+  
 private:  
   std::map<std::string, size_t> msg_counts_;
   std::deque<LogEntry> log_;

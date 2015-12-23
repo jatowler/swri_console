@@ -36,6 +36,7 @@ LogDatabase::LogDatabase()
   :
   min_time_(ros::TIME_MAX)
 {
+  startTimer(100);
 }
 
 LogDatabase::~LogDatabase()
@@ -83,5 +84,10 @@ void LogDatabase::processQueue()
   new_msgs_.clear();
 
   Q_EMIT messagesAdded();              
+}
+
+void LogDatabase::timerEvent(QTimerEvent *event)
+{
+  processQueue();
 }
 }  // namespace swri_console
