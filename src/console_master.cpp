@@ -31,6 +31,7 @@
 #include <swri_console/console_master.h>
 #include <swri_console/console_window.h>
 #include <swri_console/settings_keys.h>
+#include <swri_console/bag_source.h>
 
 #include <QFontDialog>
 #include <QSettings>
@@ -42,11 +43,6 @@ ConsoleMaster::ConsoleMaster(int argc, char** argv):
   connected_(false),
   window_font_(QFont("Ubuntu Mono", 9))
 {
-  QObject::connect(&bag_reader_, SIGNAL(logReceived(const rosgraph_msgs::LogConstPtr& )),
-                   &db_, SLOT(queueMessage(const rosgraph_msgs::LogConstPtr&) ));
-  QObject::connect(&bag_reader_, SIGNAL(finishedReading()),
-                   &db_, SLOT(processQueue()));
-
   QObject::connect(&ros_source_, SIGNAL(logReceived(const rosgraph_msgs::LogConstPtr& )),
                    &db_, SLOT(queueMessage(const rosgraph_msgs::LogConstPtr&) ));
   ros_source_.start();
@@ -78,8 +74,8 @@ void ConsoleMaster::createNewWindow()
   QObject::connect(win, SIGNAL(selectFont()),
                    this, SLOT(selectFont()));
 
-  QObject::connect(win, SIGNAL(readBagFile()),
-                   &bag_reader_, SLOT(promptForBagFile()));
+  QObject::connect(win, SIGNAL(readBagFile(const QString &)),
+                   this, SLOT(readBagFile(const QString &)));
 
   win->show();
 }
@@ -114,5 +110,18 @@ void ConsoleMaster::selectFont()
       Q_EMIT fontChanged(window_font_);
     }
   }
+}
+
+void ConsoleMaster::readBagFile(const QString &name)
+{
+  BagSource *source = new BagSource(name);
+
+  QObject::connect(source, SIGNAL(logRead(const rosgraph_msgs::LogConstPtr& )),
+                   &db_, SLOT(queueMessage(const rosgraph_msgs::LogConstPtr&) ));
+  
+  QObject::connect(source, SIGNAL(finished(const QString&, bool, size_t, const QString&)),
+                   source, SLOT(deleteLater()));
+
+  source->start();
 }
 }  // namespace swri_console

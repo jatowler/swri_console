@@ -36,6 +36,10 @@
 
 #include <swri_console/console_master.h>
 
+namespace swri_console {
+void registerMetaTypes();
+}
+
 void loadFonts()
 {
   QStringList font_files;
@@ -76,6 +80,7 @@ void loadFonts()
 int main(int argc, char **argv)
 {
   QApplication app(argc, argv);
+  swri_console::registerMetaTypes();
   loadFonts();
 
   QCoreApplication::setOrganizationName("Southwest Research Institute");

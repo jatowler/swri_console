@@ -53,8 +53,10 @@ class ConsoleWindow : public QMainWindow {
 
  Q_SIGNALS:
   void createNewWindow();
-  void readBagFile();
+  void readBagFile(const QString &filename);
   void selectFont();
+
+                   
                                        
  public Q_SLOTS:
   void clearAll();
@@ -86,6 +88,8 @@ class ConsoleWindow : public QMainWindow {
   void setErrorColor();
   void setFatalColor();
 
+  void promptForBagFile();
+  
 private:
   void chooseButtonColor(QPushButton* widget);
   QColor getButtonColor(const QPushButton* button) const;

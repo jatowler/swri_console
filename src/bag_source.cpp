@@ -27,31 +27,30 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/ros_source.h>
-#include <swri_console/ros_source_backend.h>
-
+#include <swri_console/bag_source.h>
+#include <swri_console/bag_source_backend.h>
 
 namespace swri_console
 {
-RosSource::RosSource()
+BagSource::BagSource(const QString &filename)
   :
-  backend_(NULL),
-  connected_(false)
+  filename_(filename),
+  backend_(NULL)
 {
 }
 
-RosSource::~RosSource()
+BagSource::~BagSource()
 {
-  ros_thread_.quit();
-  if (!ros_thread_.wait(500)) {
-    qWarning("ROS thread is not closing in a timely fashion.  This seems to "
-             "happen with the network connection is lost or ROS master has "
-             "shutdown.  We will attempt to forcibly terminate the thread.");
-    ros_thread_.terminate();
+  thread_.quit();
+  if (!thread_.wait(500)) {
+    qWarning("Bag thread is not closing in a timely fashion.  This can happen"
+             "when opening a really large file.  We will attempt to forcibly "
+             "terminate the thread.");
+    thread_.terminate();
   }
 }
 
-void RosSource::start()
+void BagSource::start()
 {
   if (backend_) {
     return;
@@ -59,32 +58,32 @@ void RosSource::start()
 
   // Using the threading approach recommended in the following URL.
   // https://mayaposch.wordpress.com/2011/11/01/how-to-really-truly-use-qthreads-the-full-explanation/
-  backend_ = new RosSourceBackend();
-  backend_->moveToThread(&ros_thread_);
-
+  backend_ = new BagSourceBackend(filename_);
+  backend_->moveToThread(&thread_);
+  // The thread should finish when the backend has finished.
+  QObject::connect(backend_, SIGNAL(finished(bool, size_t, QString)),
+                   &thread_, SLOT(quit()));
   // The backend should delete itself once the thread has finished.
-  QObject::connect(&ros_thread_, SIGNAL(finished()),
+  QObject::connect(&thread_, SIGNAL(finished()),
                    backend_, SLOT(deleteLater()));
 
-  QObject::connect(backend_, SIGNAL(connected(bool, QString)),
-                   this, SLOT(handleConnected(bool, QString)));
-  QObject::connect(backend_, SIGNAL(logReceived(const rosgraph_msgs::LogConstPtr &)),
-                   this, SLOT(handleLog(const rosgraph_msgs::LogConstPtr &)));
-  ros_thread_.start();
+  QObject::connect(backend_, SIGNAL(finished(bool, size_t, QString)),
+                   this, SLOT(handleFinished(bool, size_t, QString)));
+  QObject::connect(backend_, SIGNAL(logRead(const rosgraph_msgs::LogConstPtr &)),
+                   this, SLOT(handleLogRead(const rosgraph_msgs::LogConstPtr &)));
+  thread_.start();
 }
 
-void RosSource::handleConnected(bool is_connected, QString uri)
+void BagSource::handleFinished(bool success, size_t msg_count, QString error_msg)
 {
-  connected_ = is_connected;
-  master_uri_ = uri;
-  Q_EMIT connected(connected_, master_uri_);
+  Q_EMIT finished(filename_, success, msg_count, error_msg);
 }
 
-void RosSource::handleLog(const rosgraph_msgs::LogConstPtr &msg)
+void BagSource::handleLogRead(const rosgraph_msgs::LogConstPtr &msg)
 {
   // Planning on changing what is done here soon, so that's why we're
   // just rebroadcasting the signal from a slot instead of linking the
   // incoming signal to the outgoing signal.
-  Q_EMIT logReceived(msg);
+  Q_EMIT logRead(msg);
 }                          
 }  // namespace swri_console

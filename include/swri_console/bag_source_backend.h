@@ -17,62 +17,69 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL Southwest Research Institute® BE LIABLE 
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+// ARE DISCLAIMED. IN NO EVENT SHALL Southwest Research Institute® BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 //
 // *****************************************************************************
+#ifndef SWRI_CONSOLE_BAG_SOURCE_BACKEND_H_
+#define SWRI_CONSOLE_BAG_SOURCE_BACKEND_H_
 
-#ifndef SWRI_CONSOLE_CONSOLE_MASTER_H_
-#define SWRI_CONSOLE_CONSOLE_MASTER_H_
-
-#include <string>
 #include <QObject>
-#include <QList>
-#include <QFont>
 #include <rosgraph_msgs/Log.h>
-#include <swri_console/log_database.h>
-#include <swri_console/ros_source.h>
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
 
 namespace swri_console
 {
-typedef std::vector<rosgraph_msgs::LogConstPtr> MessageList;
-
-class ConsoleWindow;
-class ConsoleMaster : public QObject
+class BagSourceBackend : public QObject
 {
   Q_OBJECT;
-
- public:  
-  ConsoleMaster(int argc, char** argv);
-  virtual ~ConsoleMaster();
-
- public Q_SLOTS:
-  void createNewWindow();
-  void fontSelectionChanged(const QFont &font);
-  void selectFont();
-  void readBagFile(const QString &name);
-
+  
+ public:
+  BagSourceBackend(const QString &filename);
+  ~BagSourceBackend();
+  
  Q_SIGNALS:
-  void fontChanged(const QFont &font);
+  void finished(bool success, size_t msg_count, QString error_msg);
+  void logRead(const rosgraph_msgs::LogConstPtr &msg);
+
+ protected:
+  void timerEvent(QTimerEvent *);
 
  private:
-  // All ROS operations are done on a separate thread to ensure they do not
-  // cause the GUI thread to block.
-  RosSource ros_source_;  
+  enum ResultStatus {
+    CONTINUE,
+    FINISHED,
+    ERROR
+  };
+    
+  struct Result {
+    ResultStatus status;
+    QString error_msg;
+
+    Result() : status(CONTINUE) {}
+    Result(ResultStatus status, const QString &error_msg="")
+      : status(status), error_msg(error_msg) {}
+  };
   
-  bool connected_;
-
-  QList<ConsoleWindow*> windows_;
-
-  LogDatabase db_;
-
-  QFont window_font_;
-};  // class ConsoleMaster
+  Result open();
+  Result read(size_t msgs_to_read);
+  void close();
+  
+ private:
+  const QString filename_;
+  int timer_id_;
+  bool opened_;
+  rosbag::Bag bag_;
+  rosbag::View *view_;
+  rosbag::View::const_iterator iter_;
+  size_t msg_count_;
+};
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_CONSOLE_MASTER_H_
+#endif  // SWRI_CONSOLE_BAG_SOURCE_BACKEND_H_

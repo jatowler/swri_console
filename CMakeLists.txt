@@ -49,7 +49,8 @@ file (GLOB SRC_FILES
 
 # Add header files containing Q_OBJECT declaration to this list.
 file (GLOB SRC_FILES
-  include/swri_console/bag_reader.h
+  include/swri_console/bag_source.h
+  include/swri_console/bag_source_backend.h
   include/swri_console/console_master.h
   include/swri_console/console_window.h
   include/swri_console/log_database.h
@@ -57,12 +58,12 @@ file (GLOB SRC_FILES
   include/swri_console/node_list_model.h
   include/swri_console/ros_source.h
   include/swri_console/ros_source_backend.h
-  include/swri_console/ros_thread.h
   include/swri_console/settings_keys.h
   )
 
-file (GLOB SRC_FILES
-  src/bag_reader.cpp
+file (GLOB SRC_FILES 
+  src/bag_source.cpp
+  src/bag_source_backend.cpp
   src/console_master.cpp
   src/console_window.cpp
   src/log_database.cpp
@@ -73,6 +74,7 @@ file (GLOB SRC_FILES
   src/ros_source_backend.cpp
   src/ros_thread.cpp
   src/settings_keys.cpp
+  src/register_meta_types.cpp
   )
 
 qt5_add_resources(RCC_SRCS resources/images.qrc)
@@ -91,12 +93,13 @@ target_link_libraries(swri_console
   ${Qt5Widgets_LIBRARIES}
   ${catkin_LIBRARIES}
 )
+set_target_properties(swri_console
+  PROPERTIES COMPILE_FLAGS "-std=c++0x")
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
 )
-
 
 install(TARGETS swri_console
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

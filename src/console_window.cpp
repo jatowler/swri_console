@@ -77,7 +77,7 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    this, SLOT(selectAllLogs()));
 
   QObject::connect(ui.action_ReadBagFile, SIGNAL(triggered(bool)),
-                   this, SIGNAL(readBagFile()));
+                   this, SLOT(promptForBagFile()));
 
   QObject::connect(ui.action_SaveLogs, SIGNAL(triggered(bool)),
                    this, SLOT(saveLogs()));
@@ -559,6 +559,19 @@ void ConsoleWindow::loadSettings()
 
   bool alternate_row_colors = settings.value(SettingsKeys::ALTERNATE_LOG_ROW_COLORS, true).toBool();
   ui.messageList->setAlternatingRowColors(alternate_row_colors);
+}
+
+void ConsoleWindow::promptForBagFile()
+{
+  QString filename = QFileDialog::getOpenFileName(
+    NULL,
+    tr("Open Bag File"),
+    QDir::homePath(),
+    tr("Bag Files (*.bag)"));
+
+  if (filename != NULL) {
+    Q_EMIT readBagFile(filename);
+  }  
 }
 }  // namespace swri_console
 
