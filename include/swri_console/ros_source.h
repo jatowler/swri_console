@@ -36,6 +36,7 @@
 
 namespace swri_console
 {
+class LogDatabase;
 class RosSourceBackend;
 
 /* RosSource is the interface class for interacting with ROS.  It runs
@@ -53,7 +54,7 @@ class RosSource : public QObject
    * setup signal/slot connections before anything can change behind
    * the scenes.
    */
-  RosSource();
+  RosSource(LogDatabase *db);
 
   /*
    * Destroys the ROS source.  Will call shutdown() if the source is
@@ -89,11 +90,9 @@ class RosSource : public QObject
   void connected(bool connected, const QString &mater_uri);
 
   /**
-   * Emitted every time a log message is received.  This can be emitted multiple times per spin of
-   * the ROS core; wait until spun() is emitted to do any processing on them.
+   * Emitted when the source creates a new capture session.
    */
-  void logReceived(const rosgraph_msgs::LogConstPtr &msg);
-
+  void liveSessionChanged(int session_id);
 
  private Q_SLOTS:
   // Used internally to catch when the ROS source backend connects or
@@ -106,12 +105,17 @@ class RosSource : public QObject
   // will be queued.
   void handleLog(const rosgraph_msgs::LogConstPtr &msg);
 
+  void createNewSession();
+  
  private:
   QThread ros_thread_;
   RosSourceBackend *backend_;
 
   bool connected_;
   QString master_uri_;
+
+  LogDatabase *db_;
+  int session_id_;
 };  // class RosSource
 }  // namespace swri_console
 #endif //SWRI_CONSOLE_ROS_SOURCE_H_

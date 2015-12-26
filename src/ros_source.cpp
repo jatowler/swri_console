@@ -29,14 +29,16 @@
 // *****************************************************************************
 #include <swri_console/ros_source.h>
 #include <swri_console/ros_source_backend.h>
-
+#include <swri_console/log_database.h>
 
 namespace swri_console
 {
-RosSource::RosSource()
+RosSource::RosSource(LogDatabase *db)
   :
   backend_(NULL),
-  connected_(false)
+  connected_(false),
+  db_(db),
+  session_id_(-1)
 {
 }
 
@@ -82,9 +84,23 @@ void RosSource::handleConnected(bool is_connected, QString uri)
 
 void RosSource::handleLog(const rosgraph_msgs::LogConstPtr &msg)
 {
-  // Planning on changing what is done here soon, so that's why we're
-  // just rebroadcasting the signal from a slot instead of linking the
-  // incoming signal to the outgoing signal.
-  Q_EMIT logReceived(msg);
-}                          
+  if (session_id_ < 0) {
+    createNewSession();
+  }
+
+  Session *session = &(db_->session(session_id_));
+  
+  if (!session->isValid()) {
+    createNewSession();
+    session = &(db_->session(session_id_));
+  }
+
+  session->append(msg);
+}
+
+void RosSource::createNewSession()
+{
+  session_id_ = db_->createSession("Live capture at <insert current time>");
+  Q_EMIT liveSessionChanged(session_id_);
+}  
 }  // namespace swri_console

@@ -27,8 +27,8 @@
 // DAMAGE.
 //
 // *****************************************************************************
-
 #include <swri_console/log_database.h>
+#include <swri_console/session.h>
 
 namespace swri_console
 {
@@ -48,6 +48,22 @@ void LogDatabase::clear()
   msg_counts_.clear();
   log_.clear();
   Q_EMIT databaseCleared();
+}
+
+int LogDatabase::createSession(const QString &name)
+{
+  // Find an available id
+  int id = sessions_.size();
+  while (sessions_.count(id) != 0) { id++; }
+
+  Session &session = sessions_[id];
+  session.id_ = id;
+  session.name_ = name;
+  session.db_ = this;
+
+  session_ids_.push_back(id);
+
+  return id;
 }
 
 void LogDatabase::queueMessage(const rosgraph_msgs::LogConstPtr msg)

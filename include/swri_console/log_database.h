@@ -27,16 +27,20 @@
 // DAMAGE.
 //
 // *****************************************************************************
-
 #ifndef SWRI_CONSOLE_LOG_DATABASE_H_
 #define SWRI_CONSOLE_LOG_DATABASE_H_
 
-#include <QObject>
-#include <QAbstractListModel>
-#include <QStringList>
-#include <rosgraph_msgs/Log.h>
 #include <deque>
+#include <unordered_map>
+#include <vector>
+
+#include <QObject>
+#include <QStringList>
+
 #include <ros/time.h>
+#include <rosgraph_msgs/Log.h>
+
+#include <swri_console/session.h>
 
 namespace swri_console
 {
@@ -66,7 +70,12 @@ class LogDatabase : public QObject
 
   const std::map<std::string, size_t>& messageCounts() const { return msg_counts_; }
 
-  int createRun(const QString &name);
+  int createSession(const QString &name);
+  Session& session(int id) { sessions_.count(id) ? sessions_.at(id) : Session(); }
+  const Session& session(int id) const  { sessions_.count(id) ? sessions_.at(id) : Session(); }
+  std::vector<int> sessionIds() { return session_ids_; }
+
+  
   void addMessage(int run_id, const rosgraph_msgs::LogConstPtr &msg);
 
  Q_SIGNALS:
@@ -76,11 +85,14 @@ class LogDatabase : public QObject
  public Q_SLOTS:
   void queueMessage(const rosgraph_msgs::LogConstPtr msg);
 
- private:  
+ private:
   std::map<std::string, size_t> msg_counts_;
   std::deque<LogEntry> log_;
 
   ros::Time min_time_;
+
+  std::unordered_map<int, Session> sessions_;
+  std::vector<int> session_ids_;
 };  // class LogDatabase
 }  // namespace swri_console 
 #endif  // SWRI_CONSOLE_LOG_DATABASE_H_

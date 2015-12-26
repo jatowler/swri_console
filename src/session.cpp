@@ -27,49 +27,25 @@
 // DAMAGE.
 //
 // *****************************************************************************
-
-#ifndef SWRI_CONSOLE_CONSOLE_MASTER_H_
-#define SWRI_CONSOLE_CONSOLE_MASTER_H_
-
-#include <string>
-#include <QObject>
-#include <QList>
-#include <QFont>
-#include <rosgraph_msgs/Log.h>
+#include <swri_console/session.h>
 #include <swri_console/log_database.h>
-#include <swri_console/ros_source.h>
 
 namespace swri_console
 {
-typedef std::vector<rosgraph_msgs::LogConstPtr> MessageList;
+Session::Session()
+  :
+  id_(-1),
+  name_("__uninitialized__"),
+  db_(NULL),
+  min_time_(ros::TIME_MAX)
+{  
+}
 
-class ConsoleWindow;
-class ConsoleMaster : public QObject
+Session::~Session()
 {
-  Q_OBJECT;
+}
 
- public:  
-  ConsoleMaster(int argc, char** argv);
-  virtual ~ConsoleMaster();
-
- public Q_SLOTS:
-  void createNewWindow();
-  void fontSelectionChanged(const QFont &font);
-  void selectFont();
-  void readBagFile(const QString &name);
-
- Q_SIGNALS:
-  void fontChanged(const QFont &font);
-
- private:  
-  LogDatabase db_;
-
-  QFont window_font_;
-
-  // All ROS operations are done on a separate thread to ensure they do not
-  // cause the GUI thread to block.
-  RosSource ros_source_;  
-  bool connected_;
-};  // class ConsoleMaster
+void Session::append(const rosgraph_msgs::LogConstPtr &msg)
+{
+}
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_CONSOLE_MASTER_H_

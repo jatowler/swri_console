@@ -75,6 +75,7 @@ file (GLOB SRC_FILES
   src/ros_source.cpp
   src/ros_source_backend.cpp
   src/run_list_widget.cpp
+  src/session.cpp
   src/settings_keys.cpp
   )
 
