@@ -34,7 +34,7 @@
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <widget class="swri_console::RunListWidget" name="runListWidget" native="true"/>
+          <widget class="swri_console::SessionListWidget" name="sessionListWidget" native="true"/>
           <widget class="QListView" name="nodeList">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -423,9 +423,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>swri_console::RunListWidget</class>
+   <class>swri_console::SessionListWidget</class>
    <extends>QWidget</extends>
-   <header location="global">swri_console/run_list_widget.h</header>
+   <header location="global">swri_console/session_list_widget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

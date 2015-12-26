@@ -27,8 +27,8 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#ifndef SWRI_CONSOLE_RUN_LIST_WIDGET_H_
-#define SWRI_CONSOLE_RUN_LIST_WIDGET_H_
+#ifndef SWRI_CONSOLE_SESSION_LIST_WIDGET_H_
+#define SWRI_CONSOLE_SESSION_LIST_WIDGET_H_
 
 #include <QWidget>
 
@@ -39,18 +39,18 @@ QT_END_NAMESPACE
 namespace swri_console
 {
 class LogDatabase;
-class RunListWidget : public QWidget
+class SessionListWidget : public QWidget
 {
   Q_OBJECT;
 
  public:
-  RunListWidget(QWidget *parent=0);
-  ~RunListWidget();
+  SessionListWidget(QWidget *parent=0);
+  ~SessionListWidget();
 
   void setDatabase(LogDatabase *db);
 
  private:
   QListWidget *list_widget_;
-};  // class RunListWidget
+};  // class SessionListWidget
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_RUN_LIST_WIDGET_H_
+#endif  // SWRI_CONSOLE_SESSION_LIST_WIDGET_H_

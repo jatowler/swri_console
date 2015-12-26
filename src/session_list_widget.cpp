@@ -27,14 +27,14 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/run_list_widget.h>
+#include <swri_console/session_list_widget.h>
 
 #include <QListWidget>
 #include <QVBoxLayout>
 
 namespace swri_console
 {
-RunListWidget::RunListWidget(QWidget *parent)
+SessionListWidget::SessionListWidget(QWidget *parent)
   :
   QWidget(parent)
 {
@@ -48,11 +48,11 @@ RunListWidget::RunListWidget(QWidget *parent)
   setLayout(main_layout);
 }
 
-RunListWidget::~RunListWidget()
+SessionListWidget::~SessionListWidget()
 {
 }
 
-void RunListWidget::setDatabase(LogDatabase *db)
+void SessionListWidget::setDatabase(LogDatabase *db)
 {
 }
 }  // namespace swri_console
