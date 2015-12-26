@@ -41,7 +41,7 @@ RosSourceBackend::RosSourceBackend(int argc, char** argv)
             ros::init_options::AnonymousName |
             ros::init_options::NoRosout);
 
-  startTimer(50);
+  startTimer(20);
 }
 
 RosSourceBackend::~RosSourceBackend()

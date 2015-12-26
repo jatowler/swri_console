@@ -54,34 +54,31 @@ struct LogEntry
 
 class LogDatabase : public QObject
 {
-  Q_OBJECT
-  
-public:
+  Q_OBJECT;
+
+ public:
   LogDatabase();
   ~LogDatabase();
-  
+
   void clear();
   const std::deque<LogEntry>& log() { return log_; }
   const ros::Time& minTime() const { return min_time_; }
 
   const std::map<std::string, size_t>& messageCounts() const { return msg_counts_; }
 
+  int createRun(const QString &name);
+  void addMessage(int run_id, const rosgraph_msgs::LogConstPtr &msg);
+
  Q_SIGNALS:
   void databaseCleared();
-  void messagesAdded();
   void minTimeUpdated();
 
-public Q_SLOTS:
+ public Q_SLOTS:
   void queueMessage(const rosgraph_msgs::LogConstPtr msg);
-  void processQueue();
 
- protected:
-  void timerEvent(QTimerEvent *);
-  
-private:  
+ private:  
   std::map<std::string, size_t> msg_counts_;
   std::deque<LogEntry> log_;
-  std::deque<LogEntry> new_msgs_;
 
   ros::Time min_time_;
 };  // class LogDatabase

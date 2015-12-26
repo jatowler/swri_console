@@ -60,11 +60,13 @@ LogDatabaseProxyModel::LogDatabaseProxyModel(LogDatabase *db)
 {
   QObject::connect(db_, SIGNAL(databaseCleared()),
                    this, SLOT(handleDatabaseCleared()));
-  QObject::connect(db_, SIGNAL(messagesAdded()),
-                   this, SLOT(processNewMessages()));
 
   QObject::connect(db_, SIGNAL(minTimeUpdated()),
                    this, SLOT(minTimeUpdated()));
+
+  // We're going to update the model on a timer instead of using
+  // a new messages signal to limit the update rate.
+  startTimer(20);
 }
 
 LogDatabaseProxyModel::~LogDatabaseProxyModel()
@@ -619,5 +621,10 @@ void LogDatabaseProxyModel::minTimeUpdated()
       && msg_mapping_.size()) {
     Q_EMIT dataChanged(index(0), index(msg_mapping_.size()));
   }  
+}
+
+void LogDatabaseProxyModel::timerEvent(QTimerEvent *)
+{
+  processNewMessages();
 }
 }  // namespace swri_console

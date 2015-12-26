@@ -47,7 +47,7 @@ class LogDatabase;
 class LogEntry;
 class LogDatabaseProxyModel : public QAbstractListModel
 {
-  Q_OBJECT
+  Q_OBJECT;
  
  public:
   enum {
@@ -95,6 +95,7 @@ class LogDatabaseProxyModel : public QAbstractListModel
  private:
   LogDatabase *db_;
 
+  void timerEvent(QTimerEvent*);
   void saveBagFile(const QString& filename) const;
   void saveTextFile(const QString& filename) const;
   void scheduleIdleProcessing();

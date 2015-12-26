@@ -57,13 +57,14 @@ class NodeListModel : public QAbstractListModel
                                                                  
  private Q_SLOTS:
   void handleDatabaseCleared();
-  void handleMessagesAdded();
   
  private:
   LogDatabase *db_;
   
   std::map<std::string, size_t> data_;
   std::vector<std::string> ordering_;
+
+  void timerEvent(QTimerEvent *);
 };
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_NODE_LIST_MODEL_H_

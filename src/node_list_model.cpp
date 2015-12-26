@@ -42,8 +42,8 @@ NodeListModel::NodeListModel(LogDatabase *db)
 {
   QObject::connect(db_, SIGNAL(databaseCleared()),
                    this, SLOT(handleDatabaseCleared()));
-  QObject::connect(db_, SIGNAL(messagesAdded()),
-                   this, SLOT(handleMessagesAdded()));
+
+  startTimer(20);
 }
 
 NodeListModel::~NodeListModel()
@@ -111,7 +111,7 @@ void NodeListModel::handleDatabaseCleared()
   Q_EMIT dataChanged(index(0), index(data_.size()-1));
 }
 
-void NodeListModel::handleMessagesAdded()
+void NodeListModel::timerEvent(QTimerEvent*)
 {
   const std::map<std::string, size_t> &msg_counts = db_->messageCounts();
   

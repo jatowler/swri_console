@@ -36,7 +36,6 @@ LogDatabase::LogDatabase()
   :
   min_time_(ros::TIME_MAX)
 {
-  startTimer(100);
 }
 
 LogDatabase::~LogDatabase()
@@ -67,27 +66,15 @@ void LogDatabase::queueMessage(const rosgraph_msgs::LogConstPtr msg)
   log.file = msg->file;
   log.function = msg->function;
   log.line = msg->line;
-  log.text = QString(msg->msg.c_str()).split('\n');
   log.seq = msg->header.seq;
-  new_msgs_.push_back(log);
-}
 
-void LogDatabase::processQueue()
-{
-  if (new_msgs_.empty()) {
-    return;
-  }
-  
-  log_.insert(log_.end(),
-              new_msgs_.begin(),
-              new_msgs_.end());
-  new_msgs_.clear();
+  QStringList text = QString(msg->msg.c_str()).split('\n');
+  // Remove empty lines from the back.
+  while(text.size() && text.back().isEmpty()) { text.pop_back(); }
+  // Remove empty lines from the front.
+  while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
+  log.text = text;
 
-  Q_EMIT messagesAdded();              
-}
-
-void LogDatabase::timerEvent(QTimerEvent *event)
-{
-  processQueue();
+  log_.push_back(log);  
 }
 }  // namespace swri_console
