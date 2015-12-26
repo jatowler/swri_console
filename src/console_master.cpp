@@ -112,14 +112,16 @@ void ConsoleMaster::selectFont()
 
 void ConsoleMaster::readBagFile(const QString &name)
 {
-  BagSource *source = new BagSource(name);
-
-  QObject::connect(source, SIGNAL(logRead(const rosgraph_msgs::LogConstPtr& )),
-                   &db_, SLOT(queueMessage(const rosgraph_msgs::LogConstPtr&) ));
+  BagSource *source = new BagSource(&db_, name);
   
   QObject::connect(source, SIGNAL(finished(const QString&, bool, size_t, const QString&)),
                    source, SLOT(deleteLater()));
 
+  // NOTE: There is currently a risk of segfault and/or temporary
+  // hanging if program is closed before the bag source is finished.
+  // Need to add a mechanism to abort the bag source when the last
+  // window is closed.
+  
   source->start();
 }
 }  // namespace swri_console

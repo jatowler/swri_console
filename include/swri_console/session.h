@@ -40,10 +40,12 @@ namespace swri_console
 class LogDatabase;
 class Session
 {
+ public:
   int id_;
   QString name_;
   LogDatabase *db_;
 
+  size_t count_;
   ros::Time min_time_;
 
   friend class LogDatabase;
@@ -55,6 +57,8 @@ class Session
   void append(const rosgraph_msgs::LogConstPtr &msg);
 
   bool isValid() const { return id_ >= 0; }
+  const QString& name() const { return name_; }
+  const size_t messageCount() const { return count_; }
 };  // class Session
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_SESSION_H_

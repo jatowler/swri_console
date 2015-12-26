@@ -36,6 +36,7 @@
 
 namespace swri_console
 {
+class LogDatabase;
 class BagSourceBackend;
 
 class BagSource : public QObject
@@ -43,17 +44,15 @@ class BagSource : public QObject
   Q_OBJECT;
 
  public:
-  BagSource(const QString &filename);
+  BagSource(LogDatabase *db, const QString &filename);
   ~BagSource();
 
   void start();
   
   const QString &filename() const { return filename_; }
-  
 
  Q_SIGNALS:
   void finished(const QString &name, bool success, size_t msg_count, const QString &error_msg);
-  void logRead(const rosgraph_msgs::LogConstPtr &msg);
 
  private Q_SLOTS:
   void handleFinished(bool success, size_t msg_count, QString error_msg);
@@ -63,6 +62,9 @@ class BagSource : public QObject
   const QString filename_;  
   BagSourceBackend *backend_;
   QThread thread_;
+
+  LogDatabase *db_;
+  int session_id_;
 };  // class BagSource
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_BAG_SOURCE_H_

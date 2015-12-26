@@ -28,6 +28,9 @@
 //
 // *****************************************************************************
 #include <swri_console/ros_source.h>
+
+#include <QDateTime>
+
 #include <swri_console/ros_source_backend.h>
 #include <swri_console/log_database.h>
 
@@ -76,9 +79,16 @@ void RosSource::start()
 }
 
 void RosSource::handleConnected(bool is_connected, QString uri)
-{
+{  
   connected_ = is_connected;
   master_uri_ = uri;
+
+  if (connected_) {
+    createNewSession();
+  } else {
+    session_id_ = -1;
+  }
+  
   Q_EMIT connected(connected_, master_uri_);
 }
 
@@ -100,7 +110,8 @@ void RosSource::handleLog(const rosgraph_msgs::LogConstPtr &msg)
 
 void RosSource::createNewSession()
 {
-  session_id_ = db_->createSession("Live capture at <insert current time>");
+  QDateTime now = QDateTime::currentDateTime();
+  session_id_ = db_->createSession(QString("Live at %1").arg(now.toString("hh:mm:ss")));
   Q_EMIT liveSessionChanged(session_id_);
 }  
 }  // namespace swri_console

@@ -32,6 +32,8 @@
 
 namespace swri_console
 {
+const Session LogDatabase::invalid_session_;
+
 LogDatabase::LogDatabase()
   :
   min_time_(ros::TIME_MAX)

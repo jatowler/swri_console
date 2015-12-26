@@ -29,14 +29,21 @@
 // *****************************************************************************
 #include <swri_console/session_list_widget.h>
 
+#include <algorithm>
+#include <set>
+
 #include <QListWidget>
 #include <QVBoxLayout>
+#include <QDebug>
+
+#include <swri_console/log_database.h>
 
 namespace swri_console
 {
 SessionListWidget::SessionListWidget(QWidget *parent)
   :
-  QWidget(parent)
+  QWidget(parent),
+  db_(NULL)
 {
   list_widget_ = new QListWidget(this);
   list_widget_->setFont(QFont("Ubuntu Mono", 9));
@@ -54,5 +61,66 @@ SessionListWidget::~SessionListWidget()
 
 void SessionListWidget::setDatabase(LogDatabase *db)
 {
+  if (db_) {
+    // We can implement this if needed, just don't have a current use case.
+    qWarning("SessionListWidget: Cannot change the log database.");
+    return;
+  }
+
+  db_ = db;
+  synchronize();
+  startTimer(50);
+}
+
+void SessionListWidget::timerEvent(QTimerEvent*)
+{
+  synchronize();
+}
+
+void SessionListWidget::synchronize()
+{
+  std::set<int> prev_set;
+  prev_set.insert(sessions_.begin(), sessions_.end());
+
+  const std::vector<int>& sessions = db_->sessionIds();
+  std::set<int> next_set;
+  next_set.insert(sessions.begin(), sessions.end());
+    
+  std::set<int> removed_sessions;
+  std::set_difference(prev_set.begin(), prev_set.end(),
+                      next_set.begin(), next_set.end(),
+                      std::inserter(removed_sessions, removed_sessions.end()));
+    
+  std::set<int> added_sessions;
+  std::set_difference(next_set.begin(), next_set.end(),
+                      prev_set.begin(), prev_set.end(),
+                      std::inserter(added_sessions, added_sessions.end()));
+
+  size_t removed = 0;
+  for (size_t i = 0; i < sessions_.size(); i++) {
+    if (removed_sessions.count(sessions_[i])) {
+      QListWidgetItem *item = list_widget_->takeItem(i - removed);
+      delete item;
+      removed++;
+    }
+  }
+
+  sessions_ = sessions;
+  for (size_t i = 0; i < sessions_.size(); i++) {
+    int id = sessions_[i];
+    if (added_sessions.count(id)) {
+      QListWidgetItem *item = new QListWidgetItem();
+      item->setText("");
+      item->setFlags(item->flags() | Qt::ItemIsEditable);
+      list_widget_->insertItem(i, item);
+    }
+
+    const Session &session = db_->session(id);
+    QListWidgetItem *item = list_widget_->item(i);
+    item->setData(Qt::DisplayRole, QString("%1 (%2)")
+                  .arg(session.name())
+                  .arg(session.messageCount()));
+    //item->setData(Qt::EditRole, session.name());
+  }
 }
 }  // namespace swri_console

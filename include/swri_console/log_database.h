@@ -71,10 +71,9 @@ class LogDatabase : public QObject
   const std::map<std::string, size_t>& messageCounts() const { return msg_counts_; }
 
   int createSession(const QString &name);
-  Session& session(int id) { sessions_.count(id) ? sessions_.at(id) : Session(); }
-  const Session& session(int id) const  { sessions_.count(id) ? sessions_.at(id) : Session(); }
-  std::vector<int> sessionIds() { return session_ids_; }
-
+  Session& session(int id) { sessions_.count(id) ? sessions_.at(id) : invalid_session_; }
+  const Session& session(int id) const  { sessions_.count(id) ? sessions_.at(id) : invalid_session_; }
+  const std::vector<int>& sessionIds() const { return session_ids_; }
   
   void addMessage(int run_id, const rosgraph_msgs::LogConstPtr &msg);
 
@@ -93,6 +92,9 @@ class LogDatabase : public QObject
 
   std::unordered_map<int, Session> sessions_;
   std::vector<int> session_ids_;
+  const static Session invalid_session_;
+
+  friend class Session;
 };  // class LogDatabase
 }  // namespace swri_console 
 #endif  // SWRI_CONSOLE_LOG_DATABASE_H_

@@ -32,6 +32,8 @@
 
 #include <QWidget>
 
+#include <unordered_map>
+
 QT_BEGIN_NAMESPACE
 class QListWidget;
 QT_END_NAMESPACE
@@ -49,8 +51,18 @@ class SessionListWidget : public QWidget
 
   void setDatabase(LogDatabase *db);
 
+ protected:
+  void timerEvent(QTimerEvent*);
+
+  void synchronize();
+  
  private:
+  LogDatabase *db_;
+  
   QListWidget *list_widget_;
+  // This vector contains the session ids of the items in the list
+  // widget.
+  std::vector<int> sessions_;
 };  // class SessionListWidget
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_SESSION_LIST_WIDGET_H_

@@ -28,14 +28,20 @@
 //
 // *****************************************************************************
 #include <swri_console/bag_source.h>
+
+#include <QFileInfo>
+
 #include <swri_console/bag_source_backend.h>
+#include <swri_console/log_database.h>
 
 namespace swri_console
 {
-BagSource::BagSource(const QString &filename)
+BagSource::BagSource(LogDatabase *db, const QString &filename)
   :
   filename_(filename),
-  backend_(NULL)
+  backend_(NULL),
+  db_(db),
+  session_id_(-1)
 {
 }
 
@@ -81,9 +87,19 @@ void BagSource::handleFinished(bool success, size_t msg_count, QString error_msg
 
 void BagSource::handleLogRead(const rosgraph_msgs::LogConstPtr &msg)
 {
-  // Planning on changing what is done here soon, so that's why we're
-  // just rebroadcasting the signal from a slot instead of linking the
-  // incoming signal to the outgoing signal.
-  Q_EMIT logRead(msg);
+  if (session_id_ < 0) {
+    QFileInfo file_info(filename_);    
+    session_id_ = db_->createSession(file_info.fileName());
+  }
+
+  Session *session = &(db_->session(session_id_));
+  
+  if (!session->isValid()) {
+    QFileInfo file_info(filename_);    
+    session_id_ = db_->createSession(file_info.fileName());
+    session = &(db_->session(session_id_));
+  }
+
+  session->append(msg);
 }                          
 }  // namespace swri_console

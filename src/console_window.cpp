@@ -64,6 +64,8 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
 {
   ui.setupUi(this); 
 
+  ui.sessionListWidget->setDatabase(db);
+  
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
 
