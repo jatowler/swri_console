@@ -561,15 +561,15 @@ void ConsoleWindow::loadSettings()
 
 void ConsoleWindow::promptForBagFile()
 {
-  QString filename = QFileDialog::getOpenFileName(
+  QStringList filenames = QFileDialog::getOpenFileNames(
     NULL,
-    tr("Open Bag File"),
+    tr("Open Bag File(s)"),
     QDir::homePath(),
     tr("Bag Files (*.bag)"));
 
-  if (filename != NULL) {
-    Q_EMIT readBagFile(filename);
-  }  
+  for (int i = 0; i < filenames.size(); i++) {
+    Q_EMIT readBagFile(filenames[i]);
+  }
 }
 }  // namespace swri_console
 
