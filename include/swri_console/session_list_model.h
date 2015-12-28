@@ -27,51 +27,44 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/session_list_widget.h>
 
-#include <algorithm>
-#include <set>
+#ifndef SWRI_CONSOLE_SESSION_LIST_MODEL_H_
+#define SWRI_CONSOLE_SESSION_LIST_MODEL_H_
 
-#include <QListView>
-#include <QVBoxLayout>
-#include <QDebug>
-
-#include <swri_console/log_database.h>
-#include <swri_console/session_list_model.h>
+#include <string>
+#include <vector>
+#include <map>
+#include <QAbstractListModel>
 
 namespace swri_console
 {
-SessionListWidget::SessionListWidget(QWidget *parent)
-  :
-  QWidget(parent),
-  db_(NULL)
+class LogDatabase;
+class SessionListModel : public QAbstractListModel
 {
-  model_ = new SessionListModel(this);
+  Q_OBJECT;
   
-  list_view_ = new QListView(this);
-  list_view_->setFont(QFont("Ubuntu Mono", 9));
-  list_view_->setContextMenuPolicy(Qt::CustomContextMenu);
-  list_view_->setModel(model_);
+ public:
+  SessionListModel(QObject *parent=0);
+  ~SessionListModel();
 
-  auto *main_layout = new QVBoxLayout();  
-  main_layout->addWidget(list_view_);
-  main_layout->setContentsMargins(0,0,0,0);
-  setLayout(main_layout);
-}
+  void setDatabase(LogDatabase* db);
+  
+  int sessionId(const QModelIndex &index) const;
+  
+  virtual int rowCount(const QModelIndex &parent) const;
+  virtual QVariant data(const QModelIndex &index, int role) const;
 
-SessionListWidget::~SessionListWidget()
-{
-}
+ private Q_SLOTS:
+  void handleSessionAdded(int sid);
+  void handleSessionDeleted(int sid);
+  void handleSessionRenamed(int sid);
+  
+ private:
+  LogDatabase *db_;
 
-void SessionListWidget::setDatabase(LogDatabase *db)
-{
-  if (db_) {
-    // We can implement this if needed, just don't have a current use case.
-    qWarning("SessionListWidget: Cannot change the log database.");
-    return;
-  }
+  std::vector<int> sessions_;
 
-  db_ = db;
-  model_->setDatabase(db_);
-}
+  void timerEvent(QTimerEvent *);
+};
 }  // namespace swri_console
+#endif  // SWRI_CONSOLE_SESSION_LIST_MODEL_H_

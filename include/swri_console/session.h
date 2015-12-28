@@ -45,7 +45,7 @@ class Session
   QString name_;
   LogDatabase *db_;
 
-  size_t count_;
+  size_t log_count_;
   ros::Time min_time_;
 
   friend class LogDatabase;
@@ -58,7 +58,7 @@ class Session
 
   bool isValid() const { return id_ >= 0; }
   const QString& name() const { return name_; }
-  const size_t messageCount() const { return count_; }
+  const size_t logCount() const { return log_count_; }
 };  // class Session
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_SESSION_H_

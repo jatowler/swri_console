@@ -71,18 +71,19 @@ class LogDatabase : public QObject
   const std::map<std::string, size_t>& messageCounts() const { return msg_counts_; }
 
   int createSession(const QString &name);
-  Session& session(int id) { sessions_.count(id) ? sessions_.at(id) : invalid_session_; }
-  const Session& session(int id) const  { sessions_.count(id) ? sessions_.at(id) : invalid_session_; }
+  void deleteSession(int sid);
+  void renameSession(int sid, const QString &name);
+  Session& session(int sid);
+  const Session& session(int sid) const;
   const std::vector<int>& sessionIds() const { return session_ids_; }
-  
-  void addMessage(int run_id, const rosgraph_msgs::LogConstPtr &msg);
 
  Q_SIGNALS:
   void databaseCleared();
   void minTimeUpdated();
 
- public Q_SLOTS:
-  void queueMessage(const rosgraph_msgs::LogConstPtr msg);
+  void sessionAdded(int sid);
+  void sessionDeleted(int sid);
+  void sessionRenamed(int sid);
 
  private:
   std::map<std::string, size_t> msg_counts_;
@@ -92,7 +93,8 @@ class LogDatabase : public QObject
 
   std::unordered_map<int, Session> sessions_;
   std::vector<int> session_ids_;
-  const static Session invalid_session_;
+  // Persistent invalid session for methods that return references.
+  mutable Session invalid_session_;
 
   friend class Session;
 };  // class LogDatabase
