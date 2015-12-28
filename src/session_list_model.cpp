@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <vector>
 
+#include <QMimeData>
+#include <QDebug>
+
 #include <swri_console/session_list_model.h>
 #include <swri_console/log_database.h>
 
@@ -62,6 +65,8 @@ void SessionListModel::setDatabase(LogDatabase *db)
                    this, SLOT(handleSessionDeleted(int)));
   QObject::connect(db_, SIGNAL(sessionRenamed(int)),
                    this, SLOT(handleSessionRenamed(int)));
+  QObject::connect(db_, SIGNAL(sessionMoved(int)),
+                   this, SLOT(handleSessionMoved(int)));
 
   beginResetModel();
   sessions_ = db_->sessionIds();
@@ -86,7 +91,16 @@ int SessionListModel::rowCount(const QModelIndex &parent) const
 
 Qt::ItemFlags SessionListModel::flags(const QModelIndex &index) const
 {
-  return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+  return (Qt::ItemIsSelectable |
+          Qt::ItemIsEditable |
+          Qt::ItemIsEnabled |
+          Qt::ItemIsDragEnabled |
+          Qt::ItemIsDropEnabled);
+}
+
+Qt::DropActions SessionListModel::supportedDropActions() const
+{
+  return Qt::MoveAction;
 }
 
 QVariant SessionListModel::data(const QModelIndex &index, int role) const
@@ -119,6 +133,7 @@ bool SessionListModel::setData(const QModelIndex &index, const QVariant &value, 
     return false;
   } 
 
+  qDebug() << "set data to " << value;
   int sid = sessions_[index.row()];
   db_->renameSession(sid, value.toString());
   return true;
@@ -164,8 +179,103 @@ void SessionListModel::handleSessionRenamed(int sid)
   }
 }
 
+void SessionListModel::handleSessionMoved(int sid)
+{
+  std::vector<int> new_sessions = db_->sessionIds();
+  if (new_sessions.size() != sessions_.size()) {
+    qWarning("Unexpected session size mismatch (%zu vs %zu)",
+             new_sessions.size(),
+             sessions_.size());
+    return;
+  }
+  
+  int src_index = -1;
+  int dst_index = -1;
+  for (size_t i = 0; i < sessions_.size(); i++) {
+    if (sid == sessions_[i]) {
+      src_index = i;
+    }
+    if (sid == new_sessions[i]) {
+      dst_index = i;
+    }
+  }
+
+  if (src_index < 0) {
+    qWarning("Could not find session id in existing index.");
+    return;
+  }
+  if (dst_index < 0) {
+    qWarning("Could not find session id in updated index.");
+    return;
+  }
+
+  if (dst_index < src_index) {
+    beginMoveRows(QModelIndex(), src_index, src_index, QModelIndex(), dst_index);
+  } else {
+    beginMoveRows(QModelIndex(), src_index, src_index, QModelIndex(), dst_index+1);
+  }    
+  sessions_.swap(new_sessions);
+  endMoveRows();
+}
+
 void SessionListModel::timerEvent(QTimerEvent*)
 {
   Q_EMIT dataChanged(index(0), index(sessions_.size()-1));
+}
+
+bool SessionListModel::dropMimeData(const QMimeData *data,
+                                    Qt::DropAction action,
+                                    int dst_row, int dst_column,
+                                    const QModelIndex &parent)
+{  
+  if (!data || !(action == Qt::CopyAction || action == Qt::MoveAction))
+    return false;
+  QStringList types = mimeTypes();
+  if (types.isEmpty())
+    return false;
+  QString format = types.at(0);
+  if (!data->hasFormat(format))
+    return false;
+
+  int target_row = -999;
+  if (dst_row == -1 && dst_column == -1) {
+    if (parent.isValid()) {
+      target_row = parent.row();
+    } else {
+      target_row = sessions_.size()-1;
+    }
+  } else {
+    target_row = dst_row;
+  }
+
+  
+  // We have to unpack the data from the MIME object to get a list of
+  // the source rows.
+  QVector<int> src_rows, dst_rows;
+  QByteArray encoded = data->data(format);
+  QDataStream stream(&encoded, QIODevice::ReadOnly);
+  while (!stream.atEnd()) {
+    int r, c; // we discard the column
+    QMap<int,QVariant> data; // and we discard the data
+    stream >> r >> c >> data;
+    src_rows.append(r);
+    dst_rows.append(target_row++);
+  }
+
+  QVector<int> src_ids;
+  for (int i = 0; i < src_rows.size(); i++) {
+    src_ids.append(sessions_[src_rows[i]]);
+  }
+
+  for (size_t i = 0; i < src_ids.size(); i++) {
+    db_->moveSession(src_ids[i], dst_rows[i]);
+  }
+  
+  // We return false even if we succeeded so that the view doesn't try
+  // to delete the source row itself.  It won't actually matter since
+  // we don't implement the removeRows() behavior at this point, but
+  // that could change.  It's irritating that the implementation of a
+  // move is split between a view and a model, but that's how it is.
+  return false;
 }
 }  // namespace swri_console

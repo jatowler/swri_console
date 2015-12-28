@@ -50,10 +50,12 @@ SessionListWidget::SessionListWidget(QWidget *parent)
   model_ = new SessionListModel(this);
   
   list_view_ = new QListView(this);
+  list_view_->setItemDelegate(new SessionListDelegate(this));
+  list_view_->setModel(model_);
   list_view_->setFont(QFont("Ubuntu Mono", 9));
   list_view_->setContextMenuPolicy(Qt::CustomContextMenu);
-  list_view_->setModel(model_);
-  list_view_->setItemDelegate(new SessionListDelegate(this));
+  list_view_->setDragDropMode(QAbstractItemView::InternalMove);
+  list_view_->setDropIndicatorShown(true);
 
   auto *main_layout = new QVBoxLayout();  
   main_layout->addWidget(list_view_);

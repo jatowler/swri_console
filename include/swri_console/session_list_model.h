@@ -27,7 +27,6 @@
 // DAMAGE.
 //
 // *****************************************************************************
-
 #ifndef SWRI_CONSOLE_SESSION_LIST_MODEL_H_
 #define SWRI_CONSOLE_SESSION_LIST_MODEL_H_
 
@@ -56,10 +55,19 @@ class SessionListModel : public QAbstractListModel
   QVariant data(const QModelIndex &index, int role) const;
   bool setData(const QModelIndex &index, const QVariant &value, int role);
 
+  
+  Qt::DropActions supportedDropActions() const;
+  bool dropMimeData(const QMimeData *data,
+                    Qt::DropAction action,
+                    int row, int column,
+                    const QModelIndex &parent);
+                                              
+                                              
  private Q_SLOTS:
   void handleSessionAdded(int sid);
   void handleSessionDeleted(int sid);
   void handleSessionRenamed(int sid);
+  void handleSessionMoved(int sid);
   
  private:
   LogDatabase *db_;

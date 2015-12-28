@@ -102,6 +102,46 @@ void LogDatabase::renameSession(int sid, const QString &name)
   Q_EMIT sessionRenamed(sid);  
 }
 
+void LogDatabase::moveSession(int sid, int index)
+{
+  if (index < 0 || index >= session_ids_.size()) {
+    qWarning("Refusing the move session to invalid index (%d)", index);
+    return;
+  }
+
+  // Find the SID in our vector.
+  int src_index = -1;
+  for (size_t i = 0; i < session_ids_.size(); i++) {
+    if (session_ids_[i] == sid) {
+      src_index = i;
+      break;
+    }
+  }
+
+  if (src_index < 0) {
+    qWarning("Did not find session %d, cannot move.", sid);
+    return;
+  }
+
+  if (src_index == index) {
+    return;
+  }
+  
+  // Scoot everything after the source forward one.
+  for (size_t i = src_index; i+1 < session_ids_.size(); i++) {
+    session_ids_[i] = session_ids_[i+1];
+  }
+
+  // Scoot everything after the destination back one.
+  for (size_t i = index; i+1 < session_ids_.size(); i++) {
+    session_ids_[i+1] = session_ids_[i];
+  }
+
+  // Put the SID in the right place.
+  session_ids_[index] = sid;
+  Q_EMIT sessionMoved(sid);
+}
+
 Session& LogDatabase::session(int sid)
 {
   if (sessions_.count(sid)) {

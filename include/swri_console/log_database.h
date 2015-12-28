@@ -73,6 +73,7 @@ class LogDatabase : public QObject
   int createSession(const QString &name);
   void deleteSession(int sid);
   void renameSession(int sid, const QString &name);
+  void moveSession(int sid, int index);
   Session& session(int sid);
   const Session& session(int sid) const;
   const std::vector<int>& sessionIds() const { return session_ids_; }
@@ -81,9 +82,11 @@ class LogDatabase : public QObject
   void databaseCleared();
   void minTimeUpdated();
 
+  // We get to add all these awesome signals to deal with Qt's Model/View.
   void sessionAdded(int sid);
   void sessionDeleted(int sid);
   void sessionRenamed(int sid);
+  void sessionMoved(int sid);
 
  private:
   std::map<std::string, size_t> msg_counts_;
