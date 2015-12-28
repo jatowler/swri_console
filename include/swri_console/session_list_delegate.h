@@ -27,46 +27,35 @@
 // DAMAGE.
 //
 // *****************************************************************************
+#ifndef SWRI_CONSOLE_SESSION_LIST_DELEGATE_H_
+#define SWRI_CONSOLE_SESSION_LIST_DELEGATE_H_
 
-#ifndef SWRI_CONSOLE_SESSION_LIST_MODEL_H_
-#define SWRI_CONSOLE_SESSION_LIST_MODEL_H_
-
-#include <string>
-#include <vector>
-#include <map>
-#include <QAbstractListModel>
+#include <QStyledItemDelegate>
 
 namespace swri_console
 {
-class LogDatabase;
-class SessionListModel : public QAbstractListModel
+/* Defines a custom delegate for the session list model and it's view.
+ * The entire purpose of this class is to get around an annoying
+ * default behavior.  When an item is being edited and is part of a
+ * data changed signal, the editor resets its contents to the item's
+ * edit role.  Since our items are constantly being updated with new
+ * log counts, the editor is effectively locked.  This delegate caches
+ * the last value that was assigned to the editor and only updates the
+ * editor if the item's EditRole data is different from the previously
+ * assigned value. 
+ */
+class SessionListDelegate : public QStyledItemDelegate
 {
   Q_OBJECT;
   
  public:
-  SessionListModel(QObject *parent=0);
-  ~SessionListModel();
+  SessionListDelegate(QObject *parent=0);
+  QWidget* createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+  void setEditorData(QWidget *editor, const QModelIndex &index) const;
 
-  void setDatabase(LogDatabase* db);
-  
-  int sessionId(const QModelIndex &index) const;
-  
-  int rowCount(const QModelIndex &parent) const;
-  Qt::ItemFlags flags(const QModelIndex &index) const;
-  QVariant data(const QModelIndex &index, int role) const;
-  bool setData(const QModelIndex &index, const QVariant &value, int role);
-
- private Q_SLOTS:
-  void handleSessionAdded(int sid);
-  void handleSessionDeleted(int sid);
-  void handleSessionRenamed(int sid);
-  
  private:
-  LogDatabase *db_;
-
-  std::vector<int> sessions_;
-
-  void timerEvent(QTimerEvent *);
-};
+  mutable QVariant editor_data_;
+};  // class SessionListDelegate
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_SESSION_LIST_MODEL_H_
+#endif  // SWRI_CONSOLE_SESSION_LIST_DELEGATE_H_
+

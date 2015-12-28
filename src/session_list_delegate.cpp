@@ -27,46 +27,36 @@
 // DAMAGE.
 //
 // *****************************************************************************
-
-#ifndef SWRI_CONSOLE_SESSION_LIST_MODEL_H_
-#define SWRI_CONSOLE_SESSION_LIST_MODEL_H_
-
-#include <string>
-#include <vector>
-#include <map>
-#include <QAbstractListModel>
+#include <swri_console/session_list_delegate.h>
 
 namespace swri_console
 {
-class LogDatabase;
-class SessionListModel : public QAbstractListModel
+SessionListDelegate::SessionListDelegate(QObject *parent)
+  :
+  QStyledItemDelegate(parent)
 {
-  Q_OBJECT;
-  
- public:
-  SessionListModel(QObject *parent=0);
-  ~SessionListModel();
+}
 
-  void setDatabase(LogDatabase* db);
-  
-  int sessionId(const QModelIndex &index) const;
-  
-  int rowCount(const QModelIndex &parent) const;
-  Qt::ItemFlags flags(const QModelIndex &index) const;
-  QVariant data(const QModelIndex &index, int role) const;
-  bool setData(const QModelIndex &index, const QVariant &value, int role);
+QWidget* SessionListDelegate::createEditor(
+  QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+  // Reset the cached value to a null value. We're basically assuming
+  // that the editor is re-created each time and that only one editor
+  // is around at a time... hasn't caused problems yet.
+  editor_data_ = QVariant();
+  return QStyledItemDelegate::createEditor(parent, option, index);
+}
 
- private Q_SLOTS:
-  void handleSessionAdded(int sid);
-  void handleSessionDeleted(int sid);
-  void handleSessionRenamed(int sid);
-  
- private:
-  LogDatabase *db_;
-
-  std::vector<int> sessions_;
-
-  void timerEvent(QTimerEvent *);
-};
+void SessionListDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+  QVariant data = index.data(Qt::EditRole);
+  if (data != editor_data_) {
+    // If the value is different than the last time we did an
+    // assignment, then we do want to update the editor.  This covers
+    // the initialization case, and a case where the value changed
+    // from another source.
+    editor_data_ = data;
+    QStyledItemDelegate::setEditorData(editor, index);
+  }
+}
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_SESSION_LIST_MODEL_H_

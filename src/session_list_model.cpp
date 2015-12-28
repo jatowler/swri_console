@@ -27,7 +27,6 @@
 // DAMAGE.
 //
 // *****************************************************************************
-
 #include <stdio.h>
 #include <vector>
 
@@ -71,11 +70,6 @@ void SessionListModel::setDatabase(LogDatabase *db)
   startTimer(20);
 }
 
-int SessionListModel::rowCount(const QModelIndex &parent) const
-{
-  return sessions_.size();
-}
-
 int SessionListModel::sessionId(const QModelIndex &index) const
 {
   if (index.parent().isValid() || index.row() > sessions_.size()) {
@@ -83,6 +77,16 @@ int SessionListModel::sessionId(const QModelIndex &index) const
   }
 
   return sessions_[index.row()];
+}
+
+int SessionListModel::rowCount(const QModelIndex &parent) const
+{
+  return sessions_.size();
+}
+
+Qt::ItemFlags SessionListModel::flags(const QModelIndex &index) const
+{
+  return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
 }
 
 QVariant SessionListModel::data(const QModelIndex &index, int role) const
@@ -107,6 +111,17 @@ QVariant SessionListModel::data(const QModelIndex &index, int role) const
   }
 
   return QVariant();
+}
+
+bool SessionListModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+  if (index.parent().isValid() || index.row() > sessions_.size()) {
+    return false;
+  } 
+
+  int sid = sessions_[index.row()];
+  db_->renameSession(sid, value.toString());
+  return true;
 }
 
 void SessionListModel::handleSessionAdded(int sid)

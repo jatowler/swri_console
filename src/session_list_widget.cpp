@@ -38,6 +38,7 @@
 
 #include <swri_console/log_database.h>
 #include <swri_console/session_list_model.h>
+#include <swri_console/session_list_delegate.h>
 
 namespace swri_console
 {
@@ -52,6 +53,7 @@ SessionListWidget::SessionListWidget(QWidget *parent)
   list_view_->setFont(QFont("Ubuntu Mono", 9));
   list_view_->setContextMenuPolicy(Qt::CustomContextMenu);
   list_view_->setModel(model_);
+  list_view_->setItemDelegate(new SessionListDelegate(this));
 
   auto *main_layout = new QVBoxLayout();  
   main_layout->addWidget(list_view_);
