@@ -27,44 +27,69 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/session.h>
+#include <swri_console/log_list_widget.h>
+
+#include <algorithm>
+#include <set>
+
+#include <QListView>
+#include <QVBoxLayout>
+#include <QDebug>
+
 #include <swri_console/log_database.h>
+#include <swri_console/log_list_model.h>
 
 namespace swri_console
 {
-Session::Session()
+LogListWidget::LogListWidget(QWidget *parent)
   :
-  id_(-1),
-  name_("__uninitialized__"),
-  db_(NULL),
-  min_time_(ros::TIME_MAX)
-{  
+  QWidget(parent),
+  db_(NULL)
+{
+  model_ = new LogListModel(this);
+  
+  list_view_ = new QListView(this);
+  list_view_->setModel(model_);
+  list_view_->setFont(QFont("Ubuntu Mono", 9));
+  list_view_->setUniformItemSizes(true);
+
+  list_view_->setSelectionBehavior(QAbstractItemView::SelectItems);
+  list_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);  
+
+  auto *main_layout = new QVBoxLayout();  
+  main_layout->addWidget(list_view_);
+  main_layout->setContentsMargins(0,0,0,0);
+  setLayout(main_layout);
+
+  // QObject::connect(
+  //   list_view_->selectionModel(),
+  //   SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+  //   this,
+  //   SLOT(handleViewSelectionChanged()));
 }
 
-Session::~Session()
+LogListWidget::~LogListWidget()
 {
 }
 
-void Session::append(const rosgraph_msgs::LogConstPtr &msg)
-{  
-  int nid = db_->lookupNode(msg->name);
-  node_log_counts_[nid]++;
+void LogListWidget::setDatabase(LogDatabase *db)
+{
+  if (db_) {
+    // We can implement this if needed, just don't have a current use case.
+    qWarning("LogListWidget: Cannot change the log database.");
+    return;
+  }
 
-  LogData data;
-  data.stamp = msg->header.stamp;
-  data.level = msg->level;
-  data.node_id = nid;
-  data.file = QString::fromStdString(msg->file);
-  data.function = QString::fromStdString(msg->function);
-  data.line = msg->line;
- 
-  QStringList text = QString(msg->msg.c_str()).split('\n');
-  // Remove empty lines from the back.
-  while(text.size() && text.back().isEmpty()) { text.pop_back(); }
-  // Remove empty lines from the front.
-  while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
-  data.text_lines = text;
-
-  log_data_.push_back(data);
+  db_ = db;
+  model_->setDatabase(db_);
 }
+
+void LogListWidget::setSessionFilter(const std::vector<int> &sids)
+{
+  model_->setSessionFilter(sids);
+}
+
+// void LogListWidget::handleViewSelectionChanged()
+// {
+// }
 }  // namespace swri_console

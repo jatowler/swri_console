@@ -53,6 +53,7 @@ SessionListWidget::SessionListWidget(QWidget *parent)
   list_view_->setItemDelegate(new SessionListDelegate(this));
   list_view_->setModel(model_);
   list_view_->setFont(QFont("Ubuntu Mono", 9));
+  list_view_->setUniformItemSizes(true);
   
   list_view_->setContextMenuPolicy(Qt::CustomContextMenu);
   

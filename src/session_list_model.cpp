@@ -117,7 +117,7 @@ QVariant SessionListModel::data(const QModelIndex &index, int role) const
   if (role == Qt::DisplayRole) {
     return QString("%1 (%2)")
       .arg(session.name())
-      .arg(session.totalLogCount());
+      .arg(session.logCount());
   } else if (role == Qt::EditRole) {
     return session.name();
   } else {
@@ -133,7 +133,6 @@ bool SessionListModel::setData(const QModelIndex &index, const QVariant &value, 
     return false;
   } 
 
-  qDebug() << "set data to " << value;
   int sid = sessions_[index.row()];
   db_->renameSession(sid, value.toString());
   return true;

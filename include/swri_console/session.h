@@ -30,11 +30,15 @@
 #ifndef SWRI_CONSOLE_SESSION_H_
 #define SWRI_CONSOLE_SESSION_H_
 
+#include <deque>
 #include <unordered_map>
+
 #include <QString>
 
 #include <ros/time.h>
 #include <rosgraph_msgs/Log.h>
+
+#include <swri_console/log.h>
 
 namespace swri_console
 {
@@ -48,21 +52,41 @@ class Session
 
   ros::Time min_time_;
 
-  size_t total_log_count_;
   std::unordered_map<int, size_t> node_log_counts_;
-  
+
+  friend class Log;
   friend class LogDatabase;
-  
+
+  struct LogData
+  {
+    ros::Time stamp;
+    uint8_t level;
+    int node_id;
+    QString file;
+    QString function;
+    uint32_t line;
+    QStringList text_lines;
+  };
+  std::deque<LogData> log_data_;
+    
  public:
   Session();
   ~Session();
 
-  void append(const rosgraph_msgs::LogConstPtr &msg);
-
   bool isValid() const { return id_ >= 0; }
   const QString& name() const { return name_; }
-  const size_t totalLogCount() const { return total_log_count_; }
   const size_t nodeLogCount(int nid) const { return node_log_counts_.count(nid) ? node_log_counts_.at(nid) : 0; }
+
+  void append(const rosgraph_msgs::LogConstPtr &msg);
+
+  const int logCount() const { return static_cast<int>(log_data_.size()); }
+  Log log(int index) const {
+    if (index < 0 || index >= logCount()) {
+      return Log();
+    } else {
+      return Log(this, index);
+    }    
+  }
 };  // class Session
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_SESSION_H_

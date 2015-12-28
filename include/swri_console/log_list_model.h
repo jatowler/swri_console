@@ -27,44 +27,75 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/session.h>
-#include <swri_console/log_database.h>
+
+#ifndef SWRI_CONSOLE_LOG_LIST_MODEL_H_
+#define SWRI_CONSOLE_LOG_LIST_MODEL_H_
+
+#include <string>
+#include <deque>
+#include <vector>
+
+#include <QAbstractListModel>
 
 namespace swri_console
 {
-Session::Session()
-  :
-  id_(-1),
-  name_("__uninitialized__"),
-  db_(NULL),
-  min_time_(ros::TIME_MAX)
-{  
-}
-
-Session::~Session()
+class LogDatabase;
+class LogListModel : public QAbstractListModel
 {
-}
+  Q_OBJECT
+  
+ public:
+  LogListModel(QObject *parent=0);
+  ~LogListModel();
 
-void Session::append(const rosgraph_msgs::LogConstPtr &msg)
-{  
-  int nid = db_->lookupNode(msg->name);
-  node_log_counts_[nid]++;
+  void setDatabase(LogDatabase *db);  
 
-  LogData data;
-  data.stamp = msg->header.stamp;
-  data.level = msg->level;
-  data.node_id = nid;
-  data.file = QString::fromStdString(msg->file);
-  data.function = QString::fromStdString(msg->function);
-  data.line = msg->line;
- 
-  QStringList text = QString(msg->msg.c_str()).split('\n');
-  // Remove empty lines from the back.
-  while(text.size() && text.back().isEmpty()) { text.pop_back(); }
-  // Remove empty lines from the front.
-  while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
-  data.text_lines = text;
+  virtual int rowCount(const QModelIndex &parent) const;
+  virtual QVariant data(const QModelIndex &index, int role) const;
 
-  log_data_.push_back(data);
-}
+ Q_SIGNALS:
+  void messagesAdded();
+                                                                 
+ public Q_SLOTS:
+  void setSessionFilter(const std::vector<int> &sids);
+
+ private Q_SLOTS:
+  void reset();
+  void processOldMessages();
+  
+ private:
+  void scheduleIdleProcessing();
+  void timerEvent(QTimerEvent *);
+  void processNewMessages();
+  
+  LogDatabase *db_;
+
+  // For performance reasons, the proxy model presents single line
+  // items, while the underlying log database stores multi-line
+  // messages.  The LineMap struct is used to map our item indices to
+  // the log & line that it represents.
+  struct LineMap {
+    size_t log_index;
+    int line_index;
+    LineMap() : log_index(0), line_index(0) {}
+    LineMap(size_t log, int line) : log_index(log), line_index(line) {}
+  };
+
+  struct SessionData
+  {
+    int session_id;
+
+    size_t latest_log_index;
+    std::deque<LineMap> lines;
+
+    size_t earliest_log_index;
+    std::deque<LineMap> early_lines;
+  };
+  std::vector<SessionData> blocks_;
+
+  // A list of session ids that are used to calculate the current
+  // message counts.
+  std::vector<int> sids_;
+};
 }  // namespace swri_console
+#endif  // SWRI_CONSOLE_LOG_LIST_MODEL_H_

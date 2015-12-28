@@ -107,7 +107,6 @@ private:
 
   Ui::ConsoleWindow ui;
   LogDatabase *db_;
-  LogDatabaseProxyModel *db_proxy_;
 
   QLabel *connection_status_;
 };  // class ConsoleWindow

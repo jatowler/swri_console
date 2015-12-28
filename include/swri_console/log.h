@@ -27,44 +27,30 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/session.h>
-#include <swri_console/log_database.h>
+#ifndef SWRI_CONSOLE_LOG_H_
+#define SWRI_CONSOLE_LOG_H_
+
+#include <QStringList>
 
 namespace swri_console
 {
-Session::Session()
-  :
-  id_(-1),
-  name_("__uninitialized__"),
-  db_(NULL),
-  min_time_(ros::TIME_MAX)
-{  
-}
+class Session;
 
-Session::~Session()
+// Don't store these.  Get one, use it, throw it away.
+class Log
 {
-}
+  Session const *session_;
+  int index_;
 
-void Session::append(const rosgraph_msgs::LogConstPtr &msg)
-{  
-  int nid = db_->lookupNode(msg->name);
-  node_log_counts_[nid]++;
+  friend class Session;
+  Log(Session const *session, int index) : session_(session), index_(index) {}
+  
+ public:
+  Log() : session_(NULL), index_(-1) {}
 
-  LogData data;
-  data.stamp = msg->header.stamp;
-  data.level = msg->level;
-  data.node_id = nid;
-  data.file = QString::fromStdString(msg->file);
-  data.function = QString::fromStdString(msg->function);
-  data.line = msg->line;
- 
-  QStringList text = QString(msg->msg.c_str()).split('\n');
-  // Remove empty lines from the back.
-  while(text.size() && text.back().isEmpty()) { text.pop_back(); }
-  // Remove empty lines from the front.
-  while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
-  data.text_lines = text;
+  bool isValid() const { return session_; }
 
-  log_data_.push_back(data);
-}
+  QStringList textLines() const;
+};  // class Log
 }  // namespace swri_console
+#endif  // SWRI_CONSOLE_LOG_H_

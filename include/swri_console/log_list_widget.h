@@ -27,44 +27,41 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/session.h>
-#include <swri_console/log_database.h>
+#ifndef SWRI_CONSOLE_LOG_LIST_WIDGET_H_
+#define SWRI_CONSOLE_LOG_LIST_WIDGET_H_
+
+#include <QWidget>
+
+#include <unordered_map>
+
+QT_BEGIN_NAMESPACE
+class QListView;
+QT_END_NAMESPACE
 
 namespace swri_console
 {
-Session::Session()
-  :
-  id_(-1),
-  name_("__uninitialized__"),
-  db_(NULL),
-  min_time_(ros::TIME_MAX)
-{  
-}
-
-Session::~Session()
+class LogDatabase;
+class LogListModel;
+class LogListWidget : public QWidget
 {
-}
+  Q_OBJECT;
 
-void Session::append(const rosgraph_msgs::LogConstPtr &msg)
-{  
-  int nid = db_->lookupNode(msg->name);
-  node_log_counts_[nid]++;
+ public:
+  LogListWidget(QWidget *parent=0);
+  ~LogListWidget();
 
-  LogData data;
-  data.stamp = msg->header.stamp;
-  data.level = msg->level;
-  data.node_id = nid;
-  data.file = QString::fromStdString(msg->file);
-  data.function = QString::fromStdString(msg->function);
-  data.line = msg->line;
- 
-  QStringList text = QString(msg->msg.c_str()).split('\n');
-  // Remove empty lines from the back.
-  while(text.size() && text.back().isEmpty()) { text.pop_back(); }
-  // Remove empty lines from the front.
-  while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
-  data.text_lines = text;
+  void setDatabase(LogDatabase *db);
 
-  log_data_.push_back(data);
-}
+ public Q_SLOTS:
+  void setSessionFilter(const std::vector<int> &sids);
+
+ // private Q_SLOTS:
+ //  void handleViewSelectionChanged();
+
+ private:
+  LogDatabase *db_;
+  LogListModel *model_;
+  QListView *list_view_;
+};  // class LogListWidget
 }  // namespace swri_console
+#endif  // SWRI_CONSOLE_LOG_LIST_WIDGET_H_

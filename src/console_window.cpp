@@ -57,18 +57,24 @@ namespace swri_console {
 ConsoleWindow::ConsoleWindow(LogDatabase *db)
   :
   QMainWindow(),
-  db_(db),
-  db_proxy_(new LogDatabaseProxyModel(db))
+  db_(db)
 {
   ui.setupUi(this); 
 
   ui.sessionList->setDatabase(db);
   ui.nodeList->setDatabase(db);
+  ui.logList->setDatabase(db);
   
   QObject::connect(ui.sessionList,
                    SIGNAL(selectionChanged(const std::vector<int>&)),
                    ui.nodeList,
                    SLOT(setSessionFilter(const std::vector<int>&)));
+
+  QObject::connect(ui.sessionList,
+                   SIGNAL(selectionChanged(const std::vector<int>&)),
+                   ui.logList,
+                   SLOT(setSessionFilter(const std::vector<int>&)));
+
   
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
@@ -88,14 +94,14 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.action_SaveLogs, SIGNAL(triggered(bool)),
                    this, SLOT(saveLogs()));
 
-  QObject::connect(ui.action_AbsoluteTimestamps, SIGNAL(toggled(bool)),
-                   db_proxy_, SLOT(setAbsoluteTime(bool)));
+  // QObject::connect(ui.action_AbsoluteTimestamps, SIGNAL(toggled(bool)),
+  //                  db_proxy_, SLOT(setAbsoluteTime(bool)));
 
-  QObject::connect(ui.action_ShowTimestamps, SIGNAL(toggled(bool)),
-                   db_proxy_, SLOT(setDisplayTime(bool)));
+  // QObject::connect(ui.action_ShowTimestamps, SIGNAL(toggled(bool)),
+  //                  db_proxy_, SLOT(setDisplayTime(bool)));
 
-  QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
-                   db_proxy_, SLOT(setUseRegularExpressions(bool)));
+  // QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
+  //                  db_proxy_, SLOT(setUseRegularExpressions(bool)));
 
   QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
                    this, SLOT(updateIncludeLabel()));
@@ -106,8 +112,8 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.action_SelectFont, SIGNAL(triggered(bool)),
                    this, SIGNAL(selectFont()));
 
-  QObject::connect(ui.action_ColorizeLogs, SIGNAL(toggled(bool)),
-                   db_proxy_, SLOT(setColorizeLogs(bool)));
+  // QObject::connect(ui.action_ColorizeLogs, SIGNAL(toggled(bool)),
+  //                  db_proxy_, SLOT(setColorizeLogs(bool)));
 
   QObject::connect(ui.debugColorWidget, SIGNAL(clicked(bool)),
                    this, SLOT(setDebugColor()));
@@ -119,9 +125,6 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    this, SLOT(setErrorColor()));
   QObject::connect(ui.fatalColorWidget, SIGNAL(clicked(bool)),
                    this, SLOT(setFatalColor()));
-
-  ui.messageList->setModel(db_proxy_);
-  ui.messageList->setUniformItemSizes(true);
 
   QObject::connect(
     ui.checkDebug, SIGNAL(toggled(bool)),
@@ -138,24 +141,24 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(
     ui.checkFatal, SIGNAL(toggled(bool)),
     this, SLOT(setSeverityFilter()));
-  QObject::connect(
-    db_proxy_, SIGNAL(messagesAdded()),
-    this, SLOT(messagesAdded()));
+  // QObject::connect(
+  //   db_proxy_, SIGNAL(messagesAdded()),
+  //   this, SLOT(messagesAdded()));
   QObject::connect(ui.checkFollowNewest, SIGNAL(toggled(bool)),
                    this, SLOT(setFollowNewest(bool)));
 
   // Right-click menu for the message list
-  QObject::connect(ui.messageList, SIGNAL(customContextMenuRequested(const QPoint&)),
-                    this, SLOT(showLogContextMenu(const QPoint&)));
+  // QObject::connect(ui.messageList, SIGNAL(customContextMenuRequested(const QPoint&)),
+  //                   this, SLOT(showLogContextMenu(const QPoint&)));
 
   QObject::connect(ui.clearAllButton, SIGNAL(clicked()),
                     this, SLOT(clearAll()));
   QObject::connect(ui.clearMessagesButton, SIGNAL(clicked()),
                     this, SLOT(clearMessages()));
 
-  QObject::connect(
-    ui.messageList->verticalScrollBar(), SIGNAL(valueChanged(int)),
-    this, SLOT(userScrolled(int)));
+  // QObject::connect(
+  //   ui.messageList->verticalScrollBar(), SIGNAL(valueChanged(int)),
+  //   this, SLOT(userScrolled(int)));
 
   QObject::connect(
     ui.includeText, SIGNAL(textChanged(const QString &)),
@@ -180,7 +183,6 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
 
 ConsoleWindow::~ConsoleWindow()
 {
-  delete db_proxy_;
 }
 
 void ConsoleWindow::clearAll()
@@ -202,7 +204,7 @@ void ConsoleWindow::saveLogs()
                                                   QDir::homePath() + QDir::separator() + defaultname,
                                                   tr("Bag Files (*.bag);;Text Files (*.txt)"));
   if (filename != NULL && !filename.isEmpty()) {
-    db_proxy_->saveToFile(filename);
+    // db_proxy_->saveToFile(filename);
   }
 }
 
@@ -268,51 +270,51 @@ void ConsoleWindow::setSeverityFilter()
   settings.setValue(SettingsKeys::SHOW_ERROR, ui.checkError->isChecked());
   settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
 
-  db_proxy_->setSeverityFilter(mask);
+  // db_proxy_->setSeverityFilter(mask);
 }
 
 void ConsoleWindow::messagesAdded()
 {
-  if (ui.checkFollowNewest->isChecked()) {
-    ui.messageList->scrollToBottom();
-  }
+  // if (ui.checkFollowNewest->isChecked()) {
+  //   ui.messageList->scrollToBottom();
+  // }
 }
 
 
 void ConsoleWindow::showLogContextMenu(const QPoint& point)
 {
-  QMenu contextMenu(tr("Context menu"), ui.messageList);
+  // QMenu contextMenu(tr("Context menu"), ui.messageList);
 
-  QAction select_all(tr("Select All"), ui.messageList);
-  connect(&select_all, SIGNAL(triggered()), this, SLOT(selectAllLogs()));
+  // QAction select_all(tr("Select All"), ui.messageList);
+  // connect(&select_all, SIGNAL(triggered()), this, SLOT(selectAllLogs()));
 
-  QAction copy(tr("Copy"), ui.messageList);
-  connect(&copy, SIGNAL(triggered()), this, SLOT(copyLogs()));
+  // QAction copy(tr("Copy"), ui.messageList);
+  // connect(&copy, SIGNAL(triggered()), this, SLOT(copyLogs()));
 
-  QAction copy_extended(tr("Copy Extended"), ui.messageList);
-  connect(&copy_extended, SIGNAL(triggered()), this, SLOT(copyExtendedLogs()));
+  // QAction copy_extended(tr("Copy Extended"), ui.messageList);
+  // connect(&copy_extended, SIGNAL(triggered()), this, SLOT(copyExtendedLogs()));
 
-  QAction alternate_row_colors(tr("Alternate Row Colors"), ui.messageList);
-  alternate_row_colors.setCheckable(true);
-  alternate_row_colors.setChecked(ui.messageList->alternatingRowColors());
-  connect(&alternate_row_colors, SIGNAL(toggled(bool)),
-          this, SLOT(toggleAlternateRowColors(bool)));
+  // QAction alternate_row_colors(tr("Alternate Row Colors"), ui.messageList);
+  // alternate_row_colors.setCheckable(true);
+  // alternate_row_colors.setChecked(ui.messageList->alternatingRowColors());
+  // connect(&alternate_row_colors, SIGNAL(toggled(bool)),
+  //         this, SLOT(toggleAlternateRowColors(bool)));
             
-  contextMenu.addAction(&select_all);
-  contextMenu.addAction(&copy);
-  contextMenu.addAction(&copy_extended);
-  contextMenu.addAction(&alternate_row_colors);
+  // contextMenu.addAction(&select_all);
+  // contextMenu.addAction(&copy);
+  // contextMenu.addAction(&copy_extended);
+  // contextMenu.addAction(&alternate_row_colors);
 
-  contextMenu.exec(ui.messageList->mapToGlobal(point));
+  // contextMenu.exec(ui.messageList->mapToGlobal(point));
 }
 
 void ConsoleWindow::userScrolled(int value)
 {
-  if (value != ui.messageList->verticalScrollBar()->maximum()) {
-    ui.checkFollowNewest->setChecked(false);
-  } else {
-    ui.checkFollowNewest->setChecked(true);
-  }
+  // if (value != ui.messageList->verticalScrollBar()->maximum()) {
+  //   ui.checkFollowNewest->setChecked(false);
+  // } else {
+  //   ui.checkFollowNewest->setChecked(true);
+  // }
 }
 
 
@@ -327,22 +329,22 @@ void ConsoleWindow::selectAllLogs()
 
 void ConsoleWindow::copyLogs()
 {
-  QStringList buffer;
-  foreach(const QModelIndex &index, ui.messageList->selectionModel()->selectedIndexes())
-  {
-    buffer << db_proxy_->data(index, Qt::DisplayRole).toString();
-  }
-  QApplication::clipboard()->setText(buffer.join(tr("\n")));
+  // QStringList buffer;
+  // foreach(const QModelIndex &index, ui.messageList->selectionModel()->selectedIndexes())
+  // {
+  //   // buffer << db_proxy_->data(index, Qt::DisplayRole).toString();
+  // }
+  // QApplication::clipboard()->setText(buffer.join(tr("\n")));
 }
 
 void ConsoleWindow::copyExtendedLogs()
 {
-  QStringList buffer;
-  foreach(const QModelIndex &index, ui.messageList->selectionModel()->selectedIndexes())
-  {
-    buffer << db_proxy_->data(index, LogDatabaseProxyModel::ExtendedLogRole).toString();
-  }
-  QApplication::clipboard()->setText(buffer.join(tr("\n\n")));
+  // QStringList buffer;
+  // foreach(const QModelIndex &index, ui.messageList->selectionModel()->selectedIndexes())
+  // {
+  //   // buffer << db_proxy_->data(index, LogDatabaseProxyModel::ExtendedLogRole).toString();
+  // }
+  // QApplication::clipboard()->setText(buffer.join(tr("\n\n")));
 }
 
 void ConsoleWindow::setFollowNewest(bool follow)
@@ -363,8 +365,8 @@ void ConsoleWindow::includeFilterUpdated(const QString &text)
     }
   }
 
-  db_proxy_->setIncludeFilters(filtered);
-  db_proxy_->setIncludeRegexpPattern(text);
+  // db_proxy_->setIncludeFilters(filtered);
+  // db_proxy_->setIncludeRegexpPattern(text);
   updateIncludeLabel();
 }
 
@@ -380,33 +382,33 @@ void ConsoleWindow::excludeFilterUpdated(const QString &text)
     }
   }
 
-  db_proxy_->setExcludeFilters(filtered);
-  db_proxy_->setExcludeRegexpPattern(text);
+  // db_proxy_->setExcludeFilters(filtered);
+  // db_proxy_->setExcludeRegexpPattern(text);
   updateExcludeLabel();
 }
 
 
 void ConsoleWindow::updateIncludeLabel()
 {
-  if (db_proxy_->isIncludeValid()) {
-    ui.includeLabel->setText("Include");
-  } else {
-    ui.includeLabel->setText("<font color='red'>Include</font>");
-  }
+  // if (db_proxy_->isIncludeValid()) {
+  //   ui.includeLabel->setText("Include");
+  // } else {
+  //   ui.includeLabel->setText("<font color='red'>Include</font>");
+  // }
 }
 
 void ConsoleWindow::updateExcludeLabel()
 {
-  if (db_proxy_->isExcludeValid()) {
-    ui.excludeLabel->setText("Exclude");
-  } else {
-    ui.excludeLabel->setText("<font color='red'>Exclude</font>");
-  }
+  // if (db_proxy_->isExcludeValid()) {
+  //   ui.excludeLabel->setText("Exclude");
+  // } else {
+  //   ui.excludeLabel->setText("<font color='red'>Exclude</font>");
+  // }
 }
 
 void ConsoleWindow::setFont(const QFont &font)
 {
-  ui.messageList->setFont(font);
+  // ui.messageList->setFont(font);
   // ui.nodeList->setFont(font);
 }
 
@@ -464,24 +466,24 @@ void ConsoleWindow::updateButtonColor(QPushButton* widget, const QColor& color)
   widget->setStyleSheet(s);
   widget->update();
 
-  if (widget == ui.debugColorWidget) {
-    db_proxy_->setDebugColor(color);
-  }
-  else if (widget == ui.infoColorWidget) {
-    db_proxy_->setInfoColor(color);
-  }
-  else if (widget == ui.warnColorWidget) {
-    db_proxy_->setWarnColor(color);
-  }
-  else if (widget == ui.errorColorWidget) {
-    db_proxy_->setErrorColor(color);
-  }
-  else if (widget == ui.fatalColorWidget) {
-    db_proxy_->setFatalColor(color);
-  }
-  else {
-    qWarning("Unexpected widget passed to ConsoleWindow::updateButtonColor.");
-  }
+  // if (widget == ui.debugColorWidget) {
+  //   db_proxy_->setDebugColor(color);
+  // }
+  // else if (widget == ui.infoColorWidget) {
+  //   db_proxy_->setInfoColor(color);
+  // }
+  // else if (widget == ui.warnColorWidget) {
+  //   db_proxy_->setWarnColor(color);
+  // }
+  // else if (widget == ui.errorColorWidget) {
+  //   db_proxy_->setErrorColor(color);
+  // }
+  // else if (widget == ui.fatalColorWidget) {
+  //   db_proxy_->setFatalColor(color);
+  // }
+  // else {
+  //   qWarning("Unexpected widget passed to ConsoleWindow::updateButtonColor.");
+  // }
 }
 
 void ConsoleWindow::loadColorButtonSetting(const QString& key, QPushButton* button)
@@ -511,7 +513,7 @@ void ConsoleWindow::loadColorButtonSetting(const QString& key, QPushButton* butt
 
 void ConsoleWindow::toggleAlternateRowColors(bool checked)
 {
-  ui.messageList->setAlternatingRowColors(checked);
+  // ui.messageList->setAlternatingRowColors(checked);
 
   QSettings settings;
   settings.setValue(SettingsKeys::ALTERNATE_LOG_ROW_COLORS, checked);
@@ -555,8 +557,8 @@ void ConsoleWindow::loadSettings()
   QString excludeFilter = settings.value(SettingsKeys::EXCLUDE_FILTER, "").toString();
   ui.excludeText->setText(excludeFilter);
 
-  bool alternate_row_colors = settings.value(SettingsKeys::ALTERNATE_LOG_ROW_COLORS, true).toBool();
-  ui.messageList->setAlternatingRowColors(alternate_row_colors);
+  // bool alternate_row_colors = settings.value(SettingsKeys::ALTERNATE_LOG_ROW_COLORS, true).toBool();
+  // ui.messageList->setAlternatingRowColors(alternate_row_colors);
 }
 
 void ConsoleWindow::promptForBagFile()

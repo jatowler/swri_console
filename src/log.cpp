@@ -27,44 +27,14 @@
 // DAMAGE.
 //
 // *****************************************************************************
+#include <swri_console/log.h>
 #include <swri_console/session.h>
-#include <swri_console/log_database.h>
 
 namespace swri_console
 {
-Session::Session()
-  :
-  id_(-1),
-  name_("__uninitialized__"),
-  db_(NULL),
-  min_time_(ros::TIME_MAX)
-{  
-}
-
-Session::~Session()
+QStringList Log::textLines() const
 {
-}
-
-void Session::append(const rosgraph_msgs::LogConstPtr &msg)
-{  
-  int nid = db_->lookupNode(msg->name);
-  node_log_counts_[nid]++;
-
-  LogData data;
-  data.stamp = msg->header.stamp;
-  data.level = msg->level;
-  data.node_id = nid;
-  data.file = QString::fromStdString(msg->file);
-  data.function = QString::fromStdString(msg->function);
-  data.line = msg->line;
- 
-  QStringList text = QString(msg->msg.c_str()).split('\n');
-  // Remove empty lines from the back.
-  while(text.size() && text.back().isEmpty()) { text.pop_back(); }
-  // Remove empty lines from the front.
-  while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
-  data.text_lines = text;
-
-  log_data_.push_back(data);
+  if (!session_) { return QStringList(); }
+  return session_->log_data_[index_].text_lines;
 }
 }  // namespace swri_console
