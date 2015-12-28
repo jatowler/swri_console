@@ -56,6 +56,7 @@ file (GLOB SRC_FILES
   include/swri_console/log_database.h
   include/swri_console/log_database_proxy_model.h
   include/swri_console/node_list_model.h
+  include/swri_console/node_list_widget.h
   include/swri_console/ros_source.h
   include/swri_console/ros_source_backend.h
   include/swri_console/session_list_delegate.h
@@ -73,6 +74,7 @@ file (GLOB SRC_FILES
   src/log_database_proxy_model.cpp
   src/main.cpp
   src/node_list_model.cpp
+  src/node_list_widget.cpp
   src/register_meta_types.cpp 
   src/ros_source.cpp
   src/ros_source_backend.cpp

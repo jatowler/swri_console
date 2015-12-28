@@ -37,7 +37,7 @@ Session::Session()
   id_(-1),
   name_("__uninitialized__"),
   db_(NULL),
-  log_count_(0),
+  total_log_count_(0),
   min_time_(ros::TIME_MAX)
 {  
 }
@@ -47,7 +47,9 @@ Session::~Session()
 }
 
 void Session::append(const rosgraph_msgs::LogConstPtr &msg)
-{
-  log_count_++;
+{  
+  int nid = db_->lookupNode(msg->name);
+  node_log_counts_[nid]++;
+  total_log_count_++;
 }
 }  // namespace swri_console

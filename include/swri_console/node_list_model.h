@@ -44,25 +44,32 @@ class NodeListModel : public QAbstractListModel
   Q_OBJECT
   
  public:
-  NodeListModel(LogDatabase* db);
+  NodeListModel(QObject *parent=0);
   ~NodeListModel();
 
-  std::string nodeName(const QModelIndex &index) const;
+  void setDatabase(LogDatabase *db);  
+
+  int nodeId(const QModelIndex &index) const;
   
   virtual int rowCount(const QModelIndex &parent) const;
   virtual QVariant data(const QModelIndex &index, int role) const;
 
  public Q_SLOTS:
-  void clear();
-                                                                 
+  void setSessionFilter(const std::vector<int> &sids);
+    
  private Q_SLOTS:
-  void handleDatabaseCleared();
+  void handleNodeAdded(int nid);  
   
  private:
   LogDatabase *db_;
-  
-  std::map<std::string, size_t> data_;
-  std::vector<std::string> ordering_;
+  std::vector<int> nodes_;
+
+  // A list of session ids that are used to calculate the current
+  // message counts.
+  std::vector<int> filter_sids_;
+
+  std::vector<int> msg_count_cache_;
+  void updateCountCache();
 
   void timerEvent(QTimerEvent *);
 };

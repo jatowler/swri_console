@@ -28,110 +28,127 @@
 //
 // *****************************************************************************
 
-#include <stdio.h>
+#include <swri_console/node_list_model.h>
+
 #include <vector>
 
-#include <swri_console/node_list_model.h>
 #include <swri_console/log_database.h>
 
 namespace swri_console
 {
-NodeListModel::NodeListModel(LogDatabase *db)
+NodeListModel::NodeListModel(QObject *parent)
   :
-  db_(db)
+  QAbstractListModel(parent),
+  db_(NULL)
 {
-  QObject::connect(db_, SIGNAL(databaseCleared()),
-                   this, SLOT(handleDatabaseCleared()));
-
-  startTimer(20);
 }
 
 NodeListModel::~NodeListModel()
 {
 }
 
-int NodeListModel::rowCount(const QModelIndex &parent) const
+void NodeListModel::setDatabase(LogDatabase *db)
 {
-  return ordering_.size();
-}
-
-std::string NodeListModel::nodeName(const QModelIndex &index) const
-{
-  if (index.parent().isValid() ||
-      static_cast<size_t>(index.row()) > ordering_.size()) {
-    return "";
+  if (db_) {
+    // We can implement this, just don't have a use case currently.
+    qWarning("NodeListModel: Cannot change the database.");
+    return;
   }
 
-  return ordering_[index.row()];
+  db_ = db;
+  
+  QObject::connect(db_, SIGNAL(nodeAdded(int)),
+                   this, SLOT(handleNodeAdded(int)));
+
+  beginResetModel();
+  nodes_ = db_->nodeIds();
+  updateCountCache();
+  endResetModel();
+  
+  startTimer(20);
+}
+
+int NodeListModel::nodeId(const QModelIndex &index) const
+{
+  if (index.parent().isValid() || index.row() > nodes_.size()) {
+    return -1;
+  }
+
+  return nodes_[index.row()];
+}
+
+int NodeListModel::rowCount(const QModelIndex &parent) const
+{
+  return nodes_.size();
 }
 
 QVariant NodeListModel::data(const QModelIndex &index, int role) const
 {
-  if (index.parent().isValid() ||
-      static_cast<size_t>(index.row()) > ordering_.size()) {
+  if (index.parent().isValid() || index.row() > nodes_.size()) {
     return QVariant();
   } 
 
-  std::string name = ordering_[index.row()];
-  
+  int nid = nodes_[index.row()];
+  int count = msg_count_cache_[index.row()];
+
   if (role == Qt::DisplayRole) {
-    char buffer[1023];
-    snprintf(buffer, sizeof(buffer), "%s (%lu)",
-             name.c_str(),
-             data_.find(name)->second);
-    return QVariant(QString(buffer));
+    return QString("%1 (%2)")
+      .arg(db_->nodeName(nid))
+      .arg(count);
+  } else if (role == Qt::ForegroundRole) {
+    if (count == 0) {
+      // Un-emphasize nodes with no messages.
+      return Qt::gray;
+    } else {
+      // Use default color
+      return QVariant();
+    }
   }
-
-  return QVariant();
+    
+    return QVariant();
 }
 
-void NodeListModel::clear()
+void NodeListModel::handleNodeAdded(int nid)
 {
-  if (ordering_.empty()) {
-    return;
-  }
-  beginRemoveRows(QModelIndex(), 0, ordering_.size()-1);
-  data_.clear();
-  ordering_.clear();
-  endRemoveRows();
-}
-
-void NodeListModel::handleDatabaseCleared()
-{
-  // When the database is cleared, we reset all of the counts to zero
-  // instead of deleting them from the list.  This allows a user to
-  // clear out the logs while retaining their node selection so that
-  // they can easily reset the data without having to choose the
-  // selection again.  
-  std::map<std::string, size_t>::iterator iter;
-  for (iter = data_.begin(); iter != data_.end(); ++iter) {
-    (*iter).second = 0;
+  std::vector<int> new_nodes = db_->nodeIds();
+  for (size_t i = 0; i < new_nodes.size(); i++) {
+    if (new_nodes[i] == nid) {
+      beginInsertRows(QModelIndex(), i, i);
+      nodes_.swap(new_nodes);
+      updateCountCache();
+      endInsertRows();
+      return;
+    }
   }
 
-  Q_EMIT dataChanged(index(0), index(data_.size()-1));
+  qWarning("Missing NID error in NodeListModel::handleNodeAdded (%d)", nid);
 }
+
 
 void NodeListModel::timerEvent(QTimerEvent*)
 {
-  const std::map<std::string, size_t> &msg_counts = db_->messageCounts();
-  
-  size_t i = 0;
-  for (std::map<std::string, size_t>::const_iterator it = msg_counts.begin();
-       it != msg_counts.end();
-       ++it)
-  {
-    if (!data_.count(it->first)) {
-      beginInsertRows(QModelIndex(), i, i);
-      data_[it->first] = it->second;
-      ordering_.insert(ordering_.begin() + i, it->first);
-      endInsertRows();
-    } else {
-      data_[it->first] = it->second;
+  updateCountCache();
+  Q_EMIT dataChanged(index(0), index(nodes_.size()-1));
+}
+
+void NodeListModel::setSessionFilter(const std::vector<int> &sids)
+{
+  filter_sids_ = sids;
+  updateCountCache();
+  Q_EMIT dataChanged(index(0), index(nodes_.size()-1));
+}
+
+void NodeListModel::updateCountCache()
+{
+  msg_count_cache_.resize(nodes_.size());
+  for (size_t i = 0; i < nodes_.size(); i++) {
+    const int nid = nodes_[i];
+    int count = 0;
+    for (const int sid : filter_sids_) {
+      count += db_->session(sid).nodeLogCount(nid);
     }
-    i++;
-  }
-  
-  Q_EMIT dataChanged(index(0),
-                     index(ordering_.size()-1));
+    msg_count_cache_[i] = count;
+  }    
 }
 }  // namespace swri_console
+

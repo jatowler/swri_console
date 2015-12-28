@@ -41,7 +41,6 @@ namespace swri_console
 {
 class LogDatabase;
 class LogDatabaseProxyModel;
-class NodeListModel;
 class ConsoleWindow : public QMainWindow {
   Q_OBJECT
   
@@ -109,7 +108,6 @@ private:
   Ui::ConsoleWindow ui;
   LogDatabase *db_;
   LogDatabaseProxyModel *db_proxy_;
-  NodeListModel *node_list_model_;
 
   QLabel *connection_status_;
 };  // class ConsoleWindow

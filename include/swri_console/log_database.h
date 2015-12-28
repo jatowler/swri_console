@@ -78,9 +78,13 @@ class LogDatabase : public QObject
   const Session& session(int sid) const;
   const std::vector<int>& sessionIds() const { return session_ids_; }
 
+  int lookupNode(const std::string &name);
+  QString nodeName(int nid) const;
+  const std::vector<int>& nodeIds() const { return node_ids_; }
+  
  Q_SIGNALS:
   void databaseCleared();
-  void minTimeUpdated();
+  void minTimeUpdated();  
 
   // We get to add all these awesome signals to deal with Qt's Model/View.
   void sessionAdded(int sid);
@@ -88,6 +92,8 @@ class LogDatabase : public QObject
   void sessionRenamed(int sid);
   void sessionMoved(int sid);
 
+  void nodeAdded(int nid);
+  
  private:
   std::map<std::string, size_t> msg_counts_;
   std::deque<LogEntry> log_;
@@ -98,6 +104,10 @@ class LogDatabase : public QObject
   std::vector<int> session_ids_;
   // Persistent invalid session for methods that return references.
   mutable Session invalid_session_;
+  
+  std::unordered_map<int, QString> node_name_from_id_;
+  std::map<std::string, int> node_id_from_name_;
+  std::vector<int> node_ids_;
 
   friend class Session;
 };  // class LogDatabase

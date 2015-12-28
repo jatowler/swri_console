@@ -27,7 +27,7 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/session_list_widget.h>
+#include <swri_console/node_list_widget.h>
 
 #include <algorithm>
 #include <set>
@@ -37,27 +37,20 @@
 #include <QDebug>
 
 #include <swri_console/log_database.h>
-#include <swri_console/session_list_model.h>
-#include <swri_console/session_list_delegate.h>
+#include <swri_console/node_list_model.h>
 
 namespace swri_console
 {
-SessionListWidget::SessionListWidget(QWidget *parent)
+NodeListWidget::NodeListWidget(QWidget *parent)
   :
   QWidget(parent),
   db_(NULL)
 {
-  model_ = new SessionListModel(this);
+  model_ = new NodeListModel(this);
   
   list_view_ = new QListView(this);
-  list_view_->setItemDelegate(new SessionListDelegate(this));
   list_view_->setModel(model_);
   list_view_->setFont(QFont("Ubuntu Mono", 9));
-  
-  list_view_->setContextMenuPolicy(Qt::CustomContextMenu);
-  
-  list_view_->setDragDropMode(QAbstractItemView::InternalMove);
-  list_view_->setDropIndicatorShown(true);
 
   list_view_->setSelectionBehavior(QAbstractItemView::SelectItems);
   list_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);  
@@ -74,15 +67,15 @@ SessionListWidget::SessionListWidget(QWidget *parent)
     SLOT(handleViewSelectionChanged()));
 }
 
-SessionListWidget::~SessionListWidget()
+NodeListWidget::~NodeListWidget()
 {
 }
 
-void SessionListWidget::setDatabase(LogDatabase *db)
+void NodeListWidget::setDatabase(LogDatabase *db)
 {
   if (db_) {
     // We can implement this if needed, just don't have a current use case.
-    qWarning("SessionListWidget: Cannot change the log database.");
+    qWarning("NodeListWidget: Cannot change the log database.");
     return;
   }
 
@@ -90,24 +83,30 @@ void SessionListWidget::setDatabase(LogDatabase *db)
   model_->setDatabase(db_);
 }
 
-void SessionListWidget::handleViewSelectionChanged()
+void NodeListWidget::setSessionFilter(const std::vector<int> &sids)
+{
+  model_->setSessionFilter(sids);
+}
+
+void NodeListWidget::handleViewSelectionChanged()
 {
   QModelIndexList selected = list_view_->selectionModel()->selection().indexes();
 
-  // We're sorting the selection to be in the same order as the layout
-  // in the list because that was the ordering is always visually
-  // consistent.  Users can reorder the session with drag & drop to
-  // change the layout.
+  // I'm sorting these just to be consistent with how things are done
+  // in the session widget, but it really shouldn't matter here
+  // because this selection is just used to filter the logs and has no
+  // bearing on the log ordering.
   std::sort(selected.begin(), selected.end(),
             [](const QModelIndex &a, const QModelIndex &b) {
               return a.row() < b.row();
             });
 
-  selected_sids_.resize(selected.size());  
+  selected_nids_.resize(selected.size());  
   for (int i = 0; i < selected.size(); i++) {
-    selected_sids_[i] = model_->sessionId(selected[i]);
+    selected_nids_[i] = model_->nodeId(selected[i]);
   }
 
-  Q_EMIT selectionChanged(selected_sids_);
+  Q_EMIT selectionChanged(selected_nids_);
 }
+
 }  // namespace swri_console

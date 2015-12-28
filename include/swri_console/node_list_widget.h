@@ -27,42 +27,49 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#ifndef SWRI_CONSOLE_SESSION_H_
-#define SWRI_CONSOLE_SESSION_H_
+#ifndef SWRI_CONSOLE_NODE_LIST_WIDGET_H_
+#define SWRI_CONSOLE_NODE_LIST_WIDGET_H_
+
+#include <QWidget>
 
 #include <unordered_map>
-#include <QString>
 
-#include <ros/time.h>
-#include <rosgraph_msgs/Log.h>
+QT_BEGIN_NAMESPACE
+class QListView;
+QT_END_NAMESPACE
 
 namespace swri_console
 {
 class LogDatabase;
-class Session
+class NodeListModel;
+class NodeListWidget : public QWidget
 {
+  Q_OBJECT;
+
  public:
-  int id_;
-  QString name_;
+  NodeListWidget(QWidget *parent=0);
+  ~NodeListWidget();
+
+  void setDatabase(LogDatabase *db);
+
+  const std::vector<int>& selectedIds() const { return selected_nids_; }
+
+ Q_SIGNALS:
+  void selectionChanged(const std::vector<int> &nids);
+
+ public Q_SLOTS:
+  void setSessionFilter(const std::vector<int> &sids);
+
+ private Q_SLOTS:
+  void handleViewSelectionChanged();
+
+ private:
   LogDatabase *db_;
+  NodeListModel *model_;
+  QListView *list_view_;
 
-  ros::Time min_time_;
-
-  size_t total_log_count_;
-  std::unordered_map<int, size_t> node_log_counts_;
+  std::vector<int> selected_nids_;
   
-  friend class LogDatabase;
-  
- public:
-  Session();
-  ~Session();
-
-  void append(const rosgraph_msgs::LogConstPtr &msg);
-
-  bool isValid() const { return id_ >= 0; }
-  const QString& name() const { return name_; }
-  const size_t totalLogCount() const { return total_log_count_; }
-  const size_t nodeLogCount(int nid) const { return node_log_counts_.count(nid) ? node_log_counts_.at(nid) : 0; }
-};  // class Session
+};  // class NodeListWidget
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_SESSION_H_
+#endif  // SWRI_CONSOLE_NODE_LIST_WIDGET_H_

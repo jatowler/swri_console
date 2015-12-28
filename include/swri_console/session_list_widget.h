@@ -51,11 +51,21 @@ class SessionListWidget : public QWidget
   ~SessionListWidget();
 
   void setDatabase(LogDatabase *db);
+  
+  const std::vector<int>& selectedIds() const { return selected_sids_; }
 
+ Q_SIGNALS:
+  void selectionChanged(const std::vector<int> &sids);
+
+ private Q_SLOTS:
+  void handleViewSelectionChanged();
+  
  private:
   LogDatabase *db_;
   SessionListModel *model_;
   QListView *list_view_;
+
+  std::vector<int> selected_sids_;
 };  // class SessionListWidget
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_SESSION_LIST_WIDGET_H_

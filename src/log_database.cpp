@@ -30,6 +30,8 @@
 #include <swri_console/log_database.h>
 #include <swri_console/session.h>
 
+#include <QDebug>
+
 namespace swri_console
 {
 LogDatabase::LogDatabase()
@@ -162,6 +164,39 @@ const Session& LogDatabase::session(int sid) const
   qWarning("Request for invalid session %d", sid);
   invalid_session_ = Session();
   return invalid_session_;
+}
+
+int LogDatabase::lookupNode(const std::string &name)
+{
+  if (node_id_from_name_.count(name) == 0) {    
+    int nid = node_name_from_id_.size();
+    while (node_name_from_id_.count(nid) != 0) { nid++; }
+
+    node_name_from_id_[nid] = QString::fromStdString(name);
+    node_id_from_name_[name] = nid;
+
+    // Rebuild the node id vector from the map.  We're using the fact
+    // that std::map orders it's keys to get the node names in
+    // alphabetical order. 
+    node_ids_.clear();
+    for (auto const &it : node_id_from_name_) {
+      node_ids_.push_back(it.second);
+    }
+    
+    Q_EMIT nodeAdded(nid);
+  }
+
+  return node_id_from_name_.at(name);
+}
+
+QString LogDatabase::nodeName(int nid) const
+{
+  if (node_name_from_id_.count(nid)) {
+    return node_name_from_id_.at(nid);
+  }
+
+  qWarning("Request for invalid node %d", nid);
+  return QString("<invalid node %1").arg(nid);
 }
 
 

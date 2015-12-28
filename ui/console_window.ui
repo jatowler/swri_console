@@ -27,25 +27,15 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
          <widget class="QSplitter" name="splitter">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <widget class="swri_console::SessionListWidget" name="sessionListWidget" native="true"/>
-          <widget class="QListView" name="nodeList">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::ExtendedSelection</enum>
-           </property>
-          </widget>
+          <widget class="swri_console::SessionListWidget" name="sessionList" native="true"/>
+          <widget class="swri_console::NodeListWidget" name="nodeList" native="true"/>
          </widget>
         </item>
         <item>
@@ -273,7 +263,7 @@
      <x>0</x>
      <y>0</y>
      <width>1035</width>
-     <height>27</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -426,6 +416,12 @@
    <class>swri_console::SessionListWidget</class>
    <extends>QWidget</extends>
    <header location="global">swri_console/session_list_widget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>swri_console::NodeListWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">swri_console/node_list_widget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

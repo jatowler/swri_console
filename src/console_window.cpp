@@ -37,7 +37,6 @@
 #include <swri_console/console_window.h>
 #include <swri_console/log_database.h>
 #include <swri_console/log_database_proxy_model.h>
-#include <swri_console/node_list_model.h>
 #include <swri_console/settings_keys.h>
 
 #include <QColorDialog>
@@ -59,12 +58,17 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   :
   QMainWindow(),
   db_(db),
-  db_proxy_(new LogDatabaseProxyModel(db)),
-  node_list_model_(new NodeListModel(db))
+  db_proxy_(new LogDatabaseProxyModel(db))
 {
   ui.setupUi(this); 
 
-  ui.sessionListWidget->setDatabase(db);
+  ui.sessionList->setDatabase(db);
+  ui.nodeList->setDatabase(db);
+  
+  QObject::connect(ui.sessionList,
+                   SIGNAL(selectionChanged(const std::vector<int>&)),
+                   ui.nodeList,
+                   SLOT(setSessionFilter(const std::vector<int>&)));
   
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
@@ -116,16 +120,8 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.fatalColorWidget, SIGNAL(clicked(bool)),
                    this, SLOT(setFatalColor()));
 
-  ui.nodeList->setModel(node_list_model_);  
   ui.messageList->setModel(db_proxy_);
   ui.messageList->setUniformItemSizes(true);
-
-  QObject::connect(
-    ui.nodeList->selectionModel(),
-    SIGNAL(selectionChanged(const QItemSelection &,
-                                const QItemSelection &)),
-    this,
-    SLOT(nodeSelectionChanged()));
 
   QObject::connect(
     ui.checkDebug, SIGNAL(toggled(bool)),
@@ -190,7 +186,7 @@ ConsoleWindow::~ConsoleWindow()
 void ConsoleWindow::clearAll()
 {
   db_->clear();
-  node_list_model_->clear();
+  //node_list_model_->clear();
 }
 
 void ConsoleWindow::clearMessages()
@@ -226,23 +222,23 @@ void ConsoleWindow::closeEvent(QCloseEvent *event)
 
 void ConsoleWindow::nodeSelectionChanged()
 {
-  QModelIndexList selection = ui.nodeList->selectionModel()->selectedIndexes();
-  std::set<std::string> nodes;
-  QStringList node_names;
+  // QModelIndexList selection = ui.nodeList->selectionModel()->selectedIndexes();
+  // std::set<std::string> nodes;
+  // QStringList node_names;
 
-  for (int i = 0; i < selection.size(); i++) {
-    std::string name = node_list_model_->nodeName(selection[i]);
-    nodes.insert(name);
-    node_names.append(name.c_str());
-  }
+  // for (size_t i = 0; i < selection.size(); i++) {
+  //   std::string name = node_list_model_->nodeName(selection[i]);
+  //   nodes.insert(name);
+  //   node_names.append(name.c_str());
+  // }
 
-  db_proxy_->setNodeFilter(nodes);
+  // db_proxy_->setNodeFilter(nodes);
 
-  for (int i = 0; i < node_names.size(); i++) {
-    node_names[i] = node_names[i].split("/", QString::SkipEmptyParts).last();
-  }
+  // for (size_t i = 0; i < node_names.size(); i++) {
+  //   node_names[i] = node_names[i].split("/", QString::SkipEmptyParts).last();
+  // }
     
-  setWindowTitle(QString("SWRI Console (") + node_names.join(", ") + ")");
+  // setWindowTitle(QString("SWRI Console (") + node_names.join(", ") + ")");
 }
 
 void ConsoleWindow::setSeverityFilter()
@@ -322,11 +318,11 @@ void ConsoleWindow::userScrolled(int value)
 
 void ConsoleWindow::selectAllLogs()
 {
-  if (ui.nodeList->hasFocus()) {
-    ui.nodeList->selectAll();
-  } else {
-    ui.messageList->selectAll();
-  }
+  // if (ui.nodeList->hasFocus()) {
+  //   ui.nodeList->selectAll();
+  // } else {
+  //   ui.messageList->selectAll();
+  // }
 }
 
 void ConsoleWindow::copyLogs()
@@ -411,7 +407,7 @@ void ConsoleWindow::updateExcludeLabel()
 void ConsoleWindow::setFont(const QFont &font)
 {
   ui.messageList->setFont(font);
-  ui.nodeList->setFont(font);
+  // ui.nodeList->setFont(font);
 }
 
 void ConsoleWindow::setDebugColor()

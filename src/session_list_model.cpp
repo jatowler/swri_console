@@ -117,7 +117,7 @@ QVariant SessionListModel::data(const QModelIndex &index, int role) const
   if (role == Qt::DisplayRole) {
     return QString("%1 (%2)")
       .arg(session.name())
-      .arg(session.logCount());
+      .arg(session.totalLogCount());
   } else if (role == Qt::EditRole) {
     return session.name();
   } else {
