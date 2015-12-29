@@ -30,9 +30,11 @@
 #ifndef SWRI_CONSOLE_SESSION_LOG_FILTER_H_
 #define SWRI_CONSOLE_SESSION_LOG_FILTER_H_
 
+#include <vector>
 #include <unordered_set>
 
 #include <QObject>
+#include <QRegExp>
 
 namespace swri_console
 {
@@ -54,9 +56,15 @@ class LogFilter : public QObject
   void setNodeFilter(const std::vector<int> &nids);
   void setSeverityMask(uint8_t mask);
 
+  void setIncludeRegExp(const QRegExp &regexp);
+  void setExcludeRegExp(const QRegExp &regexp);
+
  private:
   std::unordered_set<int> nids_;
   uint8_t severity_mask_;
+
+  QRegExp include_regexp_;
+  QRegExp exclude_regexp_;
 };  // class LogFilter
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_SESSION_LOG_FILTER_H_

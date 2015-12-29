@@ -30,6 +30,8 @@
 #include <swri_console/log_filter.h>
 #include <swri_console/log.h>
 
+#include <QDebug>
+
 namespace swri_console
 {
 LogFilter::LogFilter(QObject *parent)
@@ -48,6 +50,16 @@ bool LogFilter::accept(const Log& log) const
   if (nids_.count(log.nodeId()) == 0) {
     return false;
   }
+
+  QString text = log.textSingleLine();
+
+  if (include_regexp_.indexIn(text) < 0) {
+    return false;
+  }
+
+  if (!exclude_regexp_.isEmpty() && exclude_regexp_.indexIn(text) >= 0) {
+    return false;
+  }
   
   return true;
 }
@@ -61,7 +73,22 @@ void LogFilter::setNodeFilter(const std::vector<int> &nids)
 
 void LogFilter::setSeverityMask(uint8_t mask)
 {
+  if (severity_mask_ == mask) { return; }
   severity_mask_ = mask;
+  Q_EMIT filterModified();
+}
+
+void LogFilter::setIncludeRegExp(const QRegExp &regexp)
+{
+  if (include_regexp_ == regexp) { return; }
+  include_regexp_ = regexp;
+  Q_EMIT filterModified();
+}
+
+void LogFilter::setExcludeRegExp(const QRegExp &regexp)
+{
+  if (exclude_regexp_ == regexp) { return; }
+  exclude_regexp_ = regexp;
   Q_EMIT filterModified();
 }
 }  // namespace swri_console

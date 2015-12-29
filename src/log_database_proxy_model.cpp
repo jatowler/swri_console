@@ -51,7 +51,6 @@ LogDatabaseProxyModel::LogDatabaseProxyModel(LogDatabase *db)
   colorize_logs_(true),
   display_time_(true),
   display_absolute_time_(false),
-  use_regular_expressions_(false),
   debug_color_(Qt::gray),
   info_color_(Qt::black),
   warn_color_(QColor(255,127,0)),
@@ -67,22 +66,6 @@ LogDatabaseProxyModel::LogDatabaseProxyModel(LogDatabase *db)
   // We're going to update the model on a timer instead of using
   // a new messages signal to limit the update rate.
   startTimer(20);
-}
-
-LogDatabaseProxyModel::~LogDatabaseProxyModel()
-{
-}
-
-void LogDatabaseProxyModel::setNodeFilter(const std::set<std::string> &names)
-{
-  names_ = names;
-  reset();
-}
-
-void LogDatabaseProxyModel::setSeverityFilter(uint8_t severity_mask)
-{
-  severity_mask_ = severity_mask;
-  reset();
 }
 
 void LogDatabaseProxyModel::setAbsoluteTime(bool absolute)
@@ -133,53 +116,6 @@ void LogDatabaseProxyModel::setDisplayTime(bool display)
   }
 }
 
-void LogDatabaseProxyModel::setUseRegularExpressions(bool useRegexps)
-{
-  if (useRegexps == use_regular_expressions_) {
-    return;
-  }
-
-  use_regular_expressions_ = useRegexps;
-  QSettings settings;
-  settings.setValue(SettingsKeys::USE_REGEXPS, useRegexps);
-  reset();
-}
-
-void LogDatabaseProxyModel::setIncludeFilters(
-  const QStringList &list)
-{
-  include_strings_ = list;
-  // The text and regexp filters are always updated at the same time, so this
-  // value will be saved by setIncludeRegexpPattern.
-  reset();
-}
-
-void LogDatabaseProxyModel::setExcludeFilters(
-  const QStringList &list)
-{
-  exclude_strings_ = list;
-  // The text and regexp filters are always updated at the same time, so this
-  // value will be saved by setExcludeRegexpPattern.
-  reset();
-}
-
-
-void LogDatabaseProxyModel::setIncludeRegexpPattern(const QString& pattern)
-{
-  include_regexp_.setPattern(pattern);
-  QSettings settings;
-  settings.setValue(SettingsKeys::INCLUDE_FILTER, pattern);
-  reset();
-}
-
-void LogDatabaseProxyModel::setExcludeRegexpPattern(const QString& pattern)
-{
-  exclude_regexp_.setPattern(pattern);
-  QSettings settings;
-  settings.setValue(SettingsKeys::EXCLUDE_FILTER, pattern);
-  reset();
-}
-
 void LogDatabaseProxyModel::setDebugColor(const QColor& debug_color)
 {
   debug_color_ = debug_color;
@@ -219,33 +155,6 @@ void LogDatabaseProxyModel::setFatalColor(const QColor& fatal_color)
   settings.setValue(SettingsKeys::FATAL_COLOR, fatal_color);
   reset();
 }
-
-int LogDatabaseProxyModel::rowCount(const QModelIndex &parent) const
-{
-  if (parent.isValid()) {
-    return 0;
-  }
-
-  return msg_mapping_.size();
-}
-
-
-bool LogDatabaseProxyModel::isIncludeValid() const
-{
-  if (use_regular_expressions_ && !include_regexp_.isValid()) {
-    return false;
-  }
-  return true;
-}
-
-bool LogDatabaseProxyModel::isExcludeValid() const
-{
-  if (use_regular_expressions_ && !exclude_regexp_.isValid()) {
-    return false;
-  }
-  return true;
-}
-
 
 QVariant LogDatabaseProxyModel::data(
   const QModelIndex &index, int role) const
@@ -475,52 +384,6 @@ void LogDatabaseProxyModel::handleDatabaseCleared()
   reset();
 }
 
-bool LogDatabaseProxyModel::acceptLogEntry(const LogEntry &item)
-{
-  if (!testIncludeFilter(item)) {
-    return false;
-  }
-
-  if (use_regular_expressions_) {
-    // For multi-line messages, we join the lines together with a
-    // space to make it easy for users to use filters that spread
-    // across the new lines.
-    
-    // Don't let an empty regexp filter out everything
-    return exclude_regexp_.isEmpty() || exclude_regexp_.indexIn(item.text.join(" ")) < 0;
-  } else {
-    for (int i = 0; i < exclude_strings_.size(); i++) {
-      if (item.text.join(" ").contains(exclude_strings_[i], Qt::CaseInsensitive)) {
-        return false;
-      }
-    }
-  }
-  
-  return true;
-}
-
-// Return true if the item message contains at least one of the
-// strings in include_filter_.  Always returns true if there are no
-// include strings.
-bool LogDatabaseProxyModel::testIncludeFilter(const LogEntry &item)
-{
-  if (use_regular_expressions_) {
-    return include_regexp_.indexIn(item.text.join(" ")) >= 0;
-  } else {
-    if (include_strings_.empty()) {
-      return true;
-    }
-
-    for (int i = 0; i < include_strings_.size(); i++) {
-      if (item.text.join(" ").contains(include_strings_[i], Qt::CaseInsensitive)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
 void LogDatabaseProxyModel::minTimeUpdated()
 {
   if (display_time_ &&
@@ -528,10 +391,5 @@ void LogDatabaseProxyModel::minTimeUpdated()
       && msg_mapping_.size()) {
     Q_EMIT dataChanged(index(0), index(msg_mapping_.size()));
   }  
-}
-
-void LogDatabaseProxyModel::timerEvent(QTimerEvent *)
-{
-  processNewMessages();
 }
 }  // namespace swri_console

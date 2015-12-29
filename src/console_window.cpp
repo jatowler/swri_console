@@ -50,6 +50,7 @@
 #include <QScrollBar>
 #include <QMenu>
 #include <QSettings>
+#include <QDebug>
 
 using namespace Qt;
 
@@ -105,15 +106,6 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   // QObject::connect(ui.action_ShowTimestamps, SIGNAL(toggled(bool)),
   //                  db_proxy_, SLOT(setDisplayTime(bool)));
 
-  // QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
-  //                  db_proxy_, SLOT(setUseRegularExpressions(bool)));
-
-  QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
-                   this, SLOT(updateIncludeLabel()));
-
-  QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
-                   this, SLOT(updateExcludeLabel()));
-
   QObject::connect(ui.action_SelectFont, SIGNAL(triggered(bool)),
                    this, SIGNAL(selectFont()));
 
@@ -163,14 +155,14 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.clearMessagesButton, SIGNAL(clicked()),
                     this, SLOT(clearMessages()));
 
-  QObject::connect(
-    ui.includeText, SIGNAL(textChanged(const QString &)),
-    this, SLOT(includeFilterUpdated(const QString &)));
+  QObject::connect(ui.includeText, SIGNAL(textEdited(const QString &)),
+                   this, SLOT(processFilterText()));
+  QObject::connect(ui.excludeText, SIGNAL(textEdited(const QString &)),
+                   this, SLOT(processFilterText()));
+  QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
+                   this, SLOT(processFilterText()));
 
-  QObject::connect(
-    ui.excludeText, SIGNAL(textChanged(const QString &)),
-    this, SLOT(excludeFilterUpdated(const QString &)));
-
+  
   QList<int> sizes;
   sizes.append(100);
   sizes.append(1000);
@@ -326,59 +318,6 @@ void ConsoleWindow::copyExtendedLogs()
   // QApplication::clipboard()->setText(buffer.join(tr("\n\n")));
 }
 
-void ConsoleWindow::includeFilterUpdated(const QString &text)
-{
-  QStringList items = text.split(";", QString::SkipEmptyParts);
-  QStringList filtered;
-  
-  for (int i = 0; i < items.size(); i++) {
-    QString x = items[i].trimmed();
-    if (!x.isEmpty()) {
-      filtered.append(x);
-    }
-  }
-
-  // db_proxy_->setIncludeFilters(filtered);
-  // db_proxy_->setIncludeRegexpPattern(text);
-  updateIncludeLabel();
-}
-
-void ConsoleWindow::excludeFilterUpdated(const QString &text)
-{
-  QStringList items = text.split(";", QString::SkipEmptyParts);
-  QStringList filtered;
-  
-  for (int i = 0; i < items.size(); i++) {
-    QString x = items[i].trimmed();
-    if (!x.isEmpty()) {
-      filtered.append(x);
-    }
-  }
-
-  // db_proxy_->setExcludeFilters(filtered);
-  // db_proxy_->setExcludeRegexpPattern(text);
-  updateExcludeLabel();
-}
-
-
-void ConsoleWindow::updateIncludeLabel()
-{
-  // if (db_proxy_->isIncludeValid()) {
-  //   ui.includeLabel->setText("Include");
-  // } else {
-  //   ui.includeLabel->setText("<font color='red'>Include</font>");
-  // }
-}
-
-void ConsoleWindow::updateExcludeLabel()
-{
-  // if (db_proxy_->isExcludeValid()) {
-  //   ui.excludeLabel->setText("Exclude");
-  // } else {
-  //   ui.excludeLabel->setText("<font color='red'>Exclude</font>");
-  // }
-}
-
 void ConsoleWindow::setFont(const QFont &font)
 {
   // ui.messageList->setFont(font);
@@ -489,7 +428,6 @@ void ConsoleWindow::loadSettings()
   // First, load all the boolean settings...
   loadBooleanSetting(SettingsKeys::DISPLAY_TIMESTAMPS, ui.action_ShowTimestamps);
   loadBooleanSetting(SettingsKeys::ABSOLUTE_TIMESTAMPS, ui.action_AbsoluteTimestamps);
-  loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
   loadBooleanSetting(SettingsKeys::COLORIZE_LOGS, ui.action_ColorizeLogs);
 
   // The severity level has to be handled a little differently, since they're all combined
@@ -520,6 +458,9 @@ void ConsoleWindow::loadSettings()
   ui.includeText->setText(includeFilter);
   QString excludeFilter = settings.value(SettingsKeys::EXCLUDE_FILTER, "").toString();
   ui.excludeText->setText(excludeFilter);
+  // This triggers the processing, which currently saves the values,
+  // so we have to do it after we load the settings.
+  loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
 }
 
 void ConsoleWindow::promptForBagFile()
@@ -533,6 +474,50 @@ void ConsoleWindow::promptForBagFile()
   for (int i = 0; i < filenames.size(); i++) {
     Q_EMIT readBagFile(filenames[i]);
   }
+}
+
+static
+QRegExp regExpFromText(const QString &text, bool use_regular_expression)
+{
+  if (use_regular_expression) {
+    return QRegExp(text, Qt::CaseInsensitive);
+  } else {
+    QStringList raw_items = text.split(";", QString::SkipEmptyParts);
+    QStringList esc_items;
+    
+    for (int i = 0; i < raw_items.size(); i++) {
+      esc_items.append(QRegExp::escape(raw_items[i].trimmed()));
+    }
+
+    QString pattern = esc_items.join("|");
+    return QRegExp(pattern, Qt::CaseInsensitive);
+  }
+}
+
+void ConsoleWindow::processFilterText()
+{
+  bool use_re = ui.action_RegularExpressions->isChecked();
+
+  QSettings settings;
+  settings.setValue(SettingsKeys::USE_REGEXPS, use_re);
+
+  QRegExp re = regExpFromText(ui.includeText->text(), use_re);
+  if (re.isValid()) {
+    ui.includeLabel->setStyleSheet("QLabel { }");
+    ui.logList->logFilter()->setIncludeRegExp(re);
+    settings.setValue(SettingsKeys::INCLUDE_FILTER, ui.includeText->text());
+  } else {
+    ui.includeLabel->setStyleSheet("QLabel { background-color : red; color : white; }");
+  }
+
+  re = regExpFromText(ui.excludeText->text(), use_re);
+  if (re.isValid()) {
+    ui.excludeLabel->setStyleSheet("QLabel { }");
+    ui.logList->logFilter()->setExcludeRegExp(re);
+    settings.setValue(SettingsKeys::EXCLUDE_FILTER, ui.excludeText->text());
+  } else {
+    ui.excludeLabel->setStyleSheet("QLabel { background-color : red; color : white; }");
+  }  
 }
 }  // namespace swri_console
 

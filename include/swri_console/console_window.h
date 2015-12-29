@@ -67,11 +67,6 @@ class ConsoleWindow : public QMainWindow {
   void copyLogs();
   void copyExtendedLogs();
   
-  void includeFilterUpdated(const QString &);
-  void excludeFilterUpdated(const QString &);
-  void updateIncludeLabel();
-  void updateExcludeLabel();
-
   void setFont(const QFont &font);
 
   void setDebugColor();
@@ -81,6 +76,9 @@ class ConsoleWindow : public QMainWindow {
   void setFatalColor();
 
   void promptForBagFile();
+
+ private Q_SLOTS:
+  void processFilterText();
   
 private:
   void chooseButtonColor(QPushButton* widget);

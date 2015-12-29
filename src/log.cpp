@@ -49,4 +49,9 @@ QStringList Log::textLines() const
   if (!session_) { return QStringList(); }
   return session_->log_data_[index_].text_lines;
 }
+
+QString Log::textSingleLine() const
+{
+  return textLines().join(" ");
+}
 }  // namespace swri_console
