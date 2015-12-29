@@ -52,8 +52,19 @@ class LogListWidget : public QWidget
 
   void setDatabase(LogDatabase *db);
 
+  bool autoScrollToBottom() const { return auto_scroll_to_bottom_; }
+
+ Q_SIGNALS:
+  void autoScrollToBottomChanged(bool auto_scroll);
+  
  public Q_SLOTS:
   void setSessionFilter(const std::vector<int> &sids);
+  void setAutoScrollToBottom(bool auto_scroll);
+
+
+ private Q_SLOTS:
+  void handleMessagesAdded();
+  void userScrolled(int);
 
  // private Q_SLOTS:
  //  void handleViewSelectionChanged();
@@ -62,6 +73,8 @@ class LogListWidget : public QWidget
   LogDatabase *db_;
   LogListModel *model_;
   QListView *list_view_;
+
+  bool auto_scroll_to_bottom_;  
 };  // class LogListWidget
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_LOG_LIST_WIDGET_H_

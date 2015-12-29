@@ -54,9 +54,7 @@ class ConsoleWindow : public QMainWindow {
   void createNewWindow();
   void readBagFile(const QString &filename);
   void selectFont();
-
-                   
-                                       
+                                                          
  public Q_SLOTS:
   void clearAll();
   void clearMessages();
@@ -64,16 +62,12 @@ class ConsoleWindow : public QMainWindow {
   void rosConnected(bool connected, const QString &master_uri);
   void setSeverityFilter();
   void nodeSelectionChanged();
-  void messagesAdded();
   void showLogContextMenu(const QPoint& point);
   void selectAllLogs();
   void copyLogs();
   void copyExtendedLogs();
-  void setFollowNewest(bool);
   void toggleAlternateRowColors(bool);
   
-  void userScrolled(int);
-
   void includeFilterUpdated(const QString &);
   void excludeFilterUpdated(const QString &);
   void updateIncludeLabel();

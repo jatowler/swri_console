@@ -141,11 +141,13 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(
     ui.checkFatal, SIGNAL(toggled(bool)),
     this, SLOT(setSeverityFilter()));
-  // QObject::connect(
-  //   db_proxy_, SIGNAL(messagesAdded()),
-  //   this, SLOT(messagesAdded()));
-  QObject::connect(ui.checkFollowNewest, SIGNAL(toggled(bool)),
-                   this, SLOT(setFollowNewest(bool)));
+
+  ui.checkFollowNewest->setChecked(true);
+  ui.logList->setAutoScrollToBottom(true);
+  QObject::connect(ui.checkFollowNewest, SIGNAL(toggled(bool)), 
+                   ui.logList, SLOT(setAutoScrollToBottom(bool)));
+  QObject::connect(ui.logList, SIGNAL(autoScrollToBottomChanged(bool)),
+                   ui.checkFollowNewest, SLOT(setChecked(bool)));
 
   // Right-click menu for the message list
   // QObject::connect(ui.messageList, SIGNAL(customContextMenuRequested(const QPoint&)),
@@ -155,10 +157,6 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                     this, SLOT(clearAll()));
   QObject::connect(ui.clearMessagesButton, SIGNAL(clicked()),
                     this, SLOT(clearMessages()));
-
-  // QObject::connect(
-  //   ui.messageList->verticalScrollBar(), SIGNAL(valueChanged(int)),
-  //   this, SLOT(userScrolled(int)));
 
   QObject::connect(
     ui.includeText, SIGNAL(textChanged(const QString &)),
@@ -273,14 +271,6 @@ void ConsoleWindow::setSeverityFilter()
   // db_proxy_->setSeverityFilter(mask);
 }
 
-void ConsoleWindow::messagesAdded()
-{
-  // if (ui.checkFollowNewest->isChecked()) {
-  //   ui.messageList->scrollToBottom();
-  // }
-}
-
-
 void ConsoleWindow::showLogContextMenu(const QPoint& point)
 {
   // QMenu contextMenu(tr("Context menu"), ui.messageList);
@@ -307,16 +297,6 @@ void ConsoleWindow::showLogContextMenu(const QPoint& point)
 
   // contextMenu.exec(ui.messageList->mapToGlobal(point));
 }
-
-void ConsoleWindow::userScrolled(int value)
-{
-  // if (value != ui.messageList->verticalScrollBar()->maximum()) {
-  //   ui.checkFollowNewest->setChecked(false);
-  // } else {
-  //   ui.checkFollowNewest->setChecked(true);
-  // }
-}
-
 
 void ConsoleWindow::selectAllLogs()
 {
@@ -347,11 +327,11 @@ void ConsoleWindow::copyExtendedLogs()
   // QApplication::clipboard()->setText(buffer.join(tr("\n\n")));
 }
 
-void ConsoleWindow::setFollowNewest(bool follow)
-{
-  QSettings settings;
-  settings.setValue(SettingsKeys::FOLLOW_NEWEST, follow);
-}
+// void ConsoleWindow::setFollowNewest(bool follow)
+// {
+//   QSettings settings;
+//   settings.setValue(SettingsKeys::FOLLOW_NEWEST, follow);
+// }
 
 void ConsoleWindow::includeFilterUpdated(const QString &text)
 {
@@ -526,7 +506,6 @@ void ConsoleWindow::loadSettings()
   loadBooleanSetting(SettingsKeys::ABSOLUTE_TIMESTAMPS, ui.action_AbsoluteTimestamps);
   loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
   loadBooleanSetting(SettingsKeys::COLORIZE_LOGS, ui.action_ColorizeLogs);
-  loadBooleanSetting(SettingsKeys::FOLLOW_NEWEST, ui.checkFollowNewest);
 
   // The severity level has to be handled a little differently, since they're all combined
   // into a single integer mask under the hood.  First they have to be loaded from the settings,

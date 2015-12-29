@@ -33,6 +33,7 @@
 #include <set>
 
 #include <QListView>
+#include <QScrollBar>
 #include <QVBoxLayout>
 #include <QDebug>
 
@@ -44,7 +45,8 @@ namespace swri_console
 LogListWidget::LogListWidget(QWidget *parent)
   :
   QWidget(parent),
-  db_(NULL)
+  db_(NULL),
+  auto_scroll_to_bottom_(true)
 {
   model_ = new LogListModel(this);
   
@@ -66,6 +68,13 @@ LogListWidget::LogListWidget(QWidget *parent)
   //   SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
   //   this,
   //   SLOT(handleViewSelectionChanged()));
+  QObject::connect(
+    model_, SIGNAL(messagesAdded()),
+    this, SLOT(handleMessagesAdded()));
+
+  QObject::connect(
+    list_view_->verticalScrollBar(), SIGNAL(valueChanged(int)),
+    this, SLOT(userScrolled(int)));  
 }
 
 LogListWidget::~LogListWidget()
@@ -89,7 +98,33 @@ void LogListWidget::setSessionFilter(const std::vector<int> &sids)
   model_->setSessionFilter(sids);
 }
 
-// void LogListWidget::handleViewSelectionChanged()
-// {
-// }
+void LogListWidget::setAutoScrollToBottom(bool auto_scroll)
+{
+  if (auto_scroll_to_bottom_ == auto_scroll) {
+    return;
+  }
+
+  auto_scroll_to_bottom_ = auto_scroll;
+  Q_EMIT autoScrollToBottomChanged(auto_scroll_to_bottom_);
+
+  if (auto_scroll_to_bottom_) {
+    list_view_->scrollToBottom();
+  }
+}
+
+void LogListWidget::handleMessagesAdded()
+{
+  if (auto_scroll_to_bottom_) {
+    list_view_->scrollToBottom();
+  }
+}
+
+void LogListWidget::userScrolled(int value)
+{
+  if (value == list_view_->verticalScrollBar()->maximum()) {
+    setAutoScrollToBottom(true);
+  } else {
+    setAutoScrollToBottom(false);
+  }  
+}
 }  // namespace swri_console
