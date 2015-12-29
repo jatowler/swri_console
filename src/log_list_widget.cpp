@@ -50,6 +50,8 @@ LogListWidget::LogListWidget(QWidget *parent)
 {
   model_ = new LogListModel(this);
   
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
   list_view_ = new QListView(this);
   list_view_->setModel(model_);
   list_view_->setFont(QFont("Ubuntu Mono", 9));

@@ -47,6 +47,8 @@ NodeListWidget::NodeListWidget(QWidget *parent)
   db_(NULL)
 {
   model_ = new NodeListModel(this);
+
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   
   list_view_ = new QListView(this);
   list_view_->setModel(model_);

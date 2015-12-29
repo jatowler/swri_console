@@ -48,6 +48,8 @@ SessionListWidget::SessionListWidget(QWidget *parent)
   db_(NULL)
 {
   model_ = new SessionListModel(this);
+
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   
   list_view_ = new QListView(this);
   list_view_->setItemDelegate(new SessionListDelegate(this));

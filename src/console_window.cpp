@@ -169,8 +169,9 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QList<int> sizes;
   sizes.append(100);
   sizes.append(1000);
-  ui.splitter->setSizes(sizes);
-  
+  ui.horizontalSplitter->setSizes(sizes);
+  ui.verticalSplitter->setSizes(sizes);
+
   statusBar()->setSizeGripEnabled(false);
   connection_status_ = new QLabel("Not connected");
   connection_status_->setFrameStyle(QFrame::Panel | QFrame::Sunken);
