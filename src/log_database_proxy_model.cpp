@@ -46,26 +46,9 @@
 namespace swri_console
 {
 LogDatabaseProxyModel::LogDatabaseProxyModel(LogDatabase *db)
-  :
-  db_(db),
-  colorize_logs_(true),
-  display_time_(true),
-  display_absolute_time_(false),
-  debug_color_(Qt::gray),
-  info_color_(Qt::black),
-  warn_color_(QColor(255,127,0)),
-  error_color_(Qt::red),
-  fatal_color_(Qt::magenta)
 {
   QObject::connect(db_, SIGNAL(databaseCleared()),
                    this, SLOT(handleDatabaseCleared()));
-
-  QObject::connect(db_, SIGNAL(minTimeUpdated()),
-                   this, SLOT(minTimeUpdated()));
-
-  // We're going to update the model on a timer instead of using
-  // a new messages signal to limit the update rate.
-  startTimer(20);
 }
 
 void LogDatabaseProxyModel::setAbsoluteTime(bool absolute)
@@ -80,22 +63,6 @@ void LogDatabaseProxyModel::setAbsoluteTime(bool absolute)
   settings.setValue(SettingsKeys::ABSOLUTE_TIMESTAMPS, display_absolute_time_);
 
   if (display_time_ && msg_mapping_.size()) {
-    Q_EMIT dataChanged(index(0), index(msg_mapping_.size()));
-  }
-}
-
-
-void LogDatabaseProxyModel::setColorizeLogs(bool colorize_logs)
-{
-  if (colorize_logs == colorize_logs_) {
-    return;
-  }
-
-  colorize_logs_ = colorize_logs;
-  QSettings settings;
-  settings.setValue(SettingsKeys::COLORIZE_LOGS, colorize_logs_);
-
-  if (msg_mapping_.size()) {
     Q_EMIT dataChanged(index(0), index(msg_mapping_.size()));
   }
 }
@@ -159,22 +126,6 @@ void LogDatabaseProxyModel::setFatalColor(const QColor& fatal_color)
 QVariant LogDatabaseProxyModel::data(
   const QModelIndex &index, int role) const
 {
-  switch (role)
-  {
-    // Currently we're only returning data for these roles, so return immediately
-    // if we're being queried for anything else.
-    case Qt::DisplayRole:
-    case Qt::ToolTipRole:
-    case ExtendedLogRole:
-      break;
-    case Qt::ForegroundRole:
-      if (colorize_logs_) {
-        break;
-      }
-    default:
-      return QVariant();
-  }
-
   if (index.parent().isValid() &&
       static_cast<size_t>(index.row()) >= msg_mapping_.size()) {
     return QVariant();
@@ -184,76 +135,8 @@ QVariant LogDatabaseProxyModel::data(
   const LogEntry &item = db_->log()[line_idx.log_index];
 
   if (role == Qt::DisplayRole) {
-    char level = '?';
-    if (item.level == rosgraph_msgs::Log::DEBUG) {
-      level = 'D';
-    } else if (item.level == rosgraph_msgs::Log::INFO) {
-      level = 'I';
-    } else if (item.level == rosgraph_msgs::Log::WARN) {
-      level = 'W';
-    } else if (item.level == rosgraph_msgs::Log::ERROR) {
-      level = 'E';
-    } else if (item.level == rosgraph_msgs::Log::FATAL) {
-      level = 'F';
-    }
-
-    char stamp[128];
-    if (display_absolute_time_) {
-      snprintf(stamp, sizeof(stamp),
-               "%u.%09u",
-               item.stamp.sec,
-               item.stamp.nsec);
-    } else {
-      ros::Duration t = item.stamp - db_->minTime();
-
-      int32_t secs = t.sec;
-      int hours = secs / 60 / 60;
-      int minutes = (secs / 60) % 60;
-      int seconds = (secs % 60);
-      int milliseconds = t.nsec / 1000000;
-      
-      snprintf(stamp, sizeof(stamp),
-               "%d:%02d:%02d:%03d",
-               hours, minutes, seconds, milliseconds);
-    }
-
-    char header[1024];
-    if (display_time_) {
-      snprintf(header, sizeof(header),
-               "[%c %s] ", level, stamp);
-    } else {
-      snprintf(header, sizeof(header),
-               "[%c] ", level);
-    }
-
-    // For multiline messages, we only want to display the header for
-    // the first line.  For the subsequent lines, we generate a header
-    // and then fill it with blank lines so that the messages are
-    // aligned properly (assuming monospaced font).  
-    if (line_idx.line_index != 0) {
-      size_t len = strnlen(header, sizeof(header));
-      for (size_t i = 0; i < len; i++) {
-        header[i] = ' ';
-      }
-    }
-    
-    return QVariant(QString(header) + item.text[line_idx.line_index]);
   }
   else if (role == Qt::ForegroundRole && colorize_logs_) {
-    switch (item.level) {
-      case rosgraph_msgs::Log::DEBUG:
-        return QVariant(debug_color_);
-      case rosgraph_msgs::Log::INFO:
-        return QVariant(info_color_);
-      case rosgraph_msgs::Log::WARN:
-        return QVariant(warn_color_);
-      case rosgraph_msgs::Log::ERROR:
-        return QVariant(error_color_);
-      case rosgraph_msgs::Log::FATAL:
-        return QVariant(fatal_color_);
-      default:
-        return QVariant(info_color_);
-    }
   }
   else if (role == Qt::ToolTipRole) {
     char buffer[4096];

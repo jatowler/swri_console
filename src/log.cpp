@@ -32,6 +32,23 @@
 
 namespace swri_console
 {
+ros::Time Log::absoluteTime() const
+{
+  if (!session_) { return ros::Time(0); }
+  return session_->log_data_[index_].stamp;
+}
+
+ros::Time Log::relativeTime() const
+{
+  if (!session_) { return ros::Time(0); }
+  ros::Duration delta = session_->log_data_[index_].stamp - session_->min_time_;
+
+  ros::Time rel_time;
+  rel_time.sec = delta.sec;
+  rel_time.nsec = delta.nsec;  
+  return rel_time;  
+}
+
 uint8_t Log::severity() const
 {
   if (!session_) { return 0xFF; }

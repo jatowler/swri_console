@@ -35,8 +35,6 @@
 namespace swri_console
 {
 LogDatabase::LogDatabase()
-  :
-  min_time_(ros::TIME_MAX)
 {
 }
 
@@ -46,9 +44,6 @@ LogDatabase::~LogDatabase()
 
 void LogDatabase::clear()
 {
-  std::map<std::string, size_t>::iterator iter;
-  msg_counts_.clear();
-  log_.clear();
   Q_EMIT databaseCleared();
 }
 
@@ -202,10 +197,6 @@ QString LogDatabase::nodeName(int nid) const
 
 // void LogDatabase::queueMessage(const rosgraph_msgs::LogConstPtr msg)
 // {
-//   if (msg->header.stamp < min_time_) {
-//     min_time_ = msg->header.stamp;
-//     Q_EMIT minTimeUpdated();
-//   }
   
 //   msg_counts_[msg->name]++;
 

@@ -75,6 +75,7 @@ class Session
 
   bool isValid() const { return id_ >= 0; }
   const QString& name() const { return name_; }
+  const ros::Time& minTime() const { return min_time_; }
   const size_t nodeLogCount(int nid) const { return node_log_counts_.count(nid) ? node_log_counts_.at(nid) : 0; }
 
   void append(const rosgraph_msgs::LogConstPtr &msg);

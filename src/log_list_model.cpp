@@ -43,7 +43,13 @@ LogListModel::LogListModel(QObject *parent)
   :
   QAbstractListModel(parent),
   db_(NULL),
-  filter_(new LogFilter(this))
+  filter_(new LogFilter(this)),
+  time_display_(RELATIVE_TIME),
+  debug_color_(Qt::gray),
+  info_color_(Qt::black),
+  warn_color_(QColor(255,127,0)),
+  error_color_(Qt::red),
+  fatal_color_(Qt::magenta)
 {
   QObject::connect(filter_, SIGNAL(filterModified()),
                    this, SLOT(reset()));                   
@@ -62,6 +68,9 @@ void LogListModel::setDatabase(LogDatabase *db)
   }
 
   db_ = db;
+
+  QObject::connect(db_, SIGNAL(sessionMinTimeChanged(int)),
+                   this, SLOT(allDataChanged()));
   
   // QObject::connect(db_, SIGNAL(logAdded(int)),
   //                  this, SLOT(handleLogAdded(int)));
@@ -91,6 +100,18 @@ int LogListModel::rowCount(const QModelIndex &parent) const
 
 QVariant LogListModel::data(const QModelIndex &index, int role) const
 {
+  switch (role)
+  {
+    // Currently we're only returning data for these roles, so return immediately
+    // if we're being queried for anything else.
+    case Qt::DisplayRole:
+    case Qt::ToolTipRole:
+    case Qt::ForegroundRole:
+      break;
+    default:
+      return QVariant();
+  }
+
   if (index.parent().isValid()) {
     return QVariant();
   } 
@@ -120,7 +141,11 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
   }
 
   if (role == Qt::DisplayRole) {
-    return log.textLines()[line_map.line_index];
+    return displayRole(log, line_map.line_index);
+  } else if (role == Qt::ToolTipRole) {
+    return toolTipRole(log, line_map.line_index);
+  } else if (role == Qt::ForegroundRole) {
+    return foregroundRole(log, line_map.line_index);
   } else {
     return QVariant();
   }
@@ -128,26 +153,122 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
   return QVariant();
 }
 
-// void LogListModel::handleLogAdded(int sid)
-// {
-//   std::vector<int> new_logs = db_->logIds();
-//   for (size_t i = 0; i < new_logs.size(); i++) {
-//     if (new_logs[i] == sid) {
-//       beginInsertRows(QModelIndex(), i, i);
-//       logs_.swap(new_logs);
-//       endInsertRows();
-//       return;
-//     }
-//   }
+QVariant LogListModel::displayRole(const Log &log, int line_index) const
+{  
+  char severity = '?';
+  if (log.severity() == rosgraph_msgs::Log::DEBUG) {
+    severity = 'D';
+  } else if (log.severity() == rosgraph_msgs::Log::INFO) {
+    severity = 'I';
+  } else if (log.severity() == rosgraph_msgs::Log::WARN) {
+    severity = 'W';
+  } else if (log.severity() == rosgraph_msgs::Log::ERROR) {
+    severity = 'E';
+  } else if (log.severity() == rosgraph_msgs::Log::FATAL) {
+    severity = 'F';
+  }
 
-//   qWarning("Missing SID error in LogListModel::handleLogAdded (%d)", sid);
-// }
+  QString header;
+  if (time_display_ == NO_TIME) {
+    header = QString("[%1] ").arg(severity);
+  } else if (time_display_ == RELATIVE_TIME) {
+    ros::Time t = log.relativeTime();
+    int32_t secs = t.sec;
+    int hours = secs / 60 / 60;
+    int minutes = (secs / 60) % 60;
+    int seconds = (secs % 60);
+    int milliseconds = t.nsec / 1000000;
+
+    char stamp[128];
+    snprintf(stamp, sizeof(stamp),
+             "%d:%02d:%02d:%03d",
+             hours, minutes, seconds, milliseconds);
+    
+    header = QString("[%1 %2] ").arg(severity).arg(stamp);
+  } else {
+    ros::Time t = log.absoluteTime();
+    char stamp[128];
+    snprintf(stamp, sizeof(stamp), 
+             "%u.%09u",
+             t.sec,
+             t.nsec);
+    header = QString("[%1 %2] ").arg(severity).arg(stamp);
+  }
+
+  // For multiline messages, we only want to display the header for
+  // the first line.  For the subsequent lines, we generate a header
+  // and then fill it with blank lines so that the messages are
+  // aligned properly (assuming monospaced font).  
+  if (line_index != 0) {
+    header.fill(' ');
+  }
+    
+  return QString(header) + log.textLines()[line_index];
+}
+
+QVariant LogListModel::toolTipRole(const Log &log, int line_index) const
+{
+  return QVariant();
+}
+
+QVariant LogListModel::foregroundRole(const Log &log, int) const
+{
+  return color(log.severity());
+}
 
 void LogListModel::setSessionFilter(const std::vector<int> &sids)
 {
   sids_ = sids;
   // Note: We could do a partial reset here...
   reset();
+}
+
+LogListModel::TimeSetting LogListModel::timeDisplay() const
+{
+  return time_display_;
+}
+
+void LogListModel::setTimeDisplay(const TimeSetting &value)
+{
+  if (time_display_ == value) { return; }
+  time_display_ = value;
+  allDataChanged();
+}
+
+QColor LogListModel::color(const uint8_t severity) const
+{
+  switch (severity) {
+  case rosgraph_msgs::Log::DEBUG:
+    return debug_color_;
+  case rosgraph_msgs::Log::INFO:
+    return info_color_;
+  case rosgraph_msgs::Log::WARN:
+    return warn_color_;
+  case rosgraph_msgs::Log::ERROR:
+    return error_color_;
+  case rosgraph_msgs::Log::FATAL:
+    return fatal_color_;
+  default:
+    return info_color_;
+  }
+}  
+
+void LogListModel::setColor(const uint8_t severity, const QColor &color)
+{
+  if (severity == rosgraph_msgs::Log::DEBUG) {
+    debug_color_ = color;
+  } else if (severity == rosgraph_msgs::Log::INFO) {
+    info_color_ = color;
+  } else if (severity == rosgraph_msgs::Log::WARN) {
+    warn_color_ = color;
+  } else if (severity == rosgraph_msgs::Log::ERROR) {
+    error_color_ = color;
+  } else if (severity == rosgraph_msgs::Log::FATAL) {
+    fatal_color_ = color;
+  } else {
+    qWarning("Attempt to set color for invalid severity: %d", severity);
+  }
+  allDataChanged();
 }
 
 void LogListModel::reset()
@@ -172,6 +293,11 @@ void LogListModel::reset()
   endResetModel();
 
   scheduleIdleProcessing();
+}
+
+void LogListModel::allDataChanged()
+{
+  Q_EMIT dataChanged(index(0), index(rowCount(QModelIndex())-1));
 }
 
 void LogListModel::scheduleIdleProcessing()

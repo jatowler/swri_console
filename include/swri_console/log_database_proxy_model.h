@@ -63,7 +63,6 @@ class LogDatabaseProxyModel : public QAbstractListModel
   void setErrorColor(const QColor& error_color);
   void setFatalColor(const QColor& fatal_color);
 
-
   virtual int rowCount(const QModelIndex &parent) const;
   virtual QVariant data(const QModelIndex &index, int role) const;
 
@@ -84,40 +83,10 @@ class LogDatabaseProxyModel : public QAbstractListModel
   void setColorizeLogs(bool colorize_logs);
 
  private:
-  LogDatabase *db_;
-
   void timerEvent(QTimerEvent*);
   void saveBagFile(const QString& filename) const;
   void saveTextFile(const QString& filename) const;
-  void scheduleIdleProcessing();
-  
-  bool colorize_logs_;
-  bool display_time_;
-  bool display_absolute_time_;
-
-  // For performance reasons, the proxy model presents single line
-  // items, while the underlying log database stores multi-line
-  // messages.  The LineMap struct is used to map our item indices to
-  // the log & line that it represents.
-  struct LineMap {
-    size_t log_index;
-    int line_index;
-
-    LineMap() : log_index(0), line_index(0) {}
-    LineMap(size_t log, int line) : log_index(log), line_index(line) {}
-  };
-  
-  size_t latest_log_index_;
-  std::deque<LineMap> msg_mapping_;
-
-  size_t earliest_log_index_;
-  std::deque<LineMap> early_mapping_;
-
-  QColor debug_color_;
-  QColor info_color_;
-  QColor warn_color_;
-  QColor error_color_;
-  QColor fatal_color_;
+  void scheduleIdleProcessing();  
 };
 }  // swri_console
 #endif  // SWRI_CONSOLE_LOG_DATABASE_PROXY_MODEL_H_

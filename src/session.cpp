@@ -50,6 +50,15 @@ void Session::append(const rosgraph_msgs::LogConstPtr &msg)
   int nid = db_->lookupNode(msg->name);
   node_log_counts_[nid]++;
 
+  if (msg->header.stamp < min_time_) {
+    min_time_ = msg->header.stamp;
+
+    // It seems totally not cool to emit someone else's signal, but
+    // it's so simple and doesn't require turning sessions into
+    // QObjects.
+    Q_EMIT db_->sessionMinTimeChanged(id_);
+  }
+  
   LogData data;
   data.stamp = msg->header.stamp;
   data.severity = msg->level;

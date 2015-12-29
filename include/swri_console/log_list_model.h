@@ -36,11 +36,13 @@
 #include <vector>
 
 #include <QAbstractListModel>
+#include <QColor>
 
 namespace swri_console
 {
 class LogDatabase;
 class LogFilter;
+class Log;
 class LogListModel : public QAbstractListModel
 {
   Q_OBJECT
@@ -55,25 +57,48 @@ class LogListModel : public QAbstractListModel
   virtual QVariant data(const QModelIndex &index, int role) const;
 
   LogFilter* logFilter() { return filter_; }
+
+  enum TimeSetting {
+    NO_TIME,
+    RELATIVE_TIME,
+    ABSOLUTE_TIME
+  };
+  TimeSetting timeDisplay() const;
+  QColor color(const uint8_t severity) const;
+  
   
  Q_SIGNALS:
   void messagesAdded();
                                                                  
  public Q_SLOTS:
   void setSessionFilter(const std::vector<int> &sids);
+  void setTimeDisplay(const TimeSetting &value);
+  void setColor(const uint8_t severity, const QColor &color);
 
  private Q_SLOTS:
   void reset();
+  void allDataChanged();
   void processOldMessages();
   
  private:
   void scheduleIdleProcessing();
   void timerEvent(QTimerEvent *);
   void processNewMessages();
+
+  QVariant displayRole(const Log &log, int line_index) const;
+  QVariant toolTipRole(const Log &log, int line_index) const;
+  QVariant foregroundRole(const Log &log, int line_index) const;
   
   LogDatabase *db_;
   LogFilter *filter_;
 
+  TimeSetting time_display_;
+  QColor debug_color_;
+  QColor info_color_;
+  QColor warn_color_;
+  QColor error_color_;
+  QColor fatal_color_;
+  
   // For performance reasons, the proxy model presents single line
   // items, while the underlying log database stores multi-line
   // messages.  The LineMap struct is used to map our item indices to

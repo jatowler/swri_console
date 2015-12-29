@@ -65,11 +65,7 @@ class LogDatabase : public QObject
   ~LogDatabase();
 
   void clear();
-  const std::deque<LogEntry>& log() { return log_; }
-  const ros::Time& minTime() const { return min_time_; }
-
-  const std::map<std::string, size_t>& messageCounts() const { return msg_counts_; }
-
+  
   int createSession(const QString &name);
   void deleteSession(int sid);
   void renameSession(int sid, const QString &name);
@@ -84,22 +80,17 @@ class LogDatabase : public QObject
   
  Q_SIGNALS:
   void databaseCleared();
-  void minTimeUpdated();  
 
   // We get to add all these awesome signals to deal with Qt's Model/View.
   void sessionAdded(int sid);
   void sessionDeleted(int sid);
   void sessionRenamed(int sid);
   void sessionMoved(int sid);
-
+  void sessionMinTimeChanged(int sid);  
+  
   void nodeAdded(int nid);
   
  private:
-  std::map<std::string, size_t> msg_counts_;
-  std::deque<LogEntry> log_;
-
-  ros::Time min_time_;
-
   std::unordered_map<int, Session> sessions_;
   std::vector<int> session_ids_;
   // Persistent invalid session for methods that return references.

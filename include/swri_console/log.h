@@ -31,6 +31,7 @@
 #define SWRI_CONSOLE_LOG_H_
 
 #include <QStringList>
+#include <ros/time.h>
 
 namespace swri_console
 {
@@ -50,10 +51,13 @@ class Log
 
   bool isValid() const { return session_; }
 
+  ros::Time absoluteTime() const;
+  ros::Time relativeTime() const;
+  
   uint8_t severity() const;
   int nodeId() const;
   QStringList textLines() const;
-  QString textSingleLine() const;
+  QString textSingleLine() const;  
 };  // class Log
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_LOG_H_
