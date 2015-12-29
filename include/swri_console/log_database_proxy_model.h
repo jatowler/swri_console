@@ -57,8 +57,6 @@ class LogDatabaseProxyModel : public QAbstractListModel
   LogDatabaseProxyModel(LogDatabase *db);
   ~LogDatabaseProxyModel();
 
-  void setNodeFilter(const std::set<std::string> &names);
-  void setSeverityFilter(uint8_t severity_mask);
   void setIncludeFilters(const QStringList &list);
   void setExcludeFilters(const QStringList &list);
   void setIncludeRegexpPattern(const QString& pattern);
@@ -103,8 +101,6 @@ class LogDatabaseProxyModel : public QAbstractListModel
   bool acceptLogEntry(const LogEntry &item);
   bool testIncludeFilter(const LogEntry &item);
   
-  std::set<std::string> names_;
-  uint8_t severity_mask_;
   bool colorize_logs_;
   bool display_time_;
   bool display_absolute_time_;

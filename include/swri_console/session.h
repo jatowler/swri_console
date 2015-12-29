@@ -60,7 +60,7 @@ class Session
   struct LogData
   {
     ros::Time stamp;
-    uint8_t level;
+    uint8_t severity;
     int node_id;
     QString file;
     QString function;

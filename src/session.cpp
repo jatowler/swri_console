@@ -52,7 +52,7 @@ void Session::append(const rosgraph_msgs::LogConstPtr &msg)
 
   LogData data;
   data.stamp = msg->header.stamp;
-  data.level = msg->level;
+  data.severity = msg->level;
   data.node_id = nid;
   data.file = QString::fromStdString(msg->file);
   data.function = QString::fromStdString(msg->function);

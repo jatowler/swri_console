@@ -37,6 +37,7 @@
 #include <swri_console/console_window.h>
 #include <swri_console/log_database.h>
 #include <swri_console/log_database_proxy_model.h>
+#include <swri_console/log_filter.h>
 #include <swri_console/settings_keys.h>
 
 #include <QColorDialog>
@@ -75,6 +76,10 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    ui.logList,
                    SLOT(setSessionFilter(const std::vector<int>&)));
 
+  QObject::connect(ui.nodeList,
+                   SIGNAL(selectionChanged(const std::vector<int>&)),
+                   ui.logList->logFilter(),
+                   SLOT(setNodeFilter(const std::vector<int>&)));
   
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
@@ -269,7 +274,7 @@ void ConsoleWindow::setSeverityFilter()
   settings.setValue(SettingsKeys::SHOW_ERROR, ui.checkError->isChecked());
   settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
 
-  // db_proxy_->setSeverityFilter(mask);
+  ui.logList->logFilter()->setSeverityMask(mask);
 }
 
 void ConsoleWindow::showLogContextMenu(const QPoint& point)

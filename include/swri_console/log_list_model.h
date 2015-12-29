@@ -40,6 +40,7 @@
 namespace swri_console
 {
 class LogDatabase;
+class LogFilter;
 class LogListModel : public QAbstractListModel
 {
   Q_OBJECT
@@ -53,6 +54,8 @@ class LogListModel : public QAbstractListModel
   virtual int rowCount(const QModelIndex &parent) const;
   virtual QVariant data(const QModelIndex &index, int role) const;
 
+  LogFilter* logFilter() { return filter_; }
+  
  Q_SIGNALS:
   void messagesAdded();
                                                                  
@@ -69,6 +72,7 @@ class LogListModel : public QAbstractListModel
   void processNewMessages();
   
   LogDatabase *db_;
+  LogFilter *filter_;
 
   // For performance reasons, the proxy model presents single line
   // items, while the underlying log database stores multi-line

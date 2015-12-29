@@ -27,26 +27,36 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/log.h>
-#include <swri_console/session.h>
+#ifndef SWRI_CONSOLE_SESSION_LOG_FILTER_H_
+#define SWRI_CONSOLE_SESSION_LOG_FILTER_H_
+
+#include <unordered_set>
+
+#include <QObject>
 
 namespace swri_console
 {
-uint8_t Log::severity() const
+class Log;
+class LogFilter : public QObject 
 {
-  if (!session_) { return 0xFF; }
-  return session_->log_data_[index_].severity;
-}
+  Q_OBJECT;
 
-int Log::nodeId() const
-{
-  if (!session_) { return -1; }
-  return session_->log_data_[index_].node_id;
-}
+ public:
+  LogFilter(QObject *parent=0);
+  bool accept(const Log&) const;
 
-QStringList Log::textLines() const
-{
-  if (!session_) { return QStringList(); }
-  return session_->log_data_[index_].text_lines;
-}
+  uint8_t severityMask() const { return severity_mask_; }
+  
+ Q_SIGNALS:
+  void filterModified();
+
+ public Q_SLOTS:
+  void setNodeFilter(const std::vector<int> &nids);
+  void setSeverityMask(uint8_t mask);
+
+ private:
+  std::unordered_set<int> nids_;
+  uint8_t severity_mask_;
+};  // class LogFilter
 }  // namespace swri_console
+#endif  // SWRI_CONSOLE_SESSION_LOG_FILTER_H_

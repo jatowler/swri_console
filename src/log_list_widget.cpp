@@ -97,6 +97,11 @@ void LogListWidget::setDatabase(LogDatabase *db)
   model_->setDatabase(db_);
 }
 
+LogFilter* LogListWidget::logFilter()
+{
+  return model_->logFilter();
+}
+
 void LogListWidget::setSessionFilter(const std::vector<int> &sids)
 {
   model_->setSessionFilter(sids);

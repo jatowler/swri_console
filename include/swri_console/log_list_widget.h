@@ -41,6 +41,7 @@ QT_END_NAMESPACE
 namespace swri_console
 {
 class LogDatabase;
+class LogFilter;
 class LogListModel;
 class LogListWidget : public QWidget
 {
@@ -52,6 +53,8 @@ class LogListWidget : public QWidget
 
   void setDatabase(LogDatabase *db);
 
+  LogFilter* logFilter();
+  
   bool autoScrollToBottom() const { return auto_scroll_to_bottom_; }
 
  Q_SIGNALS:

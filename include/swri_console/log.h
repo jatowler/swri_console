@@ -50,6 +50,8 @@ class Log
 
   bool isValid() const { return session_; }
 
+  uint8_t severity() const;
+  int nodeId() const;
   QStringList textLines() const;
 };  // class Log
 }  // namespace swri_console

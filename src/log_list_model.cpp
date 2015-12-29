@@ -27,21 +27,26 @@
 // DAMAGE.
 //
 // *****************************************************************************
+#include <swri_console/log_list_model.h>
+
 #include <vector>
 
 #include <QTimer>
 #include <QDebug>
 
-#include <swri_console/log_list_model.h>
 #include <swri_console/log_database.h>
+#include <swri_console/log_filter.h>
 
 namespace swri_console
 {
 LogListModel::LogListModel(QObject *parent)
   :
   QAbstractListModel(parent),
-  db_(NULL)
+  db_(NULL),
+  filter_(new LogFilter(this))
 {
+  QObject::connect(filter_, SIGNAL(filterModified()),
+                   this, SLOT(reset()));                   
 }
 
 LogListModel::~LogListModel()
@@ -216,9 +221,9 @@ void LogListModel::processOldMessages()
          block.earliest_log_index--, i++)
     {
       const Log log = session.log(block.earliest_log_index-1);
-      // if (!acceptLogEntry(log)) {
-      //   continue;
-      // }
+      if (!filter_->accept(log)) {
+         continue;
+      }
       
       QStringList text_lines = log.textLines();
       for (int r = 0; r < text_lines.size(); r++) {
@@ -269,9 +274,9 @@ void LogListModel::processNewMessages()
     for(; block.latest_log_index < session.logCount(); block.latest_log_index++) {
       const Log log = session.log(block.latest_log_index);
 
-      // if (!acceptLogEntry(log)) {
-      //   continue;
-      // }
+      if (!filter_->accept(log)) {
+        continue;
+      }
 
       QStringList text_lines = log.textLines();
       for (int r = 0; r < text_lines.size(); r++) {
