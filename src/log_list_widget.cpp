@@ -121,6 +121,16 @@ void LogListWidget::setAutoScrollToBottom(bool auto_scroll)
   }
 }
 
+void LogListWidget::setTimeDisplay(const TimeDisplaySetting &value)
+{
+  model_->setTimeDisplay(value);
+}
+
+void LogListWidget::setSeverityColor(const uint8_t severity, const QColor &color)
+{
+  model_->setSeverityColor(severity, color);
+}
+
 void LogListWidget::handleMessagesAdded()
 {
   if (auto_scroll_to_bottom_) {

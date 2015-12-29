@@ -55,7 +55,15 @@ class Log
   ros::Time relativeTime() const;
   
   uint8_t severity() const;
+
   int nodeId() const;
+  QString nodeName() const;
+
+  QString functionName() const;
+  QString fileName() const;
+
+  int lineNumber() const;
+  
   QStringList textLines() const;
   QString textSingleLine() const;  
 };  // class Log

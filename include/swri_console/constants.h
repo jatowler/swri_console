@@ -27,54 +27,16 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#include <swri_console/log.h>
-#include <swri_console/session.h>
+#ifndef SWRI_CONSOLE_CONSTANTS_H_
+#define SWRI_CONSOLE_CONSTANTS_H_
 
 namespace swri_console
 {
-ros::Time Log::absoluteTime() const
+enum TimeDisplaySetting
 {
-  if (!session_) { return ros::Time(0); }
-  return session_->log_data_[index_].stamp;
-}
-
-ros::Time Log::relativeTime() const
-{
-  if (!session_) { return ros::Time(0); }
-  ros::Duration delta = session_->log_data_[index_].stamp - session_->min_time_;
-
-  ros::Time rel_time;
-  rel_time.sec = delta.sec;
-  rel_time.nsec = delta.nsec;  
-  return rel_time;  
-}
-
-uint8_t Log::severity() const
-{
-  if (!session_) { return 0xFF; }
-  return session_->log_data_[index_].severity;
-}
-
-int Log::nodeId() const
-{
-  if (!session_) { return -1; }
-  return session_->log_data_[index_].node_id;
-}
-
-QString Log::nodeName() const
-{
-  if (!session_) { return "invalid log"; }
-  return session_
-}
-
-QStringList Log::textLines() const
-{
-  if (!session_) { return QStringList(); }
-  return session_->log_data_[index_].text_lines;
-}
-
-QString Log::textSingleLine() const
-{
-  return textLines().join(" ");
-}
+  NO_TIME,
+  RELATIVE_TIME,
+  ABSOLUTE_TIME
+};
 }  // namespace swri_console
+#endif  // SWRI_CONSOLE_CONSTANTS_H_

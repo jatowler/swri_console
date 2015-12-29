@@ -27,7 +27,6 @@
 // DAMAGE.
 //
 // *****************************************************************************
-
 #ifndef SWRI_CONSOLE_LOG_LIST_MODEL_H_
 #define SWRI_CONSOLE_LOG_LIST_MODEL_H_
 
@@ -37,6 +36,7 @@
 
 #include <QAbstractListModel>
 #include <QColor>
+#include <swri_console/constants.h>
 
 namespace swri_console
 {
@@ -58,22 +58,15 @@ class LogListModel : public QAbstractListModel
 
   LogFilter* logFilter() { return filter_; }
 
-  enum TimeSetting {
-    NO_TIME,
-    RELATIVE_TIME,
-    ABSOLUTE_TIME
-  };
-  TimeSetting timeDisplay() const;
-  QColor color(const uint8_t severity) const;
-  
-  
+  void setTimeDisplay(const TimeDisplaySetting &value);
+
+  QColor severityColor(const uint8_t severity) const;
+  void setSeverityColor(const uint8_t severity, const QColor &color);
+
+  void setSessionFilter(const std::vector<int> &sids);
+    
  Q_SIGNALS:
   void messagesAdded();
-                                                                 
- public Q_SLOTS:
-  void setSessionFilter(const std::vector<int> &sids);
-  void setTimeDisplay(const TimeSetting &value);
-  void setColor(const uint8_t severity, const QColor &color);
 
  private Q_SLOTS:
   void reset();
@@ -88,11 +81,12 @@ class LogListModel : public QAbstractListModel
   QVariant displayRole(const Log &log, int line_index) const;
   QVariant toolTipRole(const Log &log, int line_index) const;
   QVariant foregroundRole(const Log &log, int line_index) const;
+  QVariant extendedLogRole(const Log &log, int line_index) const;
   
   LogDatabase *db_;
   LogFilter *filter_;
 
-  TimeSetting time_display_;
+  TimeDisplaySetting time_display_;
   QColor debug_color_;
   QColor info_color_;
   QColor warn_color_;

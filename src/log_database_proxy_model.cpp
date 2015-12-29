@@ -139,49 +139,6 @@ QVariant LogDatabaseProxyModel::data(
   else if (role == Qt::ForegroundRole && colorize_logs_) {
   }
   else if (role == Qt::ToolTipRole) {
-    char buffer[4096];
-    snprintf(buffer, sizeof(buffer),
-             "<p style='white-space:pre'>"
-             "Timestamp: %d.%09d\n"
-             "Seq: %d\n"
-             "Node: %s\n"
-             "Function: %s\n"
-             "File: %s\n"
-             "Line: %d\n"
-             "\n",
-             item.stamp.sec,
-             item.stamp.nsec,
-             item.seq,
-             item.node.c_str(),
-             item.function.c_str(),
-             item.file.c_str(),
-             item.line);
-    
-    QString text = (QString(buffer) +
-                    item.text.join("\n") + 
-                    QString("</p>"));
-                            
-    return QVariant(text);
-  } else if (role == LogDatabaseProxyModel::ExtendedLogRole) {
-    char buffer[4096];
-    snprintf(buffer, sizeof(buffer),
-             "Timestamp: %d.%09d\n"
-             "Node: %s\n"
-             "Function: %s\n"
-             "File: %s\n"
-             "Line: %d\n"
-             "Message: ",
-             item.stamp.sec,
-             item.stamp.nsec,
-             item.node.c_str(),
-             item.function.c_str(),
-             item.file.c_str(),
-             item.line);
-    
-    QString text = (QString(buffer) +
-                    item.text.join("\n")); 
-                            
-    return QVariant(text);
   }
       
   return QVariant();

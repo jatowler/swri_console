@@ -207,13 +207,35 @@ QVariant LogListModel::displayRole(const Log &log, int line_index) const
 }
 
 QVariant LogListModel::toolTipRole(const Log &log, int line_index) const
+{           
+  QString text("<p style='white-space:pre'>");
+  text += extendedLogRole(log, line_index).toString();
+  text += QString("</p>");
+  return text;
+}
+
+QVariant LogListModel::extendedLogRole(const Log &log, int line_index) const
 {
-  return QVariant();
+  char stamp[128];
+  snprintf(stamp, sizeof(buffer),
+           "%d.%09d",
+           log.absoluteTime().sec,
+           log.absoluteTime().nsec);
+
+  QString text;
+  text += QString("Timestamp: %1\n").arg(stamp);
+  text += QString("Node: %1\n").arg(log.nodeName());
+  text += QString("Function: %1\n").arg(log.functionName());
+  text += QString("File: %1\n").arg(log.fileName());
+  text += QString("Line: %1\n").arg(log.lineNumber());
+  text += QString("\n");
+  text += log.textLines().join("\n");
+  return text;
 }
 
 QVariant LogListModel::foregroundRole(const Log &log, int) const
 {
-  return color(log.severity());
+  return severityColor(log.severity());
 }
 
 void LogListModel::setSessionFilter(const std::vector<int> &sids)
@@ -223,19 +245,14 @@ void LogListModel::setSessionFilter(const std::vector<int> &sids)
   reset();
 }
 
-LogListModel::TimeSetting LogListModel::timeDisplay() const
-{
-  return time_display_;
-}
-
-void LogListModel::setTimeDisplay(const TimeSetting &value)
+void LogListModel::setTimeDisplay(const TimeDisplaySetting &value)
 {
   if (time_display_ == value) { return; }
   time_display_ = value;
   allDataChanged();
 }
 
-QColor LogListModel::color(const uint8_t severity) const
+QColor LogListModel::severityColor(const uint8_t severity) const
 {
   switch (severity) {
   case rosgraph_msgs::Log::DEBUG:
@@ -253,7 +270,7 @@ QColor LogListModel::color(const uint8_t severity) const
   }
 }  
 
-void LogListModel::setColor(const uint8_t severity, const QColor &color)
+void LogListModel::setSeverityColor(const uint8_t severity, const QColor &color)
 {
   if (severity == rosgraph_msgs::Log::DEBUG) {
     debug_color_ = color;

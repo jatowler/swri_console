@@ -34,6 +34,8 @@
 
 #include <unordered_map>
 
+#include <swri_console/constants.h>
+
 QT_BEGIN_NAMESPACE
 class QListView;
 QT_END_NAMESPACE
@@ -63,7 +65,8 @@ class LogListWidget : public QWidget
  public Q_SLOTS:
   void setSessionFilter(const std::vector<int> &sids);
   void setAutoScrollToBottom(bool auto_scroll);
-
+  void setTimeDisplay(const TimeDisplaySetting &value);
+  void setSeverityColor(const uint8_t severity, const QColor &color);
 
  private Q_SLOTS:
   void handleMessagesAdded();
