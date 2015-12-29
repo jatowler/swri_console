@@ -42,7 +42,6 @@ namespace swri_console
   const QString SettingsKeys::SHOW_WARN = "Severity/ShowWarn";
   const QString SettingsKeys::SHOW_ERROR = "Severity/ShowError";
   const QString SettingsKeys::SHOW_FATAL = "Severity/ShowFatal";
-  const QString SettingsKeys::FOLLOW_NEWEST = "UI/FollowNewest";
   const QString SettingsKeys::FONT = "UI/Font";
   const QString SettingsKeys::DEBUG_COLOR = "Colors/DebugColor";
   const QString SettingsKeys::INFO_COLOR = "Colors/InfoColor";
@@ -50,5 +49,4 @@ namespace swri_console
   const QString SettingsKeys::ERROR_COLOR = "Colors/ErrorColor";
   const QString SettingsKeys::FATAL_COLOR = "Colors/FatalColor";
   const QString SettingsKeys::COLORIZE_LOGS = "Colors/ColorizeLogs";
-  const QString SettingsKeys::ALTERNATE_LOG_ROW_COLORS = "Logs/AlternateRowColors";
 }

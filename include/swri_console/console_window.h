@@ -66,7 +66,6 @@ class ConsoleWindow : public QMainWindow {
   void selectAllLogs();
   void copyLogs();
   void copyExtendedLogs();
-  void toggleAlternateRowColors(bool);
   
   void includeFilterUpdated(const QString &);
   void excludeFilterUpdated(const QString &);

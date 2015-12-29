@@ -54,7 +54,6 @@ namespace swri_console
     static const QString SHOW_WARN;
     static const QString SHOW_ERROR;
     static const QString SHOW_FATAL;
-    static const QString FOLLOW_NEWEST;
     static const QString FONT;
     static const QString DEBUG_COLOR;
     static const QString INFO_COLOR;
@@ -62,7 +61,6 @@ namespace swri_console
     static const QString ERROR_COLOR;
     static const QString FATAL_COLOR;
     static const QString COLORIZE_LOGS;
-    static const QString ALTERNATE_LOG_ROW_COLORS;
   };
 }
 

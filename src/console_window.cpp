@@ -284,17 +284,10 @@ void ConsoleWindow::showLogContextMenu(const QPoint& point)
 
   // QAction copy_extended(tr("Copy Extended"), ui.messageList);
   // connect(&copy_extended, SIGNAL(triggered()), this, SLOT(copyExtendedLogs()));
-
-  // QAction alternate_row_colors(tr("Alternate Row Colors"), ui.messageList);
-  // alternate_row_colors.setCheckable(true);
-  // alternate_row_colors.setChecked(ui.messageList->alternatingRowColors());
-  // connect(&alternate_row_colors, SIGNAL(toggled(bool)),
-  //         this, SLOT(toggleAlternateRowColors(bool)));
             
   // contextMenu.addAction(&select_all);
   // contextMenu.addAction(&copy);
   // contextMenu.addAction(&copy_extended);
-  // contextMenu.addAction(&alternate_row_colors);
 
   // contextMenu.exec(ui.messageList->mapToGlobal(point));
 }
@@ -327,12 +320,6 @@ void ConsoleWindow::copyExtendedLogs()
   // }
   // QApplication::clipboard()->setText(buffer.join(tr("\n\n")));
 }
-
-// void ConsoleWindow::setFollowNewest(bool follow)
-// {
-//   QSettings settings;
-//   settings.setValue(SettingsKeys::FOLLOW_NEWEST, follow);
-// }
 
 void ConsoleWindow::includeFilterUpdated(const QString &text)
 {
@@ -492,14 +479,6 @@ void ConsoleWindow::loadColorButtonSetting(const QString& key, QPushButton* butt
   updateButtonColor(button, color);
 }
 
-void ConsoleWindow::toggleAlternateRowColors(bool checked)
-{
-  // ui.messageList->setAlternatingRowColors(checked);
-
-  QSettings settings;
-  settings.setValue(SettingsKeys::ALTERNATE_LOG_ROW_COLORS, checked);
-}
-
 void ConsoleWindow::loadSettings()
 {
   // First, load all the boolean settings...
@@ -536,9 +515,6 @@ void ConsoleWindow::loadSettings()
   ui.includeText->setText(includeFilter);
   QString excludeFilter = settings.value(SettingsKeys::EXCLUDE_FILTER, "").toString();
   ui.excludeText->setText(excludeFilter);
-
-  // bool alternate_row_colors = settings.value(SettingsKeys::ALTERNATE_LOG_ROW_COLORS, true).toBool();
-  // ui.messageList->setAlternatingRowColors(alternate_row_colors);
 }
 
 void ConsoleWindow::promptForBagFile()
