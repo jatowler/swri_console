@@ -128,6 +128,7 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
     case Qt::DisplayRole:
     case Qt::ToolTipRole:
     case Qt::ForegroundRole:
+    case Qt::BackgroundRole:
     case ExtendedLogRole:
       break;
     default:
@@ -159,6 +160,8 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
     return toolTipRole(log, line_map.line_index);
   } else if (role == Qt::ForegroundRole) {
     return foregroundRole(log, line_map.line_index);
+  } else if (role == Qt::BackgroundRole) {
+    return backgroundRole(session_idx, row_idx);
   } else if (role == ExtendedLogRole) {
     return extendedLogRole(log, line_map.line_index);
   } else {
@@ -253,6 +256,15 @@ QVariant LogListModel::foregroundRole(const Log &log, int) const
   return severityColor(log.severity());
 }
 
+QVariant LogListModel::backgroundRole(int session_idx, int row_idx) const
+{
+  if ((row_idx - blocks_[session_idx].alternate_base) % 2) {
+    return QColor(240, 240, 240);
+  } else {
+    return QVariant();
+  }
+}
+
 void LogListModel::setSessionFilter(const std::vector<int> &sids)
 {
   sids_ = sids;
@@ -320,6 +332,7 @@ void LogListModel::reset()
     block.session_id = sids_[i];
     block.latest_log_index = session.logCount();
     block.earliest_log_index = session.logCount();
+    block.alternate_base = 0;
   }
 
   endResetModel();
@@ -404,8 +417,10 @@ void LogListModel::processOldMessages()
       block.rows.insert(block.rows.begin(),
                         block.early_rows.begin(),
                         block.early_rows.end());
+      block.alternate_base += block.early_rows.size();
       block.early_rows.clear();
       endInsertRows();
+
 
       Q_EMIT messagesAdded();
     }

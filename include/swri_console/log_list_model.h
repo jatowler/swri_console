@@ -90,6 +90,7 @@ class LogListModel : public QAbstractListModel
   QVariant displayRole(const Log &log, int line_index) const;
   QVariant toolTipRole(const Log &log, int line_index) const;
   QVariant foregroundRole(const Log &log, int line_index) const;
+  QVariant backgroundRole(int session_idx, int row_idx) const;
   QVariant extendedLogRole(const Log &log, int line_index) const;
   
   LogDatabase *db_;
@@ -122,6 +123,14 @@ class LogListModel : public QAbstractListModel
 
     size_t earliest_log_index;
     std::deque<RowMap> early_rows;
+
+    // This is what some people might call "too pedantic", but using
+    // the built in list view's alternating color caused irritating
+    // flashing while old messages were being added to the front of
+    // the list.  To get around this, we explicitly track a fixed
+    // point and base our own alternating colors off it to get stable
+    // coloring.
+    int alternate_base;
   };
   std::vector<SessionData> blocks_;
 
