@@ -146,6 +146,8 @@ void SessionListModel::handleSessionAdded(int sid)
       beginInsertRows(QModelIndex(), i, i);
       sessions_.swap(new_sessions);
       endInsertRows();
+
+      Q_EMIT sessionAdded(index(i));
       return;
     }
   }
@@ -246,7 +248,6 @@ bool SessionListModel::dropMimeData(const QMimeData *data,
   } else {
     target_row = dst_row;
   }
-
   
   // We have to unpack the data from the MIME object to get a list of
   // the source rows.

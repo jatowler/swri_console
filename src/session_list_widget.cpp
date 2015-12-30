@@ -75,6 +75,9 @@ SessionListWidget::SessionListWidget(QWidget *parent)
     SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
     this,
     SLOT(handleViewSelectionChanged()));
+
+  QObject::connect(model_, SIGNAL(sessionAdded(const QModelIndex &)),
+                   this, SLOT(handleSessionAdded(const QModelIndex &)));
 }
 
 SessionListWidget::~SessionListWidget()
@@ -112,5 +115,10 @@ void SessionListWidget::handleViewSelectionChanged()
   }
 
   Q_EMIT selectionChanged(selected_sids_);
+}
+
+void SessionListWidget::handleSessionAdded(const QModelIndex &idx)
+{
+  list_view_->selectionModel()->select(idx, QItemSelectionModel::Select);    
 }
 }  // namespace swri_console

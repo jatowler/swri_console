@@ -61,7 +61,9 @@ class SessionListModel : public QAbstractListModel
                     Qt::DropAction action,
                     int row, int column,
                     const QModelIndex &parent);
-                                              
+
+ Q_SIGNALS:
+  void sessionAdded(const QModelIndex &idx);
                                               
  private Q_SLOTS:
   void handleSessionAdded(int sid);

@@ -36,6 +36,7 @@
 
 QT_BEGIN_NAMESPACE
 class QListView;
+class QModelIndex;
 QT_END_NAMESPACE
 
 namespace swri_console
@@ -59,6 +60,7 @@ class SessionListWidget : public QWidget
 
  private Q_SLOTS:
   void handleViewSelectionChanged();
+  void handleSessionAdded(const QModelIndex &idx);
   
  private:
   LogDatabase *db_;
