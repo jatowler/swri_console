@@ -32,6 +32,7 @@
 #include <QCoreApplication>
 #include <QStringList>
 #include <QFile>
+#include <QFileInfo>
 #include <QTextStream>
 #include <QDebug>
 
@@ -186,6 +187,8 @@ int main(int argc, char **argv)
   ros::Time last_time(ros::TIME_MAX);
   ros::Duration time_adjustment(0);
 
+
+  size_t total_msg_count = 0;
   for (int i = 0; i < src_fns.size(); i++) {
     if (quit) { break; }
     size_t msg_count = 0;
@@ -195,13 +198,14 @@ int main(int argc, char **argv)
       QString topic;
 
       if (!chooseTopic(topic, src_bag)) {
-        qWarning("%04d/%d: Skipping %s", i+1, src_fns.size(), qPrintable(src_fns[i]));
+        qWarning("[% 11zu  %04d/%d] Skipping %s",
+                 total_msg_count, i+1, src_fns.size(), qPrintable(src_fns[i]));
         continue;
       }
     
-      qWarning("%04d/%d: Importing messages from %s in %s",
-               i+1, src_fns.size(), qPrintable(topic), qPrintable(src_fns[i]));
-
+      qWarning("[% 11zu  %04d/%d] Importing messages from %s in %s",
+               total_msg_count, i+1, src_fns.size(), qPrintable(topic), qPrintable(src_fns[i]));
+      
       bool first_in_bag = true;
     
       rosbag::View view(src_bag, rosbag::TopicQuery(topic.toStdString()));
@@ -209,22 +213,56 @@ int main(int argc, char **argv)
         if (quit) { break; }
         auto src_log = it->instantiate<rosgraph_msgs::Log>();
 
+        ros::Time this_time = src_log->header.stamp;
+        if (this_time == ros::Time(0)) {
+          this_time == it->getTime();
+          if (this_time == ros::Time(0)) {
+            if (first_ever) {
+              this_time = ros::Time::now();
+            } else {
+              this_time = last_time;
+            }
+          }
+        }
+          
         if (first_ever) {
           time_adjustment = ros::Duration(0);
         } else if (first_in_bag) {
           // Put a 10 second gap between files.
-          time_adjustment = last_time  - src_log->header.stamp + ros::Duration(10.0);
+          time_adjustment = last_time  - this_time + ros::Duration(10.0);
         } else {
-          ros::Time new_stamp = src_log->header.stamp + time_adjustment;
+          ros::Time new_stamp = this_time + time_adjustment;
           if (new_stamp - last_time > ros::Duration(5.0)) {
             // Bound long stretches for radio silence to 1 second.        
-            time_adjustment = last_time + ros::Duration(1.0) - src_log->header.stamp;
+            time_adjustment = last_time + ros::Duration(1.0) - this_time;
           } else if (new_stamp - last_time < ros::Duration(-0.5)) {
-            time_adjustment = last_time + ros::Duration(0.001) - src_log->header.stamp;
+            time_adjustment = last_time + ros::Duration(0.001) - this_time;
           }
-        } 
+        }
         
-        last_time = src_log->header.stamp + time_adjustment;
+        last_time = this_time + time_adjustment;
+
+        if (first_in_bag) {
+          // Add a separator in case we want to sort out where a
+          // message came from.
+          QFileInfo file_info(src_fns[i]);
+          const std::string filename = file_info.fileName().toStdString();
+
+          rosgraph_msgs::Log dst_log;
+          dst_log.header.seq = i;
+          dst_log.header.stamp = last_time;
+          dst_log.header.frame_id = "__swri_console_session_separator__";
+          dst_log.level = rosgraph_msgs::Log::INFO;
+          dst_log.name = filename;
+          dst_log.msg = std::string("The following messages were collected from ") + filename;
+          dst_log.file = filename;
+          dst_log.function = "__swri_console_session_separator__";
+          dst_log.line = 0;
+          dst_bag.write("/rosout_agg", last_time, dst_log);
+          msg_count++;
+          total_msg_count++;
+        }        
+        
         first_ever = false;
         first_in_bag = false;
 
@@ -242,9 +280,11 @@ int main(int argc, char **argv)
         // dst_log.topics = src_log.topics;
         dst_bag.write("/rosout_agg", last_time, dst_log);
         msg_count++;      
+        total_msg_count++;
       }
 
-      qWarning("   found %zu messages.", msg_count);
+      qWarning("[% 11zu  %04d/%d]   found %zu messages.",
+               total_msg_count, i+1, src_fns.size(), msg_count);
     } catch (rosbag::BagException &e) {
       qWarning("Exception occurred accessing %s after %zu messages.  Continuing to next file.",
                qPrintable(src_fns[i]), msg_count);
