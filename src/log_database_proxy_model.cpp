@@ -54,12 +54,6 @@ LogDatabaseProxyModel::LogDatabaseProxyModel(LogDatabase *db)
 QSettings settings;
 settings.setValue(SettingsKeys::ABSOLUTE_TIMESTAMPS, display_absolute_time_);
 settings.setValue(SettingsKeys::DISPLAY_TIMESTAMPS, display_time_);
-QSettings settings;
-settings.setValue(SettingsKeys::DEBUG_COLOR, debug_color);
-settings.setValue(SettingsKeys::INFO_COLOR, info_color);
-settings.setValue(SettingsKeys::WARN_COLOR, warn_color);
-settings.setValue(SettingsKeys::ERROR_COLOR, error_color);
-settings.setValue(SettingsKeys::FATAL_COLOR, fatal_color);
 
 void LogDatabaseProxyModel::saveToFile(const QString& filename) const
 {

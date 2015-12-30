@@ -27,66 +27,41 @@
 // DAMAGE.
 //
 // *****************************************************************************
+#include <swri_console/color_widget.h>
 
-#ifndef SWRI_CONSOLE_CONSOLE_WINDOW_H_
-#define SWRI_CONSOLE_CONSOLE_WINDOW_H_
-
-#include <QtWidgets/QMainWindow>
-#include <QColor>
+#include <QVBoxLayout>
 #include <QPushButton>
-#include <QSettings>
-#include "ui_console_window.h"
+#include <QColorDialog>
 
 namespace swri_console
 {
-class LogDatabase;
-class LogDatabaseProxyModel;
-class ConsoleWindow : public QMainWindow {
-  Q_OBJECT
-  
- public:
-  ConsoleWindow(LogDatabase *db);
-  ~ConsoleWindow();
-  
-  void closeEvent(QCloseEvent *event); // Overloaded function
+ColorWidget::ColorWidget(QWidget *parent)
+  :
+  button_(new QPushButton(this))
+{
+  setColor(Qt::black);
+  QObject::connect(button_, SIGNAL(clicked(bool)),
+                   this, SLOT(clicked()));
 
- Q_SIGNALS:
-  void createNewWindow();
-  void readBagFile(const QString &filename);
-  void selectFont();
-                                                          
- public Q_SLOTS:
-  void clearAll();
-  void clearMessages();
-  void saveLogs();
-  void rosConnected(bool connected, const QString &master_uri);
-  void setSeverityFilter();
-  void nodeSelectionChanged();
-  
-  void setFont(const QFont &font);
+  auto *layout = new QVBoxLayout();
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(button_);
+  setLayout(layout);
+}
 
-  void promptForBagFile();
+void ColorWidget::setColor(const QColor &color)
+{
+  color_ = color;
+  button_->setStyleSheet("background: " + color_.name());
+}
 
- private Q_SLOTS:
-  void processFilterText();
-  
-private:
-  template <typename T>
-  void loadBooleanSetting(const QString& key, T* element){
-    QSettings settings;
-    bool val = settings.value(key, element->isChecked()).toBool();
-    if (val != element->isChecked()) {
-      element->setChecked(val);
-    }
-  };
-  void loadSettings();
-  void saveSettings();
-  
-  Ui::ConsoleWindow ui;
-  LogDatabase *db_;
-
-  QLabel *connection_status_;
-};  // class ConsoleWindow
+void ColorWidget::clicked()
+{
+  QColor new_color = QColorDialog::getColor(color_, this);
+  if (!new_color.isValid() || new_color == color_) {
+    return;
+  }
+  setColor(new_color);
+  Q_EMIT colorEdited(new_color);
+}
 }  // namespace swri_console
-
-#endif // SWRI_CONSOLE_CONSOLE_WINDOW_H_

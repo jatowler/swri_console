@@ -87,7 +87,20 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="debugColorWidget"/>
+              <widget class="swri_console::ColorWidget" name="debugColor" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>49</width>
+                 <height>28</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -110,7 +123,20 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="infoColorWidget"/>
+              <widget class="swri_console::ColorWidget" name="infoColor" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>49</width>
+                 <height>28</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -133,7 +159,20 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="warnColorWidget"/>
+              <widget class="swri_console::ColorWidget" name="warnColor" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>49</width>
+                 <height>28</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -156,7 +195,20 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="errorColorWidget"/>
+              <widget class="swri_console::ColorWidget" name="errorColor" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>49</width>
+                 <height>28</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -179,7 +231,20 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="fatalColorWidget"/>
+              <widget class="swri_console::ColorWidget" name="fatalColor" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>49</width>
+                 <height>28</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -250,7 +315,7 @@
      <x>0</x>
      <y>0</y>
      <width>1035</width>
-     <height>27</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -418,6 +483,12 @@
    <class>swri_console::LogListWidget</class>
    <extends>QWidget</extends>
    <header location="global">swri_console/log_list_widget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>swri_console::ColorWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">swri_console/color_widget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

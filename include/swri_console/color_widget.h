@@ -27,66 +27,39 @@
 // DAMAGE.
 //
 // *****************************************************************************
+#ifndef SWRI_CONSOLE_COLOR_WIDGET_H_
+#define SWRI_CONSOLE_COLOR_WIDGET_H_
 
-#ifndef SWRI_CONSOLE_CONSOLE_WINDOW_H_
-#define SWRI_CONSOLE_CONSOLE_WINDOW_H_
-
-#include <QtWidgets/QMainWindow>
+#include <QWidget>
 #include <QColor>
-#include <QPushButton>
-#include <QSettings>
-#include "ui_console_window.h"
+
+QT_BEGIN_NAMESPACE
+class QPushButton;
+QT_END_NAMESPACE
 
 namespace swri_console
 {
-class LogDatabase;
-class LogDatabaseProxyModel;
-class ConsoleWindow : public QMainWindow {
-  Q_OBJECT
+class ColorWidget : public QWidget
+{
+  Q_OBJECT;
+
+  QColor color_;
+  QPushButton *button_;
   
  public:
-  ConsoleWindow(LogDatabase *db);
-  ~ConsoleWindow();
+  ColorWidget(QWidget *parent=0);
   
-  void closeEvent(QCloseEvent *event); // Overloaded function
+  const QColor& color() const { return color_; }
 
  Q_SIGNALS:
-  void createNewWindow();
-  void readBagFile(const QString &filename);
-  void selectFont();
-                                                          
- public Q_SLOTS:
-  void clearAll();
-  void clearMessages();
-  void saveLogs();
-  void rosConnected(bool connected, const QString &master_uri);
-  void setSeverityFilter();
-  void nodeSelectionChanged();
-  
-  void setFont(const QFont &font);
+  // Emitted when the color is changed by user interaction.
+  void colorEdited(const QColor &color);
 
-  void promptForBagFile();
+ public Q_SLOTS:
+  void setColor(const QColor &color);
 
  private Q_SLOTS:
-  void processFilterText();
-  
-private:
-  template <typename T>
-  void loadBooleanSetting(const QString& key, T* element){
-    QSettings settings;
-    bool val = settings.value(key, element->isChecked()).toBool();
-    if (val != element->isChecked()) {
-      element->setChecked(val);
-    }
-  };
-  void loadSettings();
-  void saveSettings();
-  
-  Ui::ConsoleWindow ui;
-  LogDatabase *db_;
-
-  QLabel *connection_status_;
-};  // class ConsoleWindow
+  void clicked();
+};  // class ColorWidget
 }  // namespace swri_console
-
-#endif // SWRI_CONSOLE_CONSOLE_WINDOW_H_
+#endif  // SWRI_CONSOLE_COLOR_WIDGET_H_

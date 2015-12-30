@@ -121,16 +121,16 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   // QObject::connect(ui.action_ColorizeLogs, SIGNAL(toggled(bool)),
   //                  db_proxy_, SLOT(setColorizeLogs(bool)));
 
-  QObject::connect(ui.debugColorWidget, SIGNAL(clicked(bool)),
-                   this, SLOT(setDebugColor()));
-  QObject::connect(ui.infoColorWidget, SIGNAL(clicked(bool)),
-                   this, SLOT(setInfoColor()));
-  QObject::connect(ui.warnColorWidget, SIGNAL(clicked(bool)),
-                   this, SLOT(setWarnColor()));
-  QObject::connect(ui.errorColorWidget, SIGNAL(clicked(bool)),
-                   this, SLOT(setErrorColor()));
-  QObject::connect(ui.fatalColorWidget, SIGNAL(clicked(bool)),
-                   this, SLOT(setFatalColor()));
+  QObject::connect(ui.debugColor, SIGNAL(colorEdited(const QColor &)),
+                   ui.logList, SLOT(setDebugColor(const QColor &)));
+  QObject::connect(ui.infoColor, SIGNAL(colorEdited(const QColor &)),
+                   ui.logList, SLOT(setInfoColor(const QColor &)));
+  QObject::connect(ui.warnColor, SIGNAL(colorEdited(const QColor &)),
+                   ui.logList, SLOT(setWarnColor(const QColor &)));
+  QObject::connect(ui.errorColor, SIGNAL(colorEdited(const QColor &)),
+                   ui.logList, SLOT(setErrorColor(const QColor &)));
+  QObject::connect(ui.fatalColor, SIGNAL(colorEdited(const QColor &)),
+                   ui.logList, SLOT(setFatalColor(const QColor &)));
 
   QObject::connect(ui.checkDebug, SIGNAL(toggled(bool)),
                    this, SLOT(setSeverityFilter()));
@@ -219,6 +219,7 @@ void ConsoleWindow::rosConnected(bool connected, const QString &master_uri)
 
 void ConsoleWindow::closeEvent(QCloseEvent *event)
 {
+  saveSettings();
   QMainWindow::closeEvent(event);
 }
 
@@ -263,13 +264,6 @@ void ConsoleWindow::setSeverityFilter()
     mask |= rosgraph_msgs::Log::FATAL;
   }
 
-  QSettings settings;
-  settings.setValue(SettingsKeys::SHOW_DEBUG, ui.checkDebug->isChecked());
-  settings.setValue(SettingsKeys::SHOW_INFO, ui.checkInfo->isChecked());
-  settings.setValue(SettingsKeys::SHOW_WARN, ui.checkWarn->isChecked());
-  settings.setValue(SettingsKeys::SHOW_ERROR, ui.checkError->isChecked());
-  settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
-
   ui.logList->logFilter()->setSeverityMask(mask);
 }
 
@@ -277,105 +271,6 @@ void ConsoleWindow::setFont(const QFont &font)
 {
   // ui.messageList->setFont(font);
   // ui.nodeList->setFont(font);
-}
-
-void ConsoleWindow::setDebugColor()
-{
-  chooseButtonColor(ui.debugColorWidget);
-}
-
-void ConsoleWindow::setInfoColor()
-{
-  chooseButtonColor(ui.infoColorWidget);
-}
-
-void ConsoleWindow::setWarnColor()
-{
-  chooseButtonColor(ui.warnColorWidget);
-}
-
-void ConsoleWindow::setErrorColor()
-{
-  chooseButtonColor(ui.errorColorWidget);
-}
-
-void ConsoleWindow::setFatalColor()
-{
-  chooseButtonColor(ui.fatalColorWidget);
-}
-
-void ConsoleWindow::chooseButtonColor(QPushButton* widget)
-{
-  QColor old_color = getButtonColor(widget);
-  QColor color = QColorDialog::getColor(old_color, this);
-  if (color.isValid()) {
-    updateButtonColor(widget, color);
-  }
-}
-
-QColor ConsoleWindow::getButtonColor(const QPushButton* button) const
-{
-  QString ss = button->styleSheet();
-  QRegExp re("background: (#\\w*);");
-  QColor old_color;
-  if (re.indexIn(ss) >= 0) {
-    old_color = QColor(re.cap(1));
-  }
-  return old_color;
-}
-
-void ConsoleWindow::updateButtonColor(QPushButton* widget, const QColor& color)
-{
-  QString s("background: #"
-            + QString(color.red() < 16? "0" : "") + QString::number(color.red(),16)
-            + QString(color.green() < 16? "0" : "") + QString::number(color.green(),16)
-            + QString(color.blue() < 16? "0" : "") + QString::number(color.blue(),16) + ";");
-  widget->setStyleSheet(s);
-  widget->update();
-
-  // if (widget == ui.debugColorWidget) {
-  //   db_proxy_->setDebugColor(color);
-  // }
-  // else if (widget == ui.infoColorWidget) {
-  //   db_proxy_->setInfoColor(color);
-  // }
-  // else if (widget == ui.warnColorWidget) {
-  //   db_proxy_->setWarnColor(color);
-  // }
-  // else if (widget == ui.errorColorWidget) {
-  //   db_proxy_->setErrorColor(color);
-  // }
-  // else if (widget == ui.fatalColorWidget) {
-  //   db_proxy_->setFatalColor(color);
-  // }
-  // else {
-  //   qWarning("Unexpected widget passed to ConsoleWindow::updateButtonColor.");
-  // }
-}
-
-void ConsoleWindow::loadColorButtonSetting(const QString& key, QPushButton* button)
-{
-  QSettings settings;
-  QColor defaultColor;
-  // The color buttons don't have a default value set in the .ui file, so we need to
-  // supply defaults for them here in case the appropriate setting isn't found.
-  if (button == ui.debugColorWidget) {
-    defaultColor = Qt::gray;
-  }
-  else if (button == ui.infoColorWidget) {
-    defaultColor = Qt::black;
-  }
-  else if (button == ui.warnColorWidget) {
-    defaultColor = QColor(255, 127, 0);
-  }
-  else if (button == ui.errorColorWidget) {
-    defaultColor = Qt::red;
-  }
-  else if (button == ui.fatalColorWidget) {
-    defaultColor = Qt::magenta;
-  }
-  QColor color = settings.value(key, defaultColor).value<QColor>();
-  updateButtonColor(button, color);
 }
 
 void ConsoleWindow::loadSettings()
@@ -402,11 +297,26 @@ void ConsoleWindow::loadSettings()
   setSeverityFilter();
 
   // Load button colors.
-  loadColorButtonSetting(SettingsKeys::DEBUG_COLOR, ui.debugColorWidget);
-  loadColorButtonSetting(SettingsKeys::INFO_COLOR, ui.infoColorWidget);
-  loadColorButtonSetting(SettingsKeys::WARN_COLOR, ui.warnColorWidget);
-  loadColorButtonSetting(SettingsKeys::ERROR_COLOR, ui.errorColorWidget);
-  loadColorButtonSetting(SettingsKeys::FATAL_COLOR, ui.fatalColorWidget);
+  QColor color;
+  color = settings.value(SettingsKeys::DEBUG_COLOR, Qt::gray).value<QColor>();
+  ui.debugColor->setColor(color);
+  ui.logList->setDebugColor(color);
+
+  color = settings.value(SettingsKeys::INFO_COLOR, Qt::gray).value<QColor>();
+  ui.infoColor->setColor(color);
+  ui.logList->setInfoColor(color);
+
+  color = settings.value(SettingsKeys::WARN_COLOR, Qt::gray).value<QColor>();
+  ui.warnColor->setColor(color);
+  ui.logList->setWarnColor(color);
+
+  color = settings.value(SettingsKeys::ERROR_COLOR, Qt::gray).value<QColor>();
+  ui.errorColor->setColor(color);
+  ui.logList->setErrorColor(color);
+
+  color = settings.value(SettingsKeys::FATAL_COLOR, Qt::gray).value<QColor>();
+  ui.fatalColor->setColor(color);
+  ui.logList->setFatalColor(color);
 
   // Finally, load the filter contents.
   QString includeFilter = settings.value(SettingsKeys::INCLUDE_FILTER, "").toString();
@@ -416,6 +326,23 @@ void ConsoleWindow::loadSettings()
   // This triggers the processing, which currently saves the values,
   // so we have to do it after we load the settings.
   loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
+}
+
+void ConsoleWindow::saveSettings()
+{
+  QSettings settings;
+  settings.setValue(SettingsKeys::DEBUG_COLOR, ui.debugColor->color());
+  settings.setValue(SettingsKeys::INFO_COLOR, ui.infoColor->color());
+  settings.setValue(SettingsKeys::WARN_COLOR, ui.warnColor->color());
+  settings.setValue(SettingsKeys::ERROR_COLOR, ui.errorColor->color());
+  settings.setValue(SettingsKeys::FATAL_COLOR, ui.fatalColor->color());
+
+  settings.setValue(SettingsKeys::SHOW_DEBUG, ui.checkDebug->isChecked());
+  settings.setValue(SettingsKeys::SHOW_INFO, ui.checkInfo->isChecked());
+  settings.setValue(SettingsKeys::SHOW_WARN, ui.checkWarn->isChecked());
+  settings.setValue(SettingsKeys::SHOW_ERROR, ui.checkError->isChecked());
+  settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
+  
 }
 
 void ConsoleWindow::promptForBagFile()
