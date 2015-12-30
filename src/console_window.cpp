@@ -32,8 +32,6 @@
 #include <stdio.h>
 #include <set>
 
-#include <rosgraph_msgs/Log.h>
-
 #include <swri_console/console_window.h>
 #include <swri_console/log_database.h>
 #include <swri_console/log_filter.h>
@@ -118,9 +116,6 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.action_SelectFont, SIGNAL(triggered(bool)),
                    this, SIGNAL(selectFont()));
 
-  // QObject::connect(ui.action_ColorizeLogs, SIGNAL(toggled(bool)),
-  //                  db_proxy_, SLOT(setColorizeLogs(bool)));
-
   QObject::connect(ui.debugColor, SIGNAL(colorEdited(const QColor &)),
                    ui.logList, SLOT(setDebugColor(const QColor &)));
   QObject::connect(ui.infoColor, SIGNAL(colorEdited(const QColor &)),
@@ -133,15 +128,15 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    ui.logList, SLOT(setFatalColor(const QColor &)));
 
   QObject::connect(ui.checkDebug, SIGNAL(toggled(bool)),
-                   this, SLOT(setSeverityFilter()));
+                   ui.logList->logFilter(), SLOT(enableDebug(bool)));
   QObject::connect(ui.checkInfo, SIGNAL(toggled(bool)),
-                   this, SLOT(setSeverityFilter()));
+                   ui.logList->logFilter(), SLOT(enableInfo(bool)));
   QObject::connect(ui.checkWarn, SIGNAL(toggled(bool)),
-                   this, SLOT(setSeverityFilter()));
+                   ui.logList->logFilter(), SLOT(enableWarn(bool)));
   QObject::connect(ui.checkError, SIGNAL(toggled(bool)),
-                   this, SLOT(setSeverityFilter()));
+                   ui.logList->logFilter(), SLOT(enableError(bool)));
   QObject::connect(ui.checkFatal, SIGNAL(toggled(bool)),
-                   this, SLOT(setSeverityFilter()));
+                   ui.logList->logFilter(), SLOT(enableFatal(bool)));
 
   ui.checkFollowNewest->setChecked(true);
   ui.logList->setAutoScrollToBottom(true);
@@ -244,29 +239,6 @@ void ConsoleWindow::nodeSelectionChanged()
   // setWindowTitle(QString("SWRI Console (") + node_names.join(", ") + ")");
 }
 
-void ConsoleWindow::setSeverityFilter()
-{
-  uint8_t mask = 0;
-
-  if (ui.checkDebug->isChecked()) {
-    mask |= rosgraph_msgs::Log::DEBUG;
-  }
-  if (ui.checkInfo->isChecked()) {
-    mask |= rosgraph_msgs::Log::INFO;
-  }
-  if (ui.checkWarn->isChecked()) {
-    mask |= rosgraph_msgs::Log::WARN;
-  }
-  if (ui.checkError->isChecked()) {
-    mask |= rosgraph_msgs::Log::ERROR;
-  }
-  if (ui.checkFatal->isChecked()) {
-    mask |= rosgraph_msgs::Log::FATAL;
-  }
-
-  ui.logList->logFilter()->setSeverityMask(mask);
-}
-
 void ConsoleWindow::setFont(const QFont &font)
 {
   // ui.messageList->setFont(font);
@@ -278,54 +250,65 @@ void ConsoleWindow::loadSettings()
   // First, load all the boolean settings...
   loadBooleanSetting(SettingsKeys::DISPLAY_TIMESTAMPS, ui.action_ShowTimestamps);
   loadBooleanSetting(SettingsKeys::ABSOLUTE_TIMESTAMPS, ui.action_AbsoluteTimestamps);
-  loadBooleanSetting(SettingsKeys::COLORIZE_LOGS, ui.action_ColorizeLogs);
 
   // The severity level has to be handled a little differently, since they're all combined
   // into a single integer mask under the hood.  First they have to be loaded from the settings,
   // then set in the UI, then the mask has to actually be applied.
   QSettings settings;
-  bool showDebug = settings.value(SettingsKeys::SHOW_DEBUG, true).toBool();
-  bool showInfo = settings.value(SettingsKeys::SHOW_INFO, true).toBool();
-  bool showWarn = settings.value(SettingsKeys::SHOW_WARN, true).toBool();
-  bool showError = settings.value(SettingsKeys::SHOW_ERROR, true).toBool();
-  bool showFatal = settings.value(SettingsKeys::SHOW_FATAL, true).toBool();
-  ui.checkDebug->setChecked(showDebug);
-  ui.checkInfo->setChecked(showInfo);
-  ui.checkWarn->setChecked(showWarn);
-  ui.checkError->setChecked(showError);
-  ui.checkFatal->setChecked(showFatal);
-  setSeverityFilter();
 
-  // Load button colors.
-  QColor color;
-  color = settings.value(SettingsKeys::DEBUG_COLOR, Qt::gray).value<QColor>();
-  ui.debugColor->setColor(color);
-  ui.logList->setDebugColor(color);
+  { // Load severity masks
+    bool enabled;
+    enabled = settings.value(SettingsKeys::SHOW_DEBUG, true).toBool();
+    ui.checkDebug->setChecked(enabled);
+    ui.logList->logFilter()->enableDebug(enabled);
 
-  color = settings.value(SettingsKeys::INFO_COLOR, Qt::gray).value<QColor>();
-  ui.infoColor->setColor(color);
-  ui.logList->setInfoColor(color);
+    enabled = settings.value(SettingsKeys::SHOW_INFO, true).toBool();
+    ui.checkInfo->setChecked(enabled);
+    ui.logList->logFilter()->enableInfo(enabled);
 
-  color = settings.value(SettingsKeys::WARN_COLOR, Qt::gray).value<QColor>();
-  ui.warnColor->setColor(color);
-  ui.logList->setWarnColor(color);
+    enabled = settings.value(SettingsKeys::SHOW_WARN, true).toBool();
+    ui.checkWarn->setChecked(enabled);
+    ui.logList->logFilter()->enableWarn(enabled);
 
-  color = settings.value(SettingsKeys::ERROR_COLOR, Qt::gray).value<QColor>();
-  ui.errorColor->setColor(color);
-  ui.logList->setErrorColor(color);
+    enabled = settings.value(SettingsKeys::SHOW_ERROR, true).toBool();
+    ui.checkError->setChecked(enabled);
+    ui.logList->logFilter()->enableError(enabled);
 
-  color = settings.value(SettingsKeys::FATAL_COLOR, Qt::gray).value<QColor>();
-  ui.fatalColor->setColor(color);
-  ui.logList->setFatalColor(color);
+    enabled = settings.value(SettingsKeys::SHOW_FATAL, true).toBool();
+    ui.checkFatal->setChecked(enabled);
+    ui.logList->logFilter()->enableFatal(enabled);
+  }
+  
+  { // Load button colors.
+    QColor color;
+    color = settings.value(SettingsKeys::DEBUG_COLOR, Qt::gray).value<QColor>();
+    ui.debugColor->setColor(color);
+    ui.logList->setDebugColor(color);
+
+    color = settings.value(SettingsKeys::INFO_COLOR, Qt::gray).value<QColor>();
+    ui.infoColor->setColor(color);
+    ui.logList->setInfoColor(color);
+
+    color = settings.value(SettingsKeys::WARN_COLOR, Qt::gray).value<QColor>();
+    ui.warnColor->setColor(color);
+    ui.logList->setWarnColor(color);
+
+    color = settings.value(SettingsKeys::ERROR_COLOR, Qt::gray).value<QColor>();
+    ui.errorColor->setColor(color);
+    ui.logList->setErrorColor(color);
+
+    color = settings.value(SettingsKeys::FATAL_COLOR, Qt::gray).value<QColor>();
+    ui.fatalColor->setColor(color);
+    ui.logList->setFatalColor(color);
+  }
 
   // Finally, load the filter contents.
+  loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
   QString includeFilter = settings.value(SettingsKeys::INCLUDE_FILTER, "").toString();
   ui.includeText->setText(includeFilter);
   QString excludeFilter = settings.value(SettingsKeys::EXCLUDE_FILTER, "").toString();
   ui.excludeText->setText(excludeFilter);
-  // This triggers the processing, which currently saves the values,
-  // so we have to do it after we load the settings.
-  loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
+  processFilterText();
 }
 
 void ConsoleWindow::saveSettings()
@@ -342,7 +325,10 @@ void ConsoleWindow::saveSettings()
   settings.setValue(SettingsKeys::SHOW_WARN, ui.checkWarn->isChecked());
   settings.setValue(SettingsKeys::SHOW_ERROR, ui.checkError->isChecked());
   settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
-  
+
+  settings.setValue(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions->isChecked());
+  settings.setValue(SettingsKeys::INCLUDE_FILTER, ui.includeText->text());
+  settings.setValue(SettingsKeys::EXCLUDE_FILTER, ui.excludeText->text());
 }
 
 void ConsoleWindow::promptForBagFile()
@@ -380,14 +366,10 @@ void ConsoleWindow::processFilterText()
 {
   bool use_re = ui.action_RegularExpressions->isChecked();
 
-  QSettings settings;
-  settings.setValue(SettingsKeys::USE_REGEXPS, use_re);
-
   QRegExp re = regExpFromText(ui.includeText->text(), use_re);
   if (re.isValid()) {
     ui.includeLabel->setStyleSheet("QLabel { }");
     ui.logList->logFilter()->setIncludeRegExp(re);
-    settings.setValue(SettingsKeys::INCLUDE_FILTER, ui.includeText->text());
   } else {
     ui.includeLabel->setStyleSheet("QLabel { background-color : red; color : white; }");
   }
@@ -396,7 +378,6 @@ void ConsoleWindow::processFilterText()
   if (re.isValid()) {
     ui.excludeLabel->setStyleSheet("QLabel { }");
     ui.logList->logFilter()->setExcludeRegExp(re);
-    settings.setValue(SettingsKeys::EXCLUDE_FILTER, ui.excludeText->text());
   } else {
     ui.excludeLabel->setStyleSheet("QLabel { background-color : red; color : white; }");
   }  

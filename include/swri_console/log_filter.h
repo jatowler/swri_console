@@ -54,12 +54,18 @@ class LogFilter : public QObject
 
  public Q_SLOTS:
   void setNodeFilter(const std::vector<int> &nids);
-  void setSeverityMask(uint8_t mask);
+  void enableDebug(bool show);
+  void enableInfo(bool show);
+  void enableWarn(bool show);
+  void enableError(bool show);
+  void enableFatal(bool show);
 
   void setIncludeRegExp(const QRegExp &regexp);
   void setExcludeRegExp(const QRegExp &regexp);
 
  private:
+  void changeSeverity(uint8_t severity, bool show);
+  
   std::unordered_set<int> nids_;
   uint8_t severity_mask_;
 

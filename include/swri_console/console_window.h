@@ -60,7 +60,6 @@ class ConsoleWindow : public QMainWindow {
   void clearMessages();
   void saveLogs();
   void rosConnected(bool connected, const QString &master_uri);
-  void setSeverityFilter();
   void nodeSelectionChanged();
   
   void setFont(const QFont &font);

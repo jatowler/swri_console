@@ -30,6 +30,8 @@
 #include <swri_console/log_filter.h>
 #include <swri_console/log.h>
 
+#include <rosgraph_msgs/Log.h>
+
 #include <QDebug>
 
 namespace swri_console
@@ -71,11 +73,43 @@ void LogFilter::setNodeFilter(const std::vector<int> &nids)
   Q_EMIT filterModified();
 }
 
-void LogFilter::setSeverityMask(uint8_t mask)
+void LogFilter::enableDebug(bool enable)
 {
-  if (severity_mask_ == mask) { return; }
-  severity_mask_ = mask;
-  Q_EMIT filterModified();
+  changeSeverity(rosgraph_msgs::Log::DEBUG, enable);
+}
+
+void LogFilter::enableInfo(bool enable)
+{
+  changeSeverity(rosgraph_msgs::Log::INFO, enable);
+}
+
+void LogFilter::enableWarn(bool enable)
+{
+  changeSeverity(rosgraph_msgs::Log::WARN, enable);
+}
+
+void LogFilter::enableError(bool enable)
+{
+  changeSeverity(rosgraph_msgs::Log::ERROR, enable);
+}
+
+void LogFilter::enableFatal(bool enable)
+{
+  changeSeverity(rosgraph_msgs::Log::FATAL, enable);
+}
+
+void LogFilter::changeSeverity(uint8_t severity, bool enable)
+{
+  uint8_t new_mask = severity_mask_;
+  if (enable) {
+    new_mask = new_mask | severity;
+  } else {
+    new_mask = new_mask & ~severity;
+  }
+  if (new_mask != severity_mask_) {
+    severity_mask_ = new_mask;
+    Q_EMIT filterModified();
+  }
 }
 
 void LogFilter::setIncludeRegExp(const QRegExp &regexp)
