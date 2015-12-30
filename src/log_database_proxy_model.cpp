@@ -51,110 +51,15 @@ LogDatabaseProxyModel::LogDatabaseProxyModel(LogDatabase *db)
                    this, SLOT(handleDatabaseCleared()));
 }
 
-void LogDatabaseProxyModel::setAbsoluteTime(bool absolute)
-{
-  if (absolute == display_absolute_time_) {
-    return;
-  }
-
-  display_absolute_time_ = absolute;
-
-  QSettings settings;
-  settings.setValue(SettingsKeys::ABSOLUTE_TIMESTAMPS, display_absolute_time_);
-
-  if (display_time_ && msg_mapping_.size()) {
-    Q_EMIT dataChanged(index(0), index(msg_mapping_.size()));
-  }
-}
-
-void LogDatabaseProxyModel::setDisplayTime(bool display)
-{
-  if (display == display_time_) {
-    return;
-  }
-
-  display_time_ = display;
-
-  QSettings settings;
-  settings.setValue(SettingsKeys::DISPLAY_TIMESTAMPS, display_time_);
-
-  if (msg_mapping_.size()) {
-    Q_EMIT dataChanged(index(0), index(msg_mapping_.size()));
-  }
-}
-
-void LogDatabaseProxyModel::setDebugColor(const QColor& debug_color)
-{
-  debug_color_ = debug_color;
-  QSettings settings;
-  settings.setValue(SettingsKeys::DEBUG_COLOR, debug_color);
-  reset();
-}
-
-void LogDatabaseProxyModel::setInfoColor(const QColor& info_color)
-{
-  info_color_ = info_color;
-  QSettings settings;
-  settings.setValue(SettingsKeys::INFO_COLOR, info_color);
-  reset();
-}
-
-void LogDatabaseProxyModel::setWarnColor(const QColor& warn_color)
-{
-  warn_color_ = warn_color;
-  QSettings settings;
-  settings.setValue(SettingsKeys::WARN_COLOR, warn_color);
-  reset();
-}
-
-void LogDatabaseProxyModel::setErrorColor(const QColor& error_color)
-{
-  error_color_ = error_color;
-  QSettings settings;
-  settings.setValue(SettingsKeys::ERROR_COLOR, error_color);
-  reset();
-}
-
-void LogDatabaseProxyModel::setFatalColor(const QColor& fatal_color)
-{
-  fatal_color_ = fatal_color;
-  QSettings settings;
-  settings.setValue(SettingsKeys::FATAL_COLOR, fatal_color);
-  reset();
-}
-
-QVariant LogDatabaseProxyModel::data(
-  const QModelIndex &index, int role) const
-{
-  if (index.parent().isValid() &&
-      static_cast<size_t>(index.row()) >= msg_mapping_.size()) {
-    return QVariant();
-  }
-
-  const LineMap line_idx = msg_mapping_[index.row()];
-  const LogEntry &item = db_->log()[line_idx.log_index];
-
-  if (role == Qt::DisplayRole) {
-  }
-  else if (role == Qt::ForegroundRole && colorize_logs_) {
-  }
-  else if (role == Qt::ToolTipRole) {
-  }
-      
-  return QVariant();
-}
-
-void LogDatabaseProxyModel::reset()
-{
-  beginResetModel();
-  msg_mapping_.clear();
-  early_mapping_.clear();
-  earliest_log_index_ = db_->log().size();
-  latest_log_index_ = earliest_log_index_;
-  endResetModel();
-  scheduleIdleProcessing();
-}
-
+QSettings settings;
+settings.setValue(SettingsKeys::ABSOLUTE_TIMESTAMPS, display_absolute_time_);
+settings.setValue(SettingsKeys::DISPLAY_TIMESTAMPS, display_time_);
+QSettings settings;
+settings.setValue(SettingsKeys::DEBUG_COLOR, debug_color);
+settings.setValue(SettingsKeys::INFO_COLOR, info_color);
+settings.setValue(SettingsKeys::WARN_COLOR, warn_color);
+settings.setValue(SettingsKeys::ERROR_COLOR, error_color);
+settings.setValue(SettingsKeys::FATAL_COLOR, fatal_color);
 
 void LogDatabaseProxyModel::saveToFile(const QString& filename) const
 {
@@ -217,19 +122,5 @@ void LogDatabaseProxyModel::saveTextFile(const QString& filename) const
   }
   outstream.flush();
   outFile.close();
-}
-
-void LogDatabaseProxyModel::handleDatabaseCleared()
-{
-  reset();
-}
-
-void LogDatabaseProxyModel::minTimeUpdated()
-{
-  if (display_time_ &&
-      !display_absolute_time_
-      && msg_mapping_.size()) {
-    Q_EMIT dataChanged(index(0), index(msg_mapping_.size()));
-  }  
 }
 }  // namespace swri_console
