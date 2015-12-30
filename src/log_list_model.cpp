@@ -92,10 +92,31 @@ int LogListModel::rowCount(const QModelIndex &parent) const
 {
   int size = 0;
   for (auto const &it : blocks_) {
-    size += it.lines.size();
+    size += it.rows.size();
   }
   
   return size;
+}
+
+bool LogListModel::decomposeModelIndex(int &session_idx, int &row_idx,
+                                       const QModelIndex index) const
+{
+  session_idx = -1;
+  row_idx = index.row();
+
+  for (size_t i = 0; i < blocks_.size(); i++) {
+    if (row_idx < blocks_[i].rows.size()) {
+      session_idx = i;
+      break;
+    }
+    row_idx -= blocks_[i].rows.size();
+  }
+
+  if (session_idx < 0) {
+    return false;
+  }
+
+  return true;
 }
 
 QVariant LogListModel::data(const QModelIndex &index, int role) const
@@ -107,6 +128,7 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
     case Qt::DisplayRole:
     case Qt::ToolTipRole:
     case Qt::ForegroundRole:
+    case ExtendedLogRole:
       break;
     default:
       return QVariant();
@@ -116,23 +138,14 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
     return QVariant();
   } 
 
-  int session_idx = -1;
-  int line_idx = index.row();
-
-  for (size_t i = 0; i < blocks_.size(); i++) {
-    if (line_idx < blocks_[i].lines.size()) {
-      session_idx = i;
-      break;
-    }
-    line_idx -= blocks_[i].lines.size();
-  }
-
-  if (session_idx < 0) {
+  int session_idx;
+  int row_idx;
+  if (!decomposeModelIndex(session_idx, row_idx, index)) {
     return QVariant();
   }
-  
+    
   int sid = blocks_[session_idx].session_id;
-  LineMap line_map = blocks_[session_idx].lines[line_idx];
+  RowMap line_map = blocks_[session_idx].rows[row_idx];
   size_t lid = line_map.log_index;
   Log log = db_->session(sid).log(lid);
   
@@ -146,6 +159,8 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
     return toolTipRole(log, line_map.line_index);
   } else if (role == Qt::ForegroundRole) {
     return foregroundRole(log, line_map.line_index);
+  } else if (role == ExtendedLogRole) {
+    return extendedLogRole(log, line_map.line_index);
   } else {
     return QVariant();
   }
@@ -332,10 +347,10 @@ void LogListModel::scheduleIdleProcessing()
 void LogListModel::processOldMessages()
 {
   // We process old messages in two steps.  First, we process the
-  // remaining messages in chunks and store them in a early_lines
+  // remaining messages in chunks and store them in a early_rows
   // buffer if they pass all the filters.  When the early mapping
   // buffer is large enough (or we have processed everything for that
-  // session), then we merge the early_lines buffer in the main
+  // session), then we merge the early_rows buffer in the main
   // buffer.  This approach allows us to process very large logs
   // without causing major lag for the user.
   //
@@ -371,25 +386,25 @@ void LogListModel::processOldMessages()
       QStringList text_lines = log.textLines();
       for (int r = 0; r < text_lines.size(); r++) {
         // Note that we have to add the lines backwards to maintain the proper order.
-        block.early_lines.push_front(LineMap(block.earliest_log_index-1,
-                                             text_lines.size()-1-r));
+        block.early_rows.push_front(RowMap(block.earliest_log_index-1,
+                                            text_lines.size()-1-r));
       }
     }
 
-    if ((block.earliest_log_index == 0 && block.early_lines.size()) ||
-        block.early_lines.size() > 200) {
+    if ((block.earliest_log_index == 0 && block.early_rows.size()) ||
+        block.early_rows.size() > 200) {
       size_t start_row = 0;
       for (size_t r = 0; r < i; r++) {
-        start_row += blocks_[r].lines.size();
+        start_row += blocks_[r].rows.size();
       }
 
       beginInsertRows(QModelIndex(),
                       start_row,
-                      start_row + block.early_lines.size() - 1);
-      block.lines.insert(block.lines.begin(),
-                         block.early_lines.begin(),
-                         block.early_lines.end());
-      block.early_lines.clear();
+                      start_row + block.early_rows.size() - 1);
+      block.rows.insert(block.rows.begin(),
+                        block.early_rows.begin(),
+                        block.early_rows.end());
+      block.early_rows.clear();
       endInsertRows();
 
       Q_EMIT messagesAdded();
@@ -413,7 +428,7 @@ void LogListModel::processNewMessages()
       continue;
     }
 
-    std::deque<LineMap> new_items;
+    std::deque<RowMap> new_items;
     for(; block.latest_log_index < session.logCount(); block.latest_log_index++) {
       const Log log = session.log(block.latest_log_index);
 
@@ -423,22 +438,22 @@ void LogListModel::processNewMessages()
 
       QStringList text_lines = log.textLines();
       for (int r = 0; r < text_lines.size(); r++) {
-        new_items.push_back(LineMap(block.latest_log_index, r));
+        new_items.push_back(RowMap(block.latest_log_index, r));
       }
     }
 
     if (!new_items.empty()) {
       size_t start_row = 0;
       for (size_t r = 0; r <= i; r++) {
-        start_row += blocks_[r].lines.size();
+        start_row += blocks_[r].rows.size();
       }
       
       beginInsertRows(QModelIndex(),
                       start_row,
                       start_row + new_items.size() - 1);
-      block.lines.insert(block.lines.end(),
-                         new_items.begin(),
-                         new_items.end());
+      block.rows.insert(block.rows.end(),
+                        new_items.begin(),
+                        new_items.end());
       endInsertRows();
       messages_added = true;
     }
@@ -446,6 +461,48 @@ void LogListModel::processNewMessages()
 
   if (messages_added) {
     Q_EMIT messagesAdded();
+  }
+}
+
+void LogListModel::reduceIndices(QModelIndexList &indices)
+{
+  // This is irritatingly complex.  This takes a sorted list of model
+  // indices and reduces it so that there is one index per log (since
+  // multiple line logs have multiple indices).  Currently this is
+  // needed by the copy extended logs function.
+    
+  int last_session_idx = -1;
+  size_t last_log_idx = 0;
+  int dropped = 0;
+  
+  for (int i = 0; i < indices.size(); i++) {
+    int session_idx;
+    int row_idx;
+   
+    if (!decomposeModelIndex(session_idx, row_idx, indices[i])) {
+      // Should not happen
+      dropped++;
+    }
+
+    // One MEELLION indirects...
+    size_t log_idx = blocks_[session_idx].rows[row_idx].log_index;
+    int line_idx = blocks_[session_idx].rows[row_idx].line_index;
+
+    if (session_idx == last_session_idx && log_idx == last_log_idx) {
+      dropped++;
+    } else {
+      last_session_idx = session_idx;
+      last_log_idx = log_idx;
+
+      if (dropped != 0) {
+        indices[i-dropped] = indices[i];
+      }
+    }
+  }
+
+  while (dropped > 0) {
+    indices.removeLast();
+    dropped--;
   }
 }
 

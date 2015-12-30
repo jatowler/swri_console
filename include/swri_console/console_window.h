@@ -62,10 +62,6 @@ class ConsoleWindow : public QMainWindow {
   void rosConnected(bool connected, const QString &master_uri);
   void setSeverityFilter();
   void nodeSelectionChanged();
-  void showLogContextMenu(const QPoint& point);
-  void selectAllLogs();
-  void copyLogs();
-  void copyExtendedLogs();
   
   void setFont(const QFont &font);
 

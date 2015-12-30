@@ -68,14 +68,16 @@ class LogListWidget : public QWidget
   void setTimeDisplay(const TimeDisplaySetting &value);
   void setSeverityColor(const uint8_t severity, const QColor &color);
 
+  void selectAll();
+  void copyLogsToClipboard();
+  void copyExtendedLogsToClipboard();
+                                    
  private Q_SLOTS:
   void handleMessagesAdded();
   void userScrolled(int);
-
- // private Q_SLOTS:
- //  void handleViewSelectionChanged();
-
+    
  private:
+  
   LogDatabase *db_;
   LogListModel *model_;
   QListView *list_view_;

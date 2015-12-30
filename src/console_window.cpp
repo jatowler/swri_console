@@ -36,7 +36,6 @@
 
 #include <swri_console/console_window.h>
 #include <swri_console/log_database.h>
-#include <swri_console/log_database_proxy_model.h>
 #include <swri_console/log_filter.h>
 #include <swri_console/settings_keys.h>
 
@@ -66,6 +65,11 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   ui.sessionList->setDatabase(db);
   ui.nodeList->setDatabase(db);
   ui.logList->setDatabase(db);
+
+  ui.logList->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui.logList->addAction(ui.action_SelectAll);
+  ui.logList->addAction(ui.action_Copy);
+  ui.logList->addAction(ui.action_CopyExtended);
   
   QObject::connect(ui.sessionList,
                    SIGNAL(selectionChanged(const std::vector<int>&)),
@@ -85,15 +89,15 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
 
-  QObject::connect(ui.action_Copy, SIGNAL(triggered()),
-                   this, SLOT(copyLogs()));
 
-  QObject::connect(ui.action_CopyExtended, SIGNAL(triggered()),
-                   this, SLOT(copyExtendedLogs()));
-  
   QObject::connect(ui.action_SelectAll, SIGNAL(triggered()),
-                   this, SLOT(selectAllLogs()));
+                   ui.logList, SLOT(selectAll()));
+  QObject::connect(ui.action_Copy, SIGNAL(triggered()),
+                   ui.logList, SLOT(copyLogsToClipboard()));
+  QObject::connect(ui.action_CopyExtended, SIGNAL(triggered()),
+                   ui.logList, SLOT(copyExtendedLogsToClipboard()));
 
+  
   QObject::connect(ui.action_ReadBagFile, SIGNAL(triggered(bool)),
                    this, SLOT(promptForBagFile()));
 
@@ -267,55 +271,6 @@ void ConsoleWindow::setSeverityFilter()
   settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
 
   ui.logList->logFilter()->setSeverityMask(mask);
-}
-
-void ConsoleWindow::showLogContextMenu(const QPoint& point)
-{
-  // QMenu contextMenu(tr("Context menu"), ui.messageList);
-
-  // QAction select_all(tr("Select All"), ui.messageList);
-  // connect(&select_all, SIGNAL(triggered()), this, SLOT(selectAllLogs()));
-
-  // QAction copy(tr("Copy"), ui.messageList);
-  // connect(&copy, SIGNAL(triggered()), this, SLOT(copyLogs()));
-
-  // QAction copy_extended(tr("Copy Extended"), ui.messageList);
-  // connect(&copy_extended, SIGNAL(triggered()), this, SLOT(copyExtendedLogs()));
-            
-  // contextMenu.addAction(&select_all);
-  // contextMenu.addAction(&copy);
-  // contextMenu.addAction(&copy_extended);
-
-  // contextMenu.exec(ui.messageList->mapToGlobal(point));
-}
-
-void ConsoleWindow::selectAllLogs()
-{
-  // if (ui.nodeList->hasFocus()) {
-  //   ui.nodeList->selectAll();
-  // } else {
-  //   ui.messageList->selectAll();
-  // }
-}
-
-void ConsoleWindow::copyLogs()
-{
-  // QStringList buffer;
-  // foreach(const QModelIndex &index, ui.messageList->selectionModel()->selectedIndexes())
-  // {
-  //   // buffer << db_proxy_->data(index, Qt::DisplayRole).toString();
-  // }
-  // QApplication::clipboard()->setText(buffer.join(tr("\n")));
-}
-
-void ConsoleWindow::copyExtendedLogs()
-{
-  // QStringList buffer;
-  // foreach(const QModelIndex &index, ui.messageList->selectionModel()->selectedIndexes())
-  // {
-  //   // buffer << db_proxy_->data(index, LogDatabaseProxyModel::ExtendedLogRole).toString();
-  // }
-  // QApplication::clipboard()->setText(buffer.join(tr("\n\n")));
 }
 
 void ConsoleWindow::setFont(const QFont &font)

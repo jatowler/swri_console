@@ -32,10 +32,13 @@
 #include <algorithm>
 #include <set>
 
+#include <QApplication>
+#include <QClipboard>
+#include <QDebug>
 #include <QListView>
+#include <QMenu>
 #include <QScrollBar>
 #include <QVBoxLayout>
-#include <QDebug>
 
 #include <swri_console/log_database.h>
 #include <swri_console/log_list_model.h>
@@ -60,6 +63,10 @@ LogListWidget::LogListWidget(QWidget *parent)
   
   list_view_->setSelectionBehavior(QAbstractItemView::SelectItems);
   list_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+  // Turn off the list view's context menu so that Qt will pass
+  // context menu requests up to us.
+  list_view_->setContextMenuPolicy(Qt::NoContextMenu);  
   
 
   auto *main_layout = new QVBoxLayout();  
@@ -145,5 +152,57 @@ void LogListWidget::userScrolled(int value)
   } else {
     setAutoScrollToBottom(false);
   }  
+}
+
+void LogListWidget::selectAll()
+{
+  list_view_->selectAll();
+}
+
+void LogListWidget::copyLogsToClipboard()
+{
+  QModelIndexList selected = list_view_->selectionModel()->selection().indexes();
+
+  // QSelectionModel does not return a sorted set, and it will
+  // typically be in the order that the items were selected by the
+  // user.  We sort them by their row so that the copy items will have
+  // the same physical relationship as the source.
+  std::sort(selected.begin(), selected.end(),
+            [](const QModelIndex &a, const QModelIndex &b) {
+              return a.row() < b.row();
+            });
+  
+  QStringList buffer;
+  buffer.reserve(selected.size());
+
+  for (auto const &index : selected) {
+    buffer.append(model_->data(index, Qt::DisplayRole).toString());
+  }
+  QApplication::clipboard()->setText(buffer.join(tr("\n")));
+}
+
+void LogListWidget::copyExtendedLogsToClipboard()
+{
+  QModelIndexList selected = list_view_->selectionModel()->selection().indexes();
+
+  // QSelectionModel does not return a sorted set, and it will
+  // typically be in the order that the items were selected by the
+  // user.  We sort them by their row so that the copy items will have
+  // the same physical relationship as the source.
+  std::sort(selected.begin(), selected.end(),
+            [](const QModelIndex &a, const QModelIndex &b) {
+              return a.row() < b.row();
+            });
+
+  model_->reduceIndices(selected);
+  
+  QStringList buffer;
+  buffer.reserve(selected.size());
+
+  for (auto const &index : selected) {
+    buffer.append(model_->data(index, LogListModel::ExtendedLogRole).toString());
+  }
+  QString separator = tr("----------------------------------------\n");
+  QApplication::clipboard()->setText(buffer.join(separator));
 }
 }  // namespace swri_console

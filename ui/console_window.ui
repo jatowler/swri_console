@@ -307,7 +307,7 @@
   </action>
   <action name="action_Copy">
    <property name="text">
-    <string>&amp;Copy</string>
+    <string>&amp;Copy Logs</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
@@ -317,8 +317,11 @@
    <property name="text">
     <string>Select &amp;All</string>
    </property>
+   <property name="toolTip">
+    <string>Select All Logs</string>
+   </property>
    <property name="shortcut">
-    <string>Ctrl+A</string>
+    <string>Ctrl+Shift+A</string>
    </property>
   </action>
   <action name="action_ReadBagFile">
@@ -388,7 +391,7 @@
   </action>
   <action name="action_CopyExtended">
    <property name="text">
-    <string>Copy &amp;Extended</string>
+    <string>Copy &amp;Extended Logs</string>
    </property>
    <property name="toolTip">
     <string>Copy Extended Log</string>

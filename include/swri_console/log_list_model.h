@@ -51,6 +51,10 @@ class LogListModel : public QAbstractListModel
   LogListModel(QObject *parent=0);
   ~LogListModel();
 
+  enum {
+     ExtendedLogRole = Qt::UserRole + 0
+  };
+  
   void setDatabase(LogDatabase *db);  
 
   virtual int rowCount(const QModelIndex &parent) const;
@@ -64,7 +68,9 @@ class LogListModel : public QAbstractListModel
   void setSeverityColor(const uint8_t severity, const QColor &color);
 
   void setSessionFilter(const std::vector<int> &sids);
-    
+
+  void reduceIndices(QModelIndexList &indices);
+  
  Q_SIGNALS:
   void messagesAdded();
 
@@ -78,6 +84,9 @@ class LogListModel : public QAbstractListModel
   void timerEvent(QTimerEvent *);
   void processNewMessages();
 
+  bool decomposeModelIndex(int &session_idx, int &row_idx,
+                           const QModelIndex index) const;
+  
   QVariant displayRole(const Log &log, int line_index) const;
   QVariant toolTipRole(const Log &log, int line_index) const;
   QVariant foregroundRole(const Log &log, int line_index) const;
@@ -93,15 +102,15 @@ class LogListModel : public QAbstractListModel
   QColor error_color_;
   QColor fatal_color_;
   
-  // For performance reasons, the proxy model presents single line
+  // For performance reasons, the proxy model presents single row
   // items, while the underlying log database stores multi-line
-  // messages.  The LineMap struct is used to map our item indices to
+  // messages.  The RowMap struct is used to map our row indices to
   // the log & line that it represents.
-  struct LineMap {
+  struct RowMap {
     size_t log_index;
     int line_index;
-    LineMap() : log_index(0), line_index(0) {}
-    LineMap(size_t log, int line) : log_index(log), line_index(line) {}
+    RowMap() : log_index(0), line_index(0) {}
+    RowMap(size_t log, int line) : log_index(log), line_index(line) {}
   };
 
   struct SessionData
@@ -109,10 +118,10 @@ class LogListModel : public QAbstractListModel
     int session_id;
 
     size_t latest_log_index;
-    std::deque<LineMap> lines;
+    std::deque<RowMap> rows;
 
     size_t earliest_log_index;
-    std::deque<LineMap> early_lines;
+    std::deque<RowMap> early_rows;
   };
   std::vector<SessionData> blocks_;
 
