@@ -62,7 +62,7 @@ class Log
   QString functionName() const;
   QString fileName() const;
 
-  int lineNumber() const;
+  uint32_t lineNumber() const;
   
   QStringList textLines() const;
   QString textSingleLine() const;  

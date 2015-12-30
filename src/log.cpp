@@ -29,6 +29,7 @@
 // *****************************************************************************
 #include <swri_console/log.h>
 #include <swri_console/session.h>
+#include <swri_console/log_database.h>
 
 namespace swri_console
 {
@@ -64,7 +65,25 @@ int Log::nodeId() const
 QString Log::nodeName() const
 {
   if (!session_) { return "invalid log"; }
-  return session_
+  return session_->db_->nodeName(nodeId());
+}
+
+QString Log::functionName() const
+{
+  if (!session_) { return QString(); }
+  return session_->log_data_[index_].function;
+}
+
+QString Log::fileName() const
+{
+  if (!session_) { return QString(); }
+  return session_->log_data_[index_].file;
+}
+
+uint32_t Log::lineNumber() const
+{
+  if (!session_) { return 0; }
+  return session_->log_data_[index_].line;
 }
 
 QStringList Log::textLines() const

@@ -217,7 +217,7 @@ QVariant LogListModel::toolTipRole(const Log &log, int line_index) const
 QVariant LogListModel::extendedLogRole(const Log &log, int line_index) const
 {
   char stamp[128];
-  snprintf(stamp, sizeof(buffer),
+  snprintf(stamp, sizeof(stamp),
            "%d.%09d",
            log.absoluteTime().sec,
            log.absoluteTime().nsec);
