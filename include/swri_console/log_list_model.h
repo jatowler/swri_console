@@ -92,6 +92,8 @@ class LogListModel : public QAbstractListModel
   QVariant foregroundRole(const Log &log, int line_index) const;
   QVariant backgroundRole(int session_idx, int row_idx) const;
   QVariant extendedLogRole(const Log &log, int line_index) const;
+
+  QVariant separatorData(int session_idx, int role) const;
   
   LogDatabase *db_;
   LogFilter *filter_;

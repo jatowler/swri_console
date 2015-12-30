@@ -130,6 +130,7 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
     case Qt::ForegroundRole:
     case Qt::BackgroundRole:
     case ExtendedLogRole:
+    case Qt::TextAlignmentRole:
       break;
     default:
       return QVariant();
@@ -144,7 +145,11 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
   if (!decomposeModelIndex(session_idx, row_idx, index)) {
     return QVariant();
   }
-    
+
+  if (row_idx == 0) {
+    return separatorData(session_idx, role);
+  }
+  
   int sid = blocks_[session_idx].session_id;
   RowMap line_map = blocks_[session_idx].rows[row_idx];
   size_t lid = line_map.log_index;
@@ -169,6 +174,29 @@ QVariant LogListModel::data(const QModelIndex &index, int role) const
   }
 
   return QVariant();
+}
+
+QVariant LogListModel::separatorData(int session_idx, int role) const
+{
+  const SessionData &data = blocks_[session_idx];
+  const Session &session = db_->session(data.session_id);
+  
+  if (role == Qt::DisplayRole) {
+    return session.name();
+  } else if (role == Qt::ToolTipRole) {
+    return session.name();
+  } else if (role == Qt::ForegroundRole) {
+    return Qt::white;
+  } else if (role == Qt::BackgroundRole) {
+    return QColor(110, 110, 110);
+    
+  } else if (role == ExtendedLogRole) {
+    return QString("\n ------ %1 ----- \n").arg(session.name());
+  } else if (role == Qt::TextAlignmentRole) {
+    return Qt::AlignHCenter;
+  } else {
+    return QVariant();
+  }  
 }
 
 QVariant LogListModel::displayRole(const Log &log, int line_index) const
@@ -330,6 +358,8 @@ void LogListModel::reset()
     blocks_.emplace_back();
     SessionData &block = blocks_.back();    
     block.session_id = sids_[i];
+    // Insert one item that be a placeholder for the session header.
+    block.rows.push_back(RowMap());
     block.latest_log_index = session.logCount();
     block.earliest_log_index = session.logCount();
     block.alternate_base = 0;
@@ -373,8 +403,11 @@ void LogListModel::processOldMessages()
   // them.  We could process all of them, but then each processing
   // time chunk would be grow with how many sessions are selected, and
   // we risk making the GUI unresponsive is a lot of sessions are active.
+  //
+  // Also, we iterate through the blocks backwards for this to get
+  // better behavior when follow latest messages is selected.
   for (size_t i = 0; i < blocks_.size(); i++) {
-    SessionData &block = blocks_[i];
+    SessionData &block = blocks_[blocks_.size()-i-1];
     
     if (block.earliest_log_index == 0) {
       // Nothing to do for this block.
@@ -412,9 +445,9 @@ void LogListModel::processOldMessages()
       }
 
       beginInsertRows(QModelIndex(),
-                      start_row,
-                      start_row + block.early_rows.size() - 1);
-      block.rows.insert(block.rows.begin(),
+                      start_row + 1,
+                      start_row + block.early_rows.size() - 1 + 1);
+      block.rows.insert(block.rows.begin() + 1, 
                         block.early_rows.begin(),
                         block.early_rows.end());
       block.alternate_base += block.early_rows.size();
@@ -499,18 +532,24 @@ void LogListModel::reduceIndices(QModelIndexList &indices)
       dropped++;
     }
 
-    // One MEELLION indirects...
-    size_t log_idx = blocks_[session_idx].rows[row_idx].log_index;
-    int line_idx = blocks_[session_idx].rows[row_idx].line_index;
-
-    if (session_idx == last_session_idx && log_idx == last_log_idx) {
-      dropped++;
+    if (row_idx == 0) {
+      indices[i-dropped] = indices[i];
+      last_session_idx = -1;
+      last_log_idx = 0;
     } else {
-      last_session_idx = session_idx;
-      last_log_idx = log_idx;
+      // One MEELLION indirects...
+      size_t log_idx = blocks_[session_idx].rows[row_idx].log_index;
+      int line_idx = blocks_[session_idx].rows[row_idx].line_index;
 
-      if (dropped != 0) {
-        indices[i-dropped] = indices[i];
+      if (session_idx == last_session_idx && log_idx == last_log_idx) {
+        dropped++;
+      } else {
+        last_session_idx = session_idx;
+        last_log_idx = log_idx;
+
+        if (dropped != 0) {
+          indices[i-dropped] = indices[i];
+        }
       }
     }
   }
