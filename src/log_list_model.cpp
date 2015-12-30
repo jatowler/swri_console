@@ -44,7 +44,7 @@ LogListModel::LogListModel(QObject *parent)
   QAbstractListModel(parent),
   db_(NULL),
   filter_(new LogFilter(this)),
-  time_display_(RELATIVE_TIME),
+  stamp_format_(STAMP_FORMAT_RELATIVE),
   debug_color_(Qt::gray),
   info_color_(Qt::black),
   warn_color_(QColor(255,127,0)),
@@ -215,9 +215,9 @@ QVariant LogListModel::displayRole(const Log &log, int line_index) const
   }
 
   QString header;
-  if (time_display_ == NO_TIME) {
+  if (stamp_format_ == STAMP_FORMAT_NONE) {
     header = QString("[%1] ").arg(severity);
-  } else if (time_display_ == RELATIVE_TIME) {
+  } else if (stamp_format_ == STAMP_FORMAT_RELATIVE) {
     ros::Time t = log.relativeTime();
     int32_t secs = t.sec;
     int hours = secs / 60 / 60;
@@ -313,10 +313,10 @@ void LogListModel::setSessionFilter(const std::vector<int> &sids)
   reset();
 }
 
-void LogListModel::setTimeDisplay(const TimeDisplaySetting &value)
+void LogListModel::setStampFormat(const StampFormat &format)
 {
-  if (time_display_ == value) { return; }
-  time_display_ = value;
+  if (stamp_format_ == format) { return; }
+  stamp_format_ = format;
   allDataChanged();
 }
 

@@ -35,34 +35,34 @@
 
 namespace swri_console
 {
-  /**
-   * This is simply a convenient place for storing all of the keys used for
-   * saving settings files.  Always referring to the consts here means we don't
-   * have to worry about problems due to typos, and changing a setting name
-   * in the future will be easy.
-   */
-  class SettingsKeys
-  {
-  public:
-    static const QString DISPLAY_TIMESTAMPS;
-    static const QString ABSOLUTE_TIMESTAMPS;
-    static const QString USE_REGEXPS;
-    static const QString INCLUDE_FILTER;
-    static const QString EXCLUDE_FILTER;
-    static const QString SHOW_DEBUG;
-    static const QString SHOW_INFO;
-    static const QString SHOW_WARN;
-    static const QString SHOW_ERROR;
-    static const QString SHOW_FATAL;
-    static const QString FONT;
-    static const QString DEBUG_COLOR;
-    static const QString INFO_COLOR;
-    static const QString WARN_COLOR;
-    static const QString ERROR_COLOR;
-    static const QString FATAL_COLOR;
-    static const QString COLORIZE_LOGS;
-  };
+/**
+ * This is simply a convenient place for storing all of the keys used for
+ * saving settings files.  Always referring to the consts here means we don't
+ * have to worry about problems due to typos, and changing a setting name
+ * in the future will be easy.
+ */
+class SettingsKeys
+{
+ public:
+  static const QString FONT;
+
+  static const QString TIMESTAMP_FORMAT;
+
+  static const QString USE_REGEXPS;
+  static const QString INCLUDE_FILTER;
+  static const QString EXCLUDE_FILTER;
+
+  static const QString SHOW_DEBUG;
+  static const QString SHOW_INFO;
+  static const QString SHOW_WARN;
+  static const QString SHOW_ERROR;
+  static const QString SHOW_FATAL;
+
+  static const QString DEBUG_COLOR;
+  static const QString INFO_COLOR;
+  static const QString WARN_COLOR;
+  static const QString ERROR_COLOR;
+  static const QString FATAL_COLOR;
+};
 }
-
-
 #endif //SWRI_CONSOLE_SETTINGS_KEYS_H

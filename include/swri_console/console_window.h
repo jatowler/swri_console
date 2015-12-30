@@ -36,6 +36,11 @@
 #include <QPushButton>
 #include <QSettings>
 #include "ui_console_window.h"
+#include <swri_console/constants.h>
+
+QT_BEGIN_NAMESPACE
+class QActionGroup;
+QT_END_NAMESPACE;
 
 namespace swri_console
 {
@@ -68,6 +73,7 @@ class ConsoleWindow : public QMainWindow {
 
  private Q_SLOTS:
   void processFilterText();
+  void handleTimestampActions();
   
 private:
   template <typename T>
@@ -80,10 +86,13 @@ private:
   };
   void loadSettings();
   void saveSettings();
+
+  StampFormat selectedStampFormat() const;
   
   Ui::ConsoleWindow ui;
   LogDatabase *db_;
 
+  QActionGroup *timestamp_actions_;
   QLabel *connection_status_;
 };  // class ConsoleWindow
 }  // namespace swri_console

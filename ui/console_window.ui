@@ -340,11 +340,14 @@
     <property name="title">
      <string>Options</string>
     </property>
-    <addaction name="action_ShowTimestamps"/>
+    <addaction name="action_NoTimestamps"/>
+    <addaction name="action_RelativeTimestamps"/>
     <addaction name="action_AbsoluteTimestamps"/>
+    <addaction name="separator"/>
     <addaction name="action_RegularExpressions"/>
     <addaction name="action_ColorizeLogs"/>
     <addaction name="action_SelectFont"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
@@ -409,6 +412,9 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Absolute Timestamps</string>
    </property>
@@ -416,7 +422,7 @@
     <string>Absolute Timestamps</string>
    </property>
   </action>
-  <action name="action_ShowTimestamps">
+  <action name="action_NoTimestamps">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -424,7 +430,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Timestamps</string>
+    <string>No Timestamps</string>
    </property>
   </action>
   <action name="action_ColorizeLogs">
@@ -463,6 +469,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="action_RelativeTimestamps">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Relative Timestamps</string>
    </property>
   </action>
  </widget>

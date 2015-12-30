@@ -95,8 +95,7 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    SIGNAL(selectionChanged(const std::vector<int>&)),
                    this,
                    SLOT(nodeSelectionChanged(const std::vector<int>&)));
-  
-  
+    
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
 
@@ -114,11 +113,13 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.action_SaveLogs, SIGNAL(triggered(bool)),
                    this, SLOT(saveLogs()));
 
-  // QObject::connect(ui.action_AbsoluteTimestamps, SIGNAL(toggled(bool)),
-  //                  db_proxy_, SLOT(setAbsoluteTime(bool)));
-
-  // QObject::connect(ui.action_ShowTimestamps, SIGNAL(toggled(bool)),
-  //                  db_proxy_, SLOT(setDisplayTime(bool)));
+  timestamp_actions_ = new QActionGroup(this);
+  timestamp_actions_->setExclusive(true);
+  timestamp_actions_->addAction(ui.action_NoTimestamps);
+  timestamp_actions_->addAction(ui.action_RelativeTimestamps);
+  timestamp_actions_->addAction(ui.action_AbsoluteTimestamps);  
+  QObject::connect(timestamp_actions_, SIGNAL(triggered(QAction *)),
+                   this, SLOT(handleTimestampActions()));
 
   QObject::connect(ui.action_SelectFont, SIGNAL(triggered(bool)),
                    this, SIGNAL(selectFont()));
@@ -152,10 +153,6 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.logList, SIGNAL(autoScrollToBottomChanged(bool)),
                    ui.checkFollowNewest, SLOT(setChecked(bool)));
 
-  // Right-click menu for the message list
-  // QObject::connect(ui.messageList, SIGNAL(customContextMenuRequested(const QPoint&)),
-  //                   this, SLOT(showLogContextMenu(const QPoint&)));
-
   QObject::connect(ui.clearAllButton, SIGNAL(clicked()),
                     this, SLOT(clearAll()));
   QObject::connect(ui.clearMessagesButton, SIGNAL(clicked()),
@@ -167,8 +164,7 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    this, SLOT(processFilterText()));
   QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
                    this, SLOT(processFilterText()));
-
-  
+ 
   QList<int> sizes;
   sizes.append(100);
   sizes.append(1000);
@@ -251,15 +247,23 @@ void ConsoleWindow::setFont(const QFont &font)
 
 void ConsoleWindow::loadSettings()
 {
-  // First, load all the boolean settings...
-  loadBooleanSetting(SettingsKeys::DISPLAY_TIMESTAMPS, ui.action_ShowTimestamps);
-  loadBooleanSetting(SettingsKeys::ABSOLUTE_TIMESTAMPS, ui.action_AbsoluteTimestamps);
-
-  // The severity level has to be handled a little differently, since they're all combined
-  // into a single integer mask under the hood.  First they have to be loaded from the settings,
-  // then set in the UI, then the mask has to actually be applied.
   QSettings settings;
 
+  {
+    int format = settings.value(SettingsKeys::TIMESTAMP_FORMAT, STAMP_FORMAT_RELATIVE).toInt();
+    ui.action_NoTimestamps->setChecked(false);
+    ui.action_RelativeTimestamps->setChecked(false);
+    ui.action_AbsoluteTimestamps->setChecked(false);    
+    if (format == STAMP_FORMAT_NONE) {
+      ui.action_NoTimestamps->setChecked(true);
+    } else if (format == STAMP_FORMAT_RELATIVE) {
+      ui.action_RelativeTimestamps->setChecked(true);
+    } else if (format == STAMP_FORMAT_ABSOLUTE) {
+      ui.action_AbsoluteTimestamps->setChecked(true);
+    }    
+    ui.logList->setStampFormat(selectedStampFormat());
+  }
+  
   { // Load severity masks
     bool enabled;
     enabled = settings.value(SettingsKeys::SHOW_DEBUG, true).toBool();
@@ -318,6 +322,12 @@ void ConsoleWindow::loadSettings()
 void ConsoleWindow::saveSettings()
 {
   QSettings settings;
+  settings.setValue(SettingsKeys::TIMESTAMP_FORMAT, selectedStampFormat());
+  
+  settings.setValue(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions->isChecked());
+  settings.setValue(SettingsKeys::INCLUDE_FILTER, ui.includeText->text());
+  settings.setValue(SettingsKeys::EXCLUDE_FILTER, ui.excludeText->text());
+
   settings.setValue(SettingsKeys::DEBUG_COLOR, ui.debugColor->color());
   settings.setValue(SettingsKeys::INFO_COLOR, ui.infoColor->color());
   settings.setValue(SettingsKeys::WARN_COLOR, ui.warnColor->color());
@@ -330,9 +340,6 @@ void ConsoleWindow::saveSettings()
   settings.setValue(SettingsKeys::SHOW_ERROR, ui.checkError->isChecked());
   settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
 
-  settings.setValue(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions->isChecked());
-  settings.setValue(SettingsKeys::INCLUDE_FILTER, ui.includeText->text());
-  settings.setValue(SettingsKeys::EXCLUDE_FILTER, ui.excludeText->text());
 }
 
 void ConsoleWindow::promptForBagFile()
@@ -385,6 +392,25 @@ void ConsoleWindow::processFilterText()
   } else {
     ui.excludeLabel->setStyleSheet("QLabel { background-color : red; color : white; }");
   }  
+}
+
+void ConsoleWindow::handleTimestampActions()
+{
+  ui.logList->setStampFormat(selectedStampFormat());
+}
+
+StampFormat ConsoleWindow::selectedStampFormat() const
+{
+  if (ui.action_NoTimestamps->isChecked()) {
+    return STAMP_FORMAT_NONE;
+  } else if (ui.action_RelativeTimestamps->isChecked()) {
+    return STAMP_FORMAT_RELATIVE;
+  } else if (ui.action_AbsoluteTimestamps->isChecked()) {
+    return STAMP_FORMAT_ABSOLUTE;
+  } else {
+    qWarning("Unexpected state in %s", __PRETTY_FUNCTION__);
+    return STAMP_FORMAT_RELATIVE;
+  }    
 }
 }  // namespace swri_console
 

@@ -32,21 +32,23 @@
 
 namespace swri_console
 {
-  const QString SettingsKeys::DISPLAY_TIMESTAMPS = "Timestamps/DisplayTimestamps";
-  const QString SettingsKeys::ABSOLUTE_TIMESTAMPS = "Timestamps/AbsoluteTimestamps";
-  const QString SettingsKeys::USE_REGEXPS = "Filters/UseRegexps";
-  const QString SettingsKeys::INCLUDE_FILTER = "Filters/IncludeFilter";
-  const QString SettingsKeys::EXCLUDE_FILTER = "Filters/ExcludeFilter";
-  const QString SettingsKeys::SHOW_DEBUG = "Severity/ShowDebug";
-  const QString SettingsKeys::SHOW_INFO = "Severity/ShowInfo";
-  const QString SettingsKeys::SHOW_WARN = "Severity/ShowWarn";
-  const QString SettingsKeys::SHOW_ERROR = "Severity/ShowError";
-  const QString SettingsKeys::SHOW_FATAL = "Severity/ShowFatal";
-  const QString SettingsKeys::FONT = "UI/Font";
-  const QString SettingsKeys::DEBUG_COLOR = "Colors/DebugColor";
-  const QString SettingsKeys::INFO_COLOR = "Colors/InfoColor";
-  const QString SettingsKeys::WARN_COLOR = "Colors/WarnColor";
-  const QString SettingsKeys::ERROR_COLOR = "Colors/ErrorColor";
-  const QString SettingsKeys::FATAL_COLOR = "Colors/FatalColor";
-  const QString SettingsKeys::COLORIZE_LOGS = "Colors/ColorizeLogs";
+const QString SettingsKeys::FONT = "UI/Font";
+
+const QString SettingsKeys::TIMESTAMP_FORMAT = "Timestamps/Format";
+
+const QString SettingsKeys::USE_REGEXPS = "Filters/UseRegexps";
+const QString SettingsKeys::INCLUDE_FILTER = "Filters/IncludeFilter";
+const QString SettingsKeys::EXCLUDE_FILTER = "Filters/ExcludeFilter";
+
+const QString SettingsKeys::SHOW_DEBUG = "Severity/ShowDebug";
+const QString SettingsKeys::SHOW_INFO = "Severity/ShowInfo";
+const QString SettingsKeys::SHOW_WARN = "Severity/ShowWarn";
+const QString SettingsKeys::SHOW_ERROR = "Severity/ShowError";
+const QString SettingsKeys::SHOW_FATAL = "Severity/ShowFatal";
+
+const QString SettingsKeys::DEBUG_COLOR = "Colors/DebugColor";
+const QString SettingsKeys::INFO_COLOR = "Colors/InfoColor";
+const QString SettingsKeys::WARN_COLOR = "Colors/WarnColor";
+const QString SettingsKeys::ERROR_COLOR = "Colors/ErrorColor";
+const QString SettingsKeys::FATAL_COLOR = "Colors/FatalColor";
 }

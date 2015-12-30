@@ -65,7 +65,7 @@ class LogListWidget : public QWidget
  public Q_SLOTS:
   void setSessionFilter(const std::vector<int> &sids);
   void setAutoScrollToBottom(bool auto_scroll);
-  void setTimeDisplay(const TimeDisplaySetting &value);
+  void setStampFormat(const StampFormat &format);
   void setDebugColor(const QColor &color);
   void setInfoColor(const QColor &color);
   void setWarnColor(const QColor &color);

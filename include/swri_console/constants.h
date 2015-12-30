@@ -32,11 +32,11 @@
 
 namespace swri_console
 {
-enum TimeDisplaySetting
+enum StampFormat
 {
-  NO_TIME,
-  RELATIVE_TIME,
-  ABSOLUTE_TIME
-};
+  STAMP_FORMAT_NONE     = 0,
+  STAMP_FORMAT_RELATIVE = 1,
+  STAMP_FORMAT_ABSOLUTE = 2
+};  // enum TimestampFormat
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_CONSTANTS_H_

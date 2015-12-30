@@ -128,9 +128,9 @@ void LogListWidget::setAutoScrollToBottom(bool auto_scroll)
   }
 }
 
-void LogListWidget::setTimeDisplay(const TimeDisplaySetting &value)
+void LogListWidget::setStampFormat(const StampFormat &format)
 {
-  model_->setTimeDisplay(value);
+  model_->setStampFormat(format);
 }
 
 void LogListWidget::setDebugColor(const QColor &color)

@@ -62,7 +62,7 @@ class LogListModel : public QAbstractListModel
 
   LogFilter* logFilter() { return filter_; }
 
-  void setTimeDisplay(const TimeDisplaySetting &value);
+  void setStampFormat(const StampFormat &format);
 
   void setDebugColor(const QColor &color);
   void setInfoColor(const QColor &color);
@@ -101,7 +101,7 @@ class LogListModel : public QAbstractListModel
   LogDatabase *db_;
   LogFilter *filter_;
 
-  TimeDisplaySetting time_display_;
+  StampFormat stamp_format_;
   QColor debug_color_;
   QColor info_color_;
   QColor warn_color_;
