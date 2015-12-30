@@ -66,7 +66,11 @@ class LogListWidget : public QWidget
   void setSessionFilter(const std::vector<int> &sids);
   void setAutoScrollToBottom(bool auto_scroll);
   void setTimeDisplay(const TimeDisplaySetting &value);
-  void setSeverityColor(const uint8_t severity, const QColor &color);
+  void setDebugColor(const QColor &color);
+  void setInfoColor(const QColor &color);
+  void setWarnColor(const QColor &color);
+  void setErrorColor(const QColor &color);
+  void setFatalColor(const QColor &color);
 
   void selectAll();
   void copyLogsToClipboard();

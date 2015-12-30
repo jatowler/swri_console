@@ -133,9 +133,29 @@ void LogListWidget::setTimeDisplay(const TimeDisplaySetting &value)
   model_->setTimeDisplay(value);
 }
 
-void LogListWidget::setSeverityColor(const uint8_t severity, const QColor &color)
+void LogListWidget::setDebugColor(const QColor &color)
 {
-  model_->setSeverityColor(severity, color);
+  model_->setDebugColor(color);
+}
+
+void LogListWidget::setInfoColor(const QColor &color)
+{
+  model_->setInfoColor(color);
+}
+
+void LogListWidget::setWarnColor(const QColor &color)
+{
+  model_->setWarnColor(color);
+}
+
+void LogListWidget::setErrorColor(const QColor &color)
+{
+  model_->setErrorColor(color);
+}
+
+void LogListWidget::setFatalColor(const QColor &color)
+{
+  model_->setFatalColor(color);
 }
 
 void LogListWidget::handleMessagesAdded()

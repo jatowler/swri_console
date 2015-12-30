@@ -64,8 +64,11 @@ class LogListModel : public QAbstractListModel
 
   void setTimeDisplay(const TimeDisplaySetting &value);
 
-  QColor severityColor(const uint8_t severity) const;
-  void setSeverityColor(const uint8_t severity, const QColor &color);
+  void setDebugColor(const QColor &color);
+  void setInfoColor(const QColor &color);
+  void setWarnColor(const QColor &color);
+  void setErrorColor(const QColor &color);
+  void setFatalColor(const QColor &color);
 
   void setSessionFilter(const std::vector<int> &sids);
 

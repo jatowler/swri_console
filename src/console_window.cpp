@@ -70,21 +70,27 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   ui.logList->addAction(ui.action_SelectAll);
   ui.logList->addAction(ui.action_Copy);
   ui.logList->addAction(ui.action_CopyExtended);
-  
+
+  // Connect the session selection to the node list (used to filter
+  // message counts).
   QObject::connect(ui.sessionList,
                    SIGNAL(selectionChanged(const std::vector<int>&)),
                    ui.nodeList,
                    SLOT(setSessionFilter(const std::vector<int>&)));
 
+  // Connect the session selection to the log list (used to filter
+  // logs).
   QObject::connect(ui.sessionList,
                    SIGNAL(selectionChanged(const std::vector<int>&)),
                    ui.logList,
                    SLOT(setSessionFilter(const std::vector<int>&)));
 
+  // Connect the node selection to the log list's filter proxy.
   QObject::connect(ui.nodeList,
                    SIGNAL(selectionChanged(const std::vector<int>&)),
                    ui.logList->logFilter(),
                    SLOT(setNodeFilter(const std::vector<int>&)));
+
   
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
@@ -96,7 +102,6 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    ui.logList, SLOT(copyLogsToClipboard()));
   QObject::connect(ui.action_CopyExtended, SIGNAL(triggered()),
                    ui.logList, SLOT(copyExtendedLogsToClipboard()));
-
   
   QObject::connect(ui.action_ReadBagFile, SIGNAL(triggered(bool)),
                    this, SLOT(promptForBagFile()));
@@ -127,21 +132,16 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   QObject::connect(ui.fatalColorWidget, SIGNAL(clicked(bool)),
                    this, SLOT(setFatalColor()));
 
-  QObject::connect(
-    ui.checkDebug, SIGNAL(toggled(bool)),
-    this, SLOT(setSeverityFilter()));
-  QObject::connect(
-    ui.checkInfo, SIGNAL(toggled(bool)),
-    this, SLOT(setSeverityFilter()));
-  QObject::connect(
-    ui.checkWarn, SIGNAL(toggled(bool)),
-    this, SLOT(setSeverityFilter()));
-  QObject::connect(
-    ui.checkError, SIGNAL(toggled(bool)),
-    this, SLOT(setSeverityFilter()));
-  QObject::connect(
-    ui.checkFatal, SIGNAL(toggled(bool)),
-    this, SLOT(setSeverityFilter()));
+  QObject::connect(ui.checkDebug, SIGNAL(toggled(bool)),
+                   this, SLOT(setSeverityFilter()));
+  QObject::connect(ui.checkInfo, SIGNAL(toggled(bool)),
+                   this, SLOT(setSeverityFilter()));
+  QObject::connect(ui.checkWarn, SIGNAL(toggled(bool)),
+                   this, SLOT(setSeverityFilter()));
+  QObject::connect(ui.checkError, SIGNAL(toggled(bool)),
+                   this, SLOT(setSeverityFilter()));
+  QObject::connect(ui.checkFatal, SIGNAL(toggled(bool)),
+                   this, SLOT(setSeverityFilter()));
 
   ui.checkFollowNewest->setChecked(true);
   ui.logList->setAutoScrollToBottom(true);

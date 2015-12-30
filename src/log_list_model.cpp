@@ -281,7 +281,20 @@ QVariant LogListModel::extendedLogRole(const Log &log, int line_index) const
 
 QVariant LogListModel::foregroundRole(const Log &log, int) const
 {
-  return severityColor(log.severity());
+  switch (log.severity()) {
+  case rosgraph_msgs::Log::DEBUG:
+    return debug_color_;
+  case rosgraph_msgs::Log::INFO:
+    return info_color_;
+  case rosgraph_msgs::Log::WARN:
+    return warn_color_;
+  case rosgraph_msgs::Log::ERROR:
+    return error_color_;
+  case rosgraph_msgs::Log::FATAL:
+    return fatal_color_;
+  default:
+    return info_color_;
+  }
 }
 
 QVariant LogListModel::backgroundRole(int session_idx, int row_idx) const
@@ -307,39 +320,33 @@ void LogListModel::setTimeDisplay(const TimeDisplaySetting &value)
   allDataChanged();
 }
 
-QColor LogListModel::severityColor(const uint8_t severity) const
+void LogListModel::setDebugColor(const QColor &color)
 {
-  switch (severity) {
-  case rosgraph_msgs::Log::DEBUG:
-    return debug_color_;
-  case rosgraph_msgs::Log::INFO:
-    return info_color_;
-  case rosgraph_msgs::Log::WARN:
-    return warn_color_;
-  case rosgraph_msgs::Log::ERROR:
-    return error_color_;
-  case rosgraph_msgs::Log::FATAL:
-    return fatal_color_;
-  default:
-    return info_color_;
-  }
-}  
+  debug_color_ = color;
+  allDataChanged();
+}
 
-void LogListModel::setSeverityColor(const uint8_t severity, const QColor &color)
+void LogListModel::setInfoColor(const QColor &color)
 {
-  if (severity == rosgraph_msgs::Log::DEBUG) {
-    debug_color_ = color;
-  } else if (severity == rosgraph_msgs::Log::INFO) {
-    info_color_ = color;
-  } else if (severity == rosgraph_msgs::Log::WARN) {
-    warn_color_ = color;
-  } else if (severity == rosgraph_msgs::Log::ERROR) {
-    error_color_ = color;
-  } else if (severity == rosgraph_msgs::Log::FATAL) {
-    fatal_color_ = color;
-  } else {
-    qWarning("Attempt to set color for invalid severity: %d", severity);
-  }
+  info_color_ = color;
+  allDataChanged();
+}
+
+void LogListModel::setWarnColor(const QColor &color)
+{
+  warn_color_ = color;
+  allDataChanged();
+}
+
+void LogListModel::setErrorColor(const QColor &color)
+{
+  error_color_ = color;
+  allDataChanged();
+}
+
+void LogListModel::setFatalColor(const QColor &color)
+{
+  fatal_color_ = color;
   allDataChanged();
 }
 
