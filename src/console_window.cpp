@@ -89,6 +89,13 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    ui.logList->logFilter(),
                    SLOT(setNodeFilter(const std::vector<int>&)));
 
+  // Connect the node selection to ourselves so we can change the
+  // window title.
+  QObject::connect(ui.nodeList,
+                   SIGNAL(selectionChanged(const std::vector<int>&)),
+                   this,
+                   SLOT(nodeSelectionChanged(const std::vector<int>&)));
+  
   
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
@@ -218,25 +225,22 @@ void ConsoleWindow::closeEvent(QCloseEvent *event)
   QMainWindow::closeEvent(event);
 }
 
-void ConsoleWindow::nodeSelectionChanged()
+void ConsoleWindow::nodeSelectionChanged(const std::vector<int>& nids)
 {
-  // QModelIndexList selection = ui.nodeList->selectionModel()->selectedIndexes();
-  // std::set<std::string> nodes;
-  // QStringList node_names;
+  QStringList node_names;
+  for (auto nid : nids) {
+    QString full_name = db_->nodeName(nid);
+    QString node_name = full_name.split("/", QString::SkipEmptyParts).last();
+    node_names.append(node_name);
+  }
 
-  // for (size_t i = 0; i < selection.size(); i++) {
-  //   std::string name = node_list_model_->nodeName(selection[i]);
-  //   nodes.insert(name);
-  //   node_names.append(name.c_str());
-  // }
-
-  // db_proxy_->setNodeFilter(nodes);
-
-  // for (size_t i = 0; i < node_names.size(); i++) {
-  //   node_names[i] = node_names[i].split("/", QString::SkipEmptyParts).last();
-  // }
-    
-  // setWindowTitle(QString("SWRI Console (") + node_names.join(", ") + ")");
+  if (node_names.size() == 0) {
+    setWindowTitle("SwRI Console");
+  } else if (node_names.size() > 5) {
+    setWindowTitle(QString("SwRI Console (%1 nodes)").arg(node_names.size()));
+  } else {
+    setWindowTitle(QString("SwRI Console (") + node_names.join(", ") + ")");
+  }
 }
 
 void ConsoleWindow::setFont(const QFont &font)

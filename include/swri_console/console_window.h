@@ -60,7 +60,7 @@ class ConsoleWindow : public QMainWindow {
   void clearMessages();
   void saveLogs();
   void rosConnected(bool connected, const QString &master_uri);
-  void nodeSelectionChanged();
+  void nodeSelectionChanged(const std::vector<int>&);
   
   void setFont(const QFont &font);
 
