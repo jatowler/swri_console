@@ -328,19 +328,19 @@ void ConsoleWindow::loadSettings()
     ui.debugColor->setColor(color);
     ui.logList->setDebugColor(color);
 
-    color = settings.value(SettingsKeys::INFO_COLOR, Qt::gray).value<QColor>();
+    color = settings.value(SettingsKeys::INFO_COLOR, Qt::black).value<QColor>();
     ui.infoColor->setColor(color);
     ui.logList->setInfoColor(color);
 
-    color = settings.value(SettingsKeys::WARN_COLOR, Qt::gray).value<QColor>();
+    color = settings.value(SettingsKeys::WARN_COLOR, QColor(255, 127, 0)).value<QColor>();
     ui.warnColor->setColor(color);
     ui.logList->setWarnColor(color);
 
-    color = settings.value(SettingsKeys::ERROR_COLOR, Qt::gray).value<QColor>();
+    color = settings.value(SettingsKeys::ERROR_COLOR, Qt::red).value<QColor>();
     ui.errorColor->setColor(color);
     ui.logList->setErrorColor(color);
 
-    color = settings.value(SettingsKeys::FATAL_COLOR, Qt::gray).value<QColor>();
+    color = settings.value(SettingsKeys::FATAL_COLOR, Qt::magenta).value<QColor>();
     ui.fatalColor->setColor(color);
     ui.logList->setFatalColor(color);
   }
