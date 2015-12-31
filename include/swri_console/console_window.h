@@ -60,8 +60,7 @@ class ConsoleWindow : public QMainWindow {
   void readBagFile(const QString &filename);
                                                           
  public Q_SLOTS:
-  void clearAll();
-  void clearMessages();
+  void resetDatabase();
   void saveLogs();
   void rosConnected(bool connected, const QString &master_uri);
   void nodeSelectionChanged(const std::vector<int>&);

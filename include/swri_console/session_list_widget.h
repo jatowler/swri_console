@@ -58,6 +58,9 @@ class SessionListWidget : public QWidget
  Q_SIGNALS:
   void selectionChanged(const std::vector<int> &sids);
 
+ public Q_SLOTS:
+  void deselectAll();
+                                              
  private Q_SLOTS:
   void handleViewSelectionChanged();
   void handleSessionAdded(const QModelIndex &idx);

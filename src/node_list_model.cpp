@@ -59,6 +59,8 @@ void NodeListModel::setDatabase(LogDatabase *db)
   
   QObject::connect(db_, SIGNAL(nodeAdded(int)),
                    this, SLOT(handleNodeAdded(int)));
+  QObject::connect(db_, SIGNAL(databaseCleared()),
+                   this, SLOT(handleDatabaseCleared()));
 
   beginResetModel();
   nodes_ = db_->nodeIds();
@@ -149,6 +151,15 @@ void NodeListModel::updateCountCache()
     }
     msg_count_cache_[i] = count;
   }    
+}
+
+void NodeListModel::handleDatabaseCleared()
+{
+  beginResetModel();
+  nodes_ = db_->nodeIds();
+  filter_sids_.clear();
+  updateCountCache();
+  endResetModel();
 }
 }  // namespace swri_console
 

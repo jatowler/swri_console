@@ -30,6 +30,7 @@
 #include <swri_console/ros_source.h>
 
 #include <QDateTime>
+#include <QTimer>
 
 #include <swri_console/ros_source_backend.h>
 #include <swri_console/log_database.h>
@@ -45,6 +46,8 @@ RosSource::RosSource(LogDatabase *db)
 {
   QObject::connect(db_, SIGNAL(sessionDeleted(int)),
                    this, SLOT(handleSessionDeleted(int)));
+  QObject::connect(db_, SIGNAL(databaseCleared()),
+                   this, SLOT(resetSessionId()));
 }
 
 RosSource::~RosSource()
@@ -103,6 +106,7 @@ void RosSource::handleLog(const rosgraph_msgs::LogConstPtr &msg)
   Session *session = &(db_->session(session_id_));
   
   if (!session->isValid()) {
+    session_id_ = -1;
     createNewSession();
     session = &(db_->session(session_id_));
   }
@@ -112,15 +116,31 @@ void RosSource::handleLog(const rosgraph_msgs::LogConstPtr &msg)
 
 void RosSource::createNewSession()
 {
-  QDateTime now = QDateTime::currentDateTime();
-  session_id_ = db_->createSession(QString("Live at %1").arg(now.toString("hh:mm:ss")));
-  Q_EMIT liveSessionChanged(session_id_);
+  // Only create a new session if the current one is invalid, this is
+  // to prevent the situation where we schedule a new session after a
+  // database reset, then handle a message, and then service the timer
+  // callback, which would create two sessions instead of one.
+  if (connected_ && session_id_ < 0) {
+    QDateTime now = QDateTime::currentDateTime();
+    session_id_ = db_->createSession(QString("Live at %1").arg(now.toString("hh:mm:ss")));
+    Q_EMIT liveSessionChanged(session_id_);
+  }
 }
 
 void RosSource::handleSessionDeleted(int sid)
 {
   if (sid == session_id_) {
-    session_id_ = -1;
+    resetSessionId();
   }
+}
+
+void RosSource::resetSessionId()
+{
+  session_id_ = -1;
+  // We don't want to create a new session during a reset because
+  // other objects are also handling the reset and expecting the
+  // database to be completely cleared out, so we schedule a timer
+  // to create the session right after this.
+  QTimer::singleShot(0, this, SLOT(createNewSession()));
 }
 }  // namespace swri_console

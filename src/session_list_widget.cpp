@@ -156,4 +156,9 @@ void SessionListWidget::handleDeleteAll()
     db_->deleteSession(sid);
   }
 }
+
+void SessionListWidget::deselectAll()
+{
+  list_view_->selectionModel()->clear();
+}
 }  // namespace swri_console

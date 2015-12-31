@@ -59,6 +59,7 @@ class NodeListModel : public QAbstractListModel
     
  private Q_SLOTS:
   void handleNodeAdded(int nid);  
+  void handleDatabaseCleared();
   
  private:
   LogDatabase *db_;

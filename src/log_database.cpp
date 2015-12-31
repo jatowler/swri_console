@@ -44,6 +44,11 @@ LogDatabase::~LogDatabase()
 
 void LogDatabase::clear()
 {
+  sessions_.clear();
+  session_ids_.clear();
+  node_name_from_id_.clear();
+  node_id_from_name_.clear();
+  node_ids_.clear();  
   Q_EMIT databaseCleared();
 }
 

@@ -64,12 +64,13 @@ class SessionListModel : public QAbstractListModel
 
  Q_SIGNALS:
   void sessionAdded(const QModelIndex &idx);
-                                              
+
  private Q_SLOTS:
   void handleSessionAdded(int sid);
   void handleSessionDeleted(int sid);
   void handleSessionRenamed(int sid);
   void handleSessionMoved(int sid);
+  void handleDatabaseCleared();
   
  private:
   LogDatabase *db_;

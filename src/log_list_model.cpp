@@ -71,15 +71,8 @@ void LogListModel::setDatabase(LogDatabase *db)
 
   QObject::connect(db_, SIGNAL(sessionMinTimeChanged(int)),
                    this, SLOT(allDataChanged()));
-  
-  // QObject::connect(db_, SIGNAL(logAdded(int)),
-  //                  this, SLOT(handleLogAdded(int)));
-  // QObject::connect(db_, SIGNAL(logDeleted(int)),
-  //                  this, SLOT(handleLogDeleted(int)));
-  // QObject::connect(db_, SIGNAL(logRenamed(int)),
-  //                  this, SLOT(handleLogRenamed(int)));
-  // QObject::connect(db_, SIGNAL(logMoved(int)),
-  //                  this, SLOT(handleLogMoved(int)));
+  QObject::connect(db_, SIGNAL(databaseCleared()),
+                   this, SLOT(handleDatabaseCleared()));
 
   reset();  
 
@@ -353,7 +346,6 @@ void LogListModel::setFatalColor(const QColor &color)
 void LogListModel::reset()
 {
   beginResetModel();
-
   blocks_.clear();
   for (size_t i = 0; i < sids_.size(); i++) {
     const Session &session = db_->session(sids_[i]);
@@ -570,5 +562,13 @@ void LogListModel::reduceIndices(QModelIndexList &indices)
 void LogListModel::timerEvent(QTimerEvent*)
 {
   processNewMessages();
+}
+
+void LogListModel::handleDatabaseCleared()
+{
+  beginResetModel();
+  sids_.clear();
+  blocks_.clear();
+  endResetModel();
 }
 }  // namespace swri_console

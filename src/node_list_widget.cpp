@@ -114,5 +114,4 @@ void NodeListWidget::handleViewSelectionChanged()
 
   Q_EMIT selectionChanged(selected_nids_);
 }
-
 }  // namespace swri_console

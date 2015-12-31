@@ -95,8 +95,8 @@ class RosSource : public QObject
   void liveSessionChanged(int session_id);
 
  public Q_SLOTS:
-  void handleSessionDeleted(int sid);
-
+  void resetSessionId();
+    
  private Q_SLOTS:
   // Used internally to catch when the ROS source backend connects or
   // disconnects.  This connection is between two different threads
@@ -107,6 +107,8 @@ class RosSource : public QObject
   // backend.  This connection is between two different threads and so
   // will be queued.
   void handleLog(const rosgraph_msgs::LogConstPtr &msg);
+
+  void handleSessionDeleted(int sid);
 
   void createNewSession();
   

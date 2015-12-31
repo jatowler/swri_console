@@ -81,6 +81,7 @@ class LogListModel : public QAbstractListModel
   void reset();
   void allDataChanged();
   void processOldMessages();
+  void handleDatabaseCleared();
   
  private:
   void scheduleIdleProcessing();

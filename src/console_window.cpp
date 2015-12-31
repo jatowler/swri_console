@@ -157,9 +157,16 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    ui.checkFollowNewest, SLOT(setChecked(bool)));
 
   QObject::connect(ui.clearAllButton, SIGNAL(clicked()),
-                    this, SLOT(clearAll()));
+                    this, SLOT(resetDatabase()));
+
+  // With the new session model, the clear messages operation
+  // corresponds to either deleting all session (from data
+  // perspective) or clearing the session selection (from user's
+  // perspective).  We're going with the latter to prevent losing
+  // useful previous session data.  Users can delete sessions through
+  // the session list context menu.
   QObject::connect(ui.clearMessagesButton, SIGNAL(clicked()),
-                    this, SLOT(clearMessages()));
+                   ui.sessionList, SLOT(deselectAll()));
 
   QObject::connect(ui.includeText, SIGNAL(textEdited(const QString &)),
                    this, SLOT(processFilterText()));
@@ -186,13 +193,7 @@ ConsoleWindow::~ConsoleWindow()
 {
 }
 
-void ConsoleWindow::clearAll()
-{
-  db_->clear();
-  //node_list_model_->clear();
-}
-
-void ConsoleWindow::clearMessages()
+void ConsoleWindow::resetDatabase()
 {
   db_->clear();
 }

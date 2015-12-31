@@ -67,6 +67,8 @@ void SessionListModel::setDatabase(LogDatabase *db)
                    this, SLOT(handleSessionRenamed(int)));
   QObject::connect(db_, SIGNAL(sessionMoved(int)),
                    this, SLOT(handleSessionMoved(int)));
+  QObject::connect(db_, SIGNAL(databaseCleared()),
+                   this, SLOT(handleDatabaseCleared()));
 
   beginResetModel();
   sessions_ = db_->sessionIds();
@@ -325,5 +327,12 @@ bool SessionListModel::dropMimeData(const QMimeData *data,
   }
     
   return false;
+}
+
+void SessionListModel::handleDatabaseCleared()
+{
+  beginResetModel();
+  sessions_.clear();
+  endResetModel();
 }
 }  // namespace swri_console
