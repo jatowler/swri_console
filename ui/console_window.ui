@@ -315,7 +315,7 @@
      <x>0</x>
      <y>0</y>
      <width>1035</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -323,6 +323,7 @@
      <string>&amp;File</string>
     </property>
     <addaction name="action_NewWindow"/>
+    <addaction name="action_ForceNewLiveSession"/>
     <addaction name="action_ReadBagFile"/>
     <addaction name="action_SaveLogs"/>
     <addaction name="separator"/>
@@ -479,6 +480,11 @@
    </property>
    <property name="text">
     <string>Relative Timestamps</string>
+   </property>
+  </action>
+  <action name="action_ForceNewLiveSession">
+   <property name="text">
+    <string>&amp;Force New Live Session</string>
    </property>
   </action>
  </widget>

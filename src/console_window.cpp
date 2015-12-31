@@ -65,7 +65,8 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   ui.nodeList->setDatabase(db);
   ui.logList->setDatabase(db);
 
-  ui.sessionList->setContextMenuPolicy(Qt::ActionsContextMenu);  
+  ui.sessionList->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui.sessionList->addAction(ui.action_ForceNewLiveSession);
   
   ui.logList->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui.logList->addAction(ui.action_SelectAll);
@@ -101,7 +102,8 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
     
   QObject::connect(ui.action_NewWindow, SIGNAL(triggered(bool)),
                    this, SIGNAL(createNewWindow()));
-
+  QObject::connect(ui.action_ForceNewLiveSession, SIGNAL(triggered()),
+                   this, SIGNAL(forceNewLiveSession()));
 
   QObject::connect(ui.action_SelectAll, SIGNAL(triggered()),
                    ui.logList, SLOT(selectAll()));
@@ -109,7 +111,8 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    ui.logList, SLOT(copyLogsToClipboard()));
   QObject::connect(ui.action_CopyExtended, SIGNAL(triggered()),
                    ui.logList, SLOT(copyExtendedLogsToClipboard()));
-  
+
+
   QObject::connect(ui.action_ReadBagFile, SIGNAL(triggered(bool)),
                    this, SLOT(promptForBagFile()));
 
@@ -373,7 +376,6 @@ void ConsoleWindow::saveSettings()
   settings.setValue(SettingsKeys::SHOW_WARN, ui.checkWarn->isChecked());
   settings.setValue(SettingsKeys::SHOW_ERROR, ui.checkError->isChecked());
   settings.setValue(SettingsKeys::SHOW_FATAL, ui.checkFatal->isChecked());
-
 }
 
 void ConsoleWindow::promptForBagFile()

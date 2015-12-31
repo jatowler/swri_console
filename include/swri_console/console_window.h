@@ -57,13 +57,14 @@ class ConsoleWindow : public QMainWindow {
 
  Q_SIGNALS:
   void createNewWindow();
+  void forceNewLiveSession();
   void readBagFile(const QString &filename);
                                                           
  public Q_SLOTS:
   void resetDatabase();
   void saveLogs();
   void rosConnected(bool connected, const QString &master_uri);
-  void nodeSelectionChanged(const std::vector<int>&);
+  void nodeSelectionChanged(const std::vector<int>&);  
   
 
   void promptForBagFile();

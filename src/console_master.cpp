@@ -56,6 +56,10 @@ void ConsoleMaster::createNewWindow()
   QObject::connect(win, SIGNAL(createNewWindow()),
                    this, SLOT(createNewWindow()));
 
+  QObject::connect(win, SIGNAL(forceNewLiveSession()),
+                   &ros_source_, SLOT(resetSessionId()));
+                   
+  
   QObject::connect(&ros_source_, SIGNAL(connected(bool, const QString&)),
                    win, SLOT(rosConnected(bool, const QString&)));
   win->rosConnected(ros_source_.isConnected(), ros_source_.masterUri());
