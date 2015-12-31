@@ -36,11 +36,11 @@
 #include <swri_console/log_database.h>
 #include <swri_console/log_filter.h>
 #include <swri_console/settings_keys.h>
+#include <swri_console/save_file_dialog.h>
 
 #include <QApplication>
 #include <QClipboard>
 #include <QColorDialog>
-#include <QDateTime>
 #include <QDebug>
 #include <QDir>
 #include <QFileDialog>
@@ -203,14 +203,17 @@ void ConsoleWindow::resetDatabase()
 
 void ConsoleWindow::saveLogs()
 {
-  QString defaultname = QDateTime::currentDateTime().toString(Qt::ISODate) + ".bag";
-  QString filename = QFileDialog::getSaveFileName(this,
-                                                  "Save Logs",
-                                                  QDir::homePath() + QDir::separator() + defaultname,
-                                                  tr("Bag Files (*.bag);;Text Files (*.txt)"));
-  if (filename != NULL && !filename.isEmpty()) {
-    // db_proxy_->saveToFile(filename);
-  }
+  // QString defaultname = QDateTime::currentDateTime().toString(Qt::ISODate) + ".bag";
+  // QString filename = QFileDialog::getSaveFileName(this,
+  //                                                 "Save Logs",
+  //                                                 QDir::homePath() + QDir::separator() + defaultname,
+  //                                                 tr("Bag Files (*.bag);;Text Files (*.txt)"));
+  // if (filename != NULL && !filename.isEmpty()) {
+  //   // db_proxy_->saveToFile(filename);
+  // }
+  SaveFileDialog dialog;
+  dialog.exec();
+  
 }
 
 void ConsoleWindow::rosConnected(bool connected, const QString &master_uri)
