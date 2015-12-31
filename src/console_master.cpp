@@ -33,14 +33,12 @@
 #include <swri_console/settings_keys.h>
 #include <swri_console/bag_source.h>
 
-#include <QFontDialog>
 #include <QSettings>
 
 namespace swri_console
 {
 ConsoleMaster::ConsoleMaster(int argc, char** argv)
   :
-  window_font_(QFont("Ubuntu Mono", 9)),
   ros_source_(&db_),
   connected_(false)
 {
@@ -55,9 +53,6 @@ void ConsoleMaster::createNewWindow()
 {
   ConsoleWindow* win = new ConsoleWindow(&db_);
 
-  QSettings settings;
-  window_font_ = settings.value(SettingsKeys::FONT, QFont("Ubuntu Mono", 9)).value<QFont>();
-  win->setFont(window_font_);
   QObject::connect(win, SIGNAL(createNewWindow()),
                    this, SLOT(createNewWindow()));
 
@@ -65,49 +60,10 @@ void ConsoleMaster::createNewWindow()
                    win, SLOT(rosConnected(bool, const QString&)));
   win->rosConnected(ros_source_.isConnected(), ros_source_.masterUri());
 
-  QObject::connect(this,
-                   SIGNAL(fontChanged(const QFont &)),
-                   win, SLOT(setFont(const QFont &)));
-
-  QObject::connect(win, SIGNAL(selectFont()),
-                   this, SLOT(selectFont()));
-
   QObject::connect(win, SIGNAL(readBagFile(const QString &)),
                    this, SLOT(readBagFile(const QString &)));
 
   win->show();
-}
-
-void ConsoleMaster::fontSelectionChanged(const QFont &font)
-{
-  window_font_ = font;
-  QSettings settings;
-  settings.setValue(SettingsKeys::FONT, font);
-  Q_EMIT fontChanged(window_font_);
-}
-
-void ConsoleMaster::selectFont()
-{
-  QFont starting_font = window_font_;
-
-  QFontDialog dlg(window_font_);
-    
-  QObject::connect(&dlg, SIGNAL(currentFontChanged(const QFont &)),
-                   this, SLOT(fontSelectionChanged(const QFont &)));
-
-  int ret = dlg.exec();
-
-  if (ret == QDialog::Accepted) {
-    if (window_font_ != dlg.selectedFont()) {
-      window_font_ = dlg.selectedFont();
-      Q_EMIT fontChanged(window_font_);
-    }
-  } else {
-    if (window_font_ != starting_font) {
-      window_font_ = starting_font;
-      Q_EMIT fontChanged(window_font_);
-    }
-  }
 }
 
 void ConsoleMaster::readBagFile(const QString &name)

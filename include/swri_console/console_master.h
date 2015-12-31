@@ -34,7 +34,6 @@
 #include <string>
 #include <QObject>
 #include <QList>
-#include <QFont>
 #include <rosgraph_msgs/Log.h>
 #include <swri_console/log_database.h>
 #include <swri_console/ros_source.h>
@@ -54,17 +53,12 @@ class ConsoleMaster : public QObject
 
  public Q_SLOTS:
   void createNewWindow();
-  void fontSelectionChanged(const QFont &font);
-  void selectFont();
   void readBagFile(const QString &name);
 
  Q_SIGNALS:
-  void fontChanged(const QFont &font);
 
  private:  
   LogDatabase db_;
-
-  QFont window_font_;
 
   // All ROS operations are done on a separate thread to ensure they do not
   // cause the GUI thread to block.

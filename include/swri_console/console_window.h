@@ -58,7 +58,6 @@ class ConsoleWindow : public QMainWindow {
  Q_SIGNALS:
   void createNewWindow();
   void readBagFile(const QString &filename);
-  void selectFont();
                                                           
  public Q_SLOTS:
   void clearAll();
@@ -67,13 +66,14 @@ class ConsoleWindow : public QMainWindow {
   void rosConnected(bool connected, const QString &master_uri);
   void nodeSelectionChanged(const std::vector<int>&);
   
-  void setFont(const QFont &font);
 
   void promptForBagFile();
 
  private Q_SLOTS:
   void processFilterText();
   void handleTimestampActions();
+  void selectFont();
+  void setFont(const QFont &font);
   
 private:
   template <typename T>
@@ -94,6 +94,7 @@ private:
 
   QActionGroup *timestamp_actions_;
   QLabel *connection_status_;
+  QFont data_font_;
 };  // class ConsoleWindow
 }  // namespace swri_console
 

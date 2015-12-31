@@ -345,7 +345,6 @@
     <addaction name="action_AbsoluteTimestamps"/>
     <addaction name="separator"/>
     <addaction name="action_RegularExpressions"/>
-    <addaction name="action_ColorizeLogs"/>
     <addaction name="action_SelectFont"/>
     <addaction name="separator"/>
    </widget>

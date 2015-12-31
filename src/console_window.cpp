@@ -37,17 +37,18 @@
 #include <swri_console/log_filter.h>
 #include <swri_console/settings_keys.h>
 
-#include <QColorDialog>
-#include <QRegExp>
 #include <QApplication>
 #include <QClipboard>
+#include <QColorDialog>
 #include <QDateTime>
-#include <QFileDialog>
-#include <QDir>
-#include <QScrollBar>
-#include <QMenu>
-#include <QSettings>
 #include <QDebug>
+#include <QDir>
+#include <QFileDialog>
+#include <QFontDialog>
+#include <QMenu>
+#include <QRegExp>
+#include <QScrollBar>
+#include <QSettings>
 
 using namespace Qt;
 
@@ -122,7 +123,7 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    this, SLOT(handleTimestampActions()));
 
   QObject::connect(ui.action_SelectFont, SIGNAL(triggered(bool)),
-                   this, SIGNAL(selectFont()));
+                   this, SLOT(selectFont()));
 
   QObject::connect(ui.debugColor, SIGNAL(colorEdited(const QColor &)),
                    ui.logList, SLOT(setDebugColor(const QColor &)));
@@ -239,16 +240,44 @@ void ConsoleWindow::nodeSelectionChanged(const std::vector<int>& nids)
   }
 }
 
+void ConsoleWindow::selectFont()
+{
+  QFont starting_font = data_font_;
+
+  QFontDialog dlg(data_font_);
+    
+  QObject::connect(&dlg, SIGNAL(currentFontChanged(const QFont &)),
+                   this, SLOT(setFont(const QFont &)));
+
+  int ret = dlg.exec();
+
+  if (ret == QDialog::Accepted) {
+    setFont(dlg.selectedFont());
+  } else {
+    setFont(starting_font);
+  }
+}
+
 void ConsoleWindow::setFont(const QFont &font)
 {
-  // ui.messageList->setFont(font);
-  // ui.nodeList->setFont(font);
+  data_font_ = font;
+  ui.includeText->setFont(data_font_);
+  ui.excludeText->setFont(data_font_);
+  ui.sessionList->setFont(data_font_);
+  ui.nodeList->setFont(data_font_);
+  ui.logList->setFont(data_font_);
 }
 
 void ConsoleWindow::loadSettings()
 {
   QSettings settings;
 
+  {
+    QFont font = QFont("Ubuntu Mono", 9);
+    font = settings.value(SettingsKeys::FONT, font).value<QFont>();
+    setFont(font);
+  }
+  
   {
     int format = settings.value(SettingsKeys::TIMESTAMP_FORMAT, STAMP_FORMAT_RELATIVE).toInt();
     ui.action_NoTimestamps->setChecked(false);
@@ -322,6 +351,8 @@ void ConsoleWindow::loadSettings()
 void ConsoleWindow::saveSettings()
 {
   QSettings settings;
+  settings.setValue(SettingsKeys::FONT, data_font_);
+
   settings.setValue(SettingsKeys::TIMESTAMP_FORMAT, selectedStampFormat());
   
   settings.setValue(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions->isChecked());
