@@ -69,7 +69,10 @@ class LogDatabase : public QObject
   int createSession(const QString &name);
   void deleteSession(int sid);
   void renameSession(int sid, const QString &name);
-  void moveSession(int sid, int index);
+  // Move the session with move_sid so that it is immediately after
+  // the session with before_sid.  If before_sid is invalid (<0),
+  // move_sid goes to the front of the list.
+  void moveSession(int move_sid, int before_sid);
   Session& session(int sid);
   const Session& session(int sid) const;
   const std::vector<int>& sessionIds() const { return session_ids_; }
@@ -91,6 +94,8 @@ class LogDatabase : public QObject
   void nodeAdded(int nid);
   
  private:
+  int indexOfSession(int sid);
+  
   std::unordered_map<int, Session> sessions_;
   std::vector<int> session_ids_;
   // Persistent invalid session for methods that return references.

@@ -99,44 +99,71 @@ void LogDatabase::renameSession(int sid, const QString &name)
   Q_EMIT sessionRenamed(sid);  
 }
 
-void LogDatabase::moveSession(int sid, int index)
+int LogDatabase::indexOfSession(int sid)
 {
-  if (index < 0 || index >= session_ids_.size()) {
-    qWarning("Refusing the move session to invalid index (%d)", index);
-    return;
-  }
-
-  // Find the SID in our vector.
-  int src_index = -1;
   for (size_t i = 0; i < session_ids_.size(); i++) {
     if (session_ids_[i] == sid) {
-      src_index = i;
-      break;
+      return i;
     }
   }
+  return -1;
+}
 
-  if (src_index < 0) {
-    qWarning("Did not find session %d, cannot move.", sid);
-    return;
-  }
-
-  if (src_index == index) {
+void LogDatabase::moveSession(int move_sid, int before_sid)
+{
+  if (move_sid == before_sid) {
+    qWarning("I don't know how to move a session to after itself.");
     return;
   }
   
-  // Scoot everything after the source forward one.
-  for (size_t i = src_index; i+1 < session_ids_.size(); i++) {
-    session_ids_[i] = session_ids_[i+1];
+  int move_idx = indexOfSession(move_sid);
+  if (move_idx < 0) {
+    qWarning("Failed to move session: Could not find move_sid=%d in id vector.", move_sid);
+    return;
   }
 
+  if (before_sid < 0) {
+    if (move_idx == 0) {
+      return;
+    }
+  } else {
+    // This is to check for missing before_sid and for no-op
+    // conditions.  We will find the index again later after the
+    // move_sid is removed from the list.
+    int next_idx = indexOfSession(before_sid);
+    if (next_idx < 0) {
+      qWarning("Failed to move sesion: Could not find before_sid=%d in id vector.", before_sid);
+      return;
+    }
+    
+    if (next_idx+1 == move_idx) {
+      // No change.
+      return;
+    }
+  }
+  
+  // Remove the moving sid.  
+  for (size_t i = move_idx; i+1 < session_ids_.size(); i++) {
+    session_ids_[i] = session_ids_[i+1];
+  }
+  session_ids_.back() = -1;
+
+  int next_idx;
+  if (before_sid < 0) {
+    next_idx = 0;
+  } else {
+    next_idx = indexOfSession(before_sid)+1;
+  }
+  
   // Scoot everything after the destination back one.
-  for (size_t i = index; i+1 < session_ids_.size(); i++) {
-    session_ids_[i+1] = session_ids_[i];
+  for (size_t i = session_ids_.size()-1; i > next_idx; i--) {
+    session_ids_[i] = session_ids_[i-1];
   }
 
   // Put the SID in the right place.
-  session_ids_[index] = sid;
-  Q_EMIT sessionMoved(sid);
+  session_ids_[next_idx] = move_sid;
+  
+  Q_EMIT sessionMoved(move_sid);
 }
 
 Session& LogDatabase::session(int sid)
@@ -193,29 +220,4 @@ QString LogDatabase::nodeName(int nid) const
   qWarning("Request for invalid node %d", nid);
   return QString("<invalid node %1").arg(nid);
 }
-
-
-// void LogDatabase::queueMessage(const rosgraph_msgs::LogConstPtr msg)
-// {
-  
-//   msg_counts_[msg->name]++;
-
-//   LogEntry log;
-//   log.stamp = msg->header.stamp;
-//   log.level = msg->level;
-//   log.node = msg->name;
-//   log.file = msg->file;
-//   log.function = msg->function;
-//   log.line = msg->line;
-//   log.seq = msg->header.seq;
-
-//   QStringList text = QString(msg->msg.c_str()).split('\n');
-//   // Remove empty lines from the back.
-//   while(text.size() && text.back().isEmpty()) { text.pop_back(); }
-//   // Remove empty lines from the front.
-//   while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
-//   log.text = text;
-
-//   log_.push_back(log);  
-// }
 }  // namespace swri_console
