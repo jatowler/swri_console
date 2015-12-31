@@ -65,6 +65,8 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
   ui.nodeList->setDatabase(db);
   ui.logList->setDatabase(db);
 
+  ui.sessionList->setContextMenuPolicy(Qt::ActionsContextMenu);  
+  
   ui.logList->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui.logList->addAction(ui.action_SelectAll);
   ui.logList->addAction(ui.action_Copy);

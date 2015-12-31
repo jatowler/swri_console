@@ -57,6 +57,10 @@ NodeListWidget::NodeListWidget(QWidget *parent)
   list_view_->setSelectionBehavior(QAbstractItemView::SelectItems);
   list_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);  
 
+  // Turn off the list view's context menu so that Qt will pass
+  // context menu requests up to us.
+  list_view_->setContextMenuPolicy(Qt::NoContextMenu);  
+
   auto *main_layout = new QVBoxLayout();  
   main_layout->addWidget(list_view_);
   main_layout->setContentsMargins(0,0,0,0);

@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <set>
 
+#include <QAction>
 #include <QListView>
 #include <QVBoxLayout>
 #include <QDebug>
@@ -64,6 +65,10 @@ SessionListWidget::SessionListWidget(QWidget *parent)
   list_view_->setSelectionBehavior(QAbstractItemView::SelectItems);
   list_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);  
 
+  // Turn off the list view's context menu so that Qt will pass
+  // context menu requests up to us.
+  list_view_->setContextMenuPolicy(Qt::NoContextMenu);  
+
   auto *main_layout = new QVBoxLayout();  
   main_layout->addWidget(list_view_);
   main_layout->setContentsMargins(0,0,0,0);
@@ -77,6 +82,16 @@ SessionListWidget::SessionListWidget(QWidget *parent)
 
   QObject::connect(model_, SIGNAL(sessionAdded(const QModelIndex &)),
                    this, SLOT(handleSessionAdded(const QModelIndex &)));
+
+  auto *deleteSelected = new QAction("&Delete Selected", this);
+  addAction(deleteSelected);
+  QObject::connect(deleteSelected, SIGNAL(triggered()),
+                   this, SLOT(handleDeleteSelected()));  
+
+  auto *deleteAll = new QAction("&Delete All", this);
+  addAction(deleteAll);
+  QObject::connect(deleteAll, SIGNAL(triggered()),
+                   this, SLOT(handleDeleteAll()));  
 }
 
 SessionListWidget::~SessionListWidget()
@@ -119,5 +134,26 @@ void SessionListWidget::handleViewSelectionChanged()
 void SessionListWidget::handleSessionAdded(const QModelIndex &idx)
 {
   list_view_->selectionModel()->select(idx, QItemSelectionModel::Select);    
+}
+
+void SessionListWidget::handleDeleteSelected()
+{
+  QModelIndexList selected = list_view_->selectionModel()->selection().indexes();
+  std::vector<int> sids;
+  for (int i = 0; i < selected.size(); i++) {
+    sids.push_back(model_->sessionId(selected[i]));
+  }
+
+  for (auto sid : sids) {
+    db_->deleteSession(sid);
+  }
+}
+
+void SessionListWidget::handleDeleteAll()
+{
+  std::vector<int> sids = db_->sessionIds();
+  for (auto sid : sids) {
+    db_->deleteSession(sid);
+  }
 }
 }  // namespace swri_console

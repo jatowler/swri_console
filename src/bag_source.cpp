@@ -43,6 +43,8 @@ BagSource::BagSource(LogDatabase *db, const QString &filename)
   db_(db),
   session_id_(-1)
 {
+  QObject::connect(db_, SIGNAL(sessionDeleted(int)),
+                   this, SLOT(handleSessionDeleted(int)));
 }
 
 BagSource::~BagSource()
@@ -101,5 +103,12 @@ void BagSource::handleLogRead(const rosgraph_msgs::LogConstPtr &msg)
   }
 
   session->append(msg);
-}                          
+}
+
+void BagSource::handleSessionDeleted(int sid)
+{
+  if (sid == session_id_) {
+    session_id_ = -1;
+  }
+}
 }  // namespace swri_console

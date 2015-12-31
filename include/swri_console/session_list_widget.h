@@ -61,6 +61,8 @@ class SessionListWidget : public QWidget
  private Q_SLOTS:
   void handleViewSelectionChanged();
   void handleSessionAdded(const QModelIndex &idx);
+  void handleDeleteSelected();
+  void handleDeleteAll();
   
  private:
   LogDatabase *db_;

@@ -54,6 +54,9 @@ class BagSource : public QObject
  Q_SIGNALS:
   void finished(const QString &name, bool success, size_t msg_count, const QString &error_msg);
 
+ public Q_SLOTS:
+  void handleSessionDeleted(int sid);
+
  private Q_SLOTS:
   void handleFinished(bool success, size_t msg_count, QString error_msg);
   void handleLogRead(const rosgraph_msgs::LogConstPtr &msg);

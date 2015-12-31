@@ -43,6 +43,8 @@ RosSource::RosSource(LogDatabase *db)
   db_(db),
   session_id_(-1)
 {
+  QObject::connect(db_, SIGNAL(sessionDeleted(int)),
+                   this, SLOT(handleSessionDeleted(int)));
 }
 
 RosSource::~RosSource()
@@ -113,5 +115,12 @@ void RosSource::createNewSession()
   QDateTime now = QDateTime::currentDateTime();
   session_id_ = db_->createSession(QString("Live at %1").arg(now.toString("hh:mm:ss")));
   Q_EMIT liveSessionChanged(session_id_);
-}  
+}
+
+void RosSource::handleSessionDeleted(int sid)
+{
+  if (sid == session_id_) {
+    session_id_ = -1;
+  }
+}
 }  // namespace swri_console
