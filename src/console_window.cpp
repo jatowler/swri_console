@@ -278,13 +278,13 @@ void ConsoleWindow::loadSettings()
 {
   QSettings settings;
 
-  {
+  { // Load font for data items (lists + line edits).
     QFont font = QFont("Ubuntu Mono", 9);
     font = settings.value(SettingsKeys::FONT, font).value<QFont>();
     setFont(font);
   }
   
-  {
+  { // Load time stamp format settings
     int format = settings.value(SettingsKeys::TIMESTAMP_FORMAT, STAMP_FORMAT_RELATIVE).toInt();
     ui.action_NoTimestamps->setChecked(false);
     ui.action_RelativeTimestamps->setChecked(false);
@@ -345,13 +345,15 @@ void ConsoleWindow::loadSettings()
     ui.logList->setFatalColor(color);
   }
 
-  // Finally, load the filter contents.
-  loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
-  QString includeFilter = settings.value(SettingsKeys::INCLUDE_FILTER, "").toString();
-  ui.includeText->setText(includeFilter);
-  QString excludeFilter = settings.value(SettingsKeys::EXCLUDE_FILTER, "").toString();
-  ui.excludeText->setText(excludeFilter);
-  processFilterText();
+  
+  { // Load the filter contents.
+    loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
+    QString includeFilter = settings.value(SettingsKeys::INCLUDE_FILTER, "").toString();
+    ui.includeText->setText(includeFilter);
+    QString excludeFilter = settings.value(SettingsKeys::EXCLUDE_FILTER, "").toString();
+    ui.excludeText->setText(excludeFilter);
+    processFilterText();
+  }
 }
 
 void ConsoleWindow::saveSettings()
