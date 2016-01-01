@@ -32,6 +32,7 @@
 #include <swri_console/console_window.h>
 #include <swri_console/settings_keys.h>
 #include <swri_console/bag_source.h>
+#include <swri_console/log_writer.h>
 
 #include <QSettings>
 
@@ -40,7 +41,8 @@ namespace swri_console
 ConsoleMaster::ConsoleMaster(int argc, char** argv)
   :
   ros_source_(&db_),
-  connected_(false)
+  connected_(false),
+  log_writer_(new LogWriter(this))
 {
   ros_source_.start();
 }
@@ -58,6 +60,9 @@ void ConsoleMaster::createNewWindow()
 
   QObject::connect(win, SIGNAL(forceNewLiveSession()),
                    &ros_source_, SLOT(resetSessionId()));
+
+  QObject::connect(win, SIGNAL(saveLogs(LogListWidget*)),
+                   log_writer_, SLOT(save(LogListWidget*)));
                    
   
   QObject::connect(&ros_source_, SIGNAL(connected(bool, const QString&)),

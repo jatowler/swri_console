@@ -67,7 +67,6 @@ LogListWidget::LogListWidget(QWidget *parent)
   // context menu requests up to us.
   list_view_->setContextMenuPolicy(Qt::NoContextMenu);  
   
-
   auto *main_layout = new QVBoxLayout();  
   main_layout->addWidget(list_view_);
   main_layout->setContentsMargins(0,0,0,0);
@@ -178,7 +177,7 @@ void LogListWidget::selectAll()
   list_view_->selectAll();
 }
 
-void LogListWidget::copyLogsToClipboard()
+QModelIndexList LogListWidget::selection() const
 {
   QModelIndexList selected = list_view_->selectionModel()->selection().indexes();
 
@@ -190,6 +189,12 @@ void LogListWidget::copyLogsToClipboard()
             [](const QModelIndex &a, const QModelIndex &b) {
               return a.row() < b.row();
             });
+  return selected;
+}
+
+void LogListWidget::copyLogsToClipboard()
+{
+  QModelIndexList selected = selection();
   
   QStringList buffer;
   buffer.reserve(selected.size());
@@ -202,17 +207,7 @@ void LogListWidget::copyLogsToClipboard()
 
 void LogListWidget::copyExtendedLogsToClipboard()
 {
-  QModelIndexList selected = list_view_->selectionModel()->selection().indexes();
-
-  // QSelectionModel does not return a sorted set, and it will
-  // typically be in the order that the items were selected by the
-  // user.  We sort them by their row so that the copy items will have
-  // the same physical relationship as the source.
-  std::sort(selected.begin(), selected.end(),
-            [](const QModelIndex &a, const QModelIndex &b) {
-              return a.row() < b.row();
-            });
-
+  QModelIndexList selected = selection();
   model_->reduceIndices(selected);
   
   QStringList buffer;
@@ -223,5 +218,49 @@ void LogListWidget::copyExtendedLogsToClipboard()
   }
   QString separator = tr("----------------------------------------\n");
   QApplication::clipboard()->setText(buffer.join(separator));
+}
+
+DatabaseView LogListWidget::displayedLogContents() const
+{
+  return model_->getModelContents();
+}
+
+DatabaseView LogListWidget::selectedLogContents() const
+{
+  QModelIndexList selected = selection();
+  model_->reduceIndices(selected);
+  return model_->getModelContents(selected);
+}
+
+DatabaseView LogListWidget::viewForSids(const std::vector<int> &sids) const
+{
+  DatabaseView view;
+
+  view.reserve(sids.size());
+  for (int sid : sids) {
+    const Session &session = db_->session(sid);
+    if (!session.isValid() || session.logCount() == 0) {
+      continue;
+    }
+
+    view.emplace_back();
+    view.back().session_id = sid;
+
+    view.back().log_ids.resize(session.logCount());
+    for (size_t i = 0; i < session.logCount(); i++) {
+      view.back().log_ids[i] = i;
+    }
+  }
+  return view;      
+}
+
+DatabaseView LogListWidget::sessionsLogContents() const
+{
+  return viewForSids(model_->sessionFilter());
+}
+
+DatabaseView LogListWidget::allLogContents() const
+{
+  return viewForSids(db_->sessionIds());
 }
 }  // namespace swri_console

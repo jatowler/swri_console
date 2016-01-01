@@ -27,50 +27,57 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#ifndef SWRI_CONSOLE_SAVE_FILE_DIALOG_H_
-#define SWRI_CONSOLE_SAVE_FILE_DIALOG_H_
+#include <swri_console/log_writer.h>
 
-#include <QFileDialog>
-
-QT_BEGIN_NAMESPACE
-class QRadioButton;
-class QCheckBox;
-QT_END_NAMESPACE
+#include <swri_console/save_file_dialog.h>
+#include <swri_console/log_list_widget.h>
 
 namespace swri_console
 {
-class SaveFileDialog : public QFileDialog
+LogWriter::LogWriter(QObject *parent)
+  :
+  QObject(parent)
 {
-  Q_OBJECT;
+}
+
+LogWriter::~LogWriter()
+{
+}
+
+void LogWriter::saveLogs(LogListWidget *log_list)
+{
+  // QString defaultname = QDateTime::currentDateTime().toString(Qt::ISODate) + ".bag";
+  // QString filename = QFileDialog::getSaveFileName(this,
+  //                                                 "Save Logs",
+  //                                                 QDir::homePath() + QDir::separator() + defaultname,
+  //                                                 tr("Bag Files (*.bag);;Text Files (*.txt)"));
+  // if (filename != NULL && !filename.isEmpty()) {
+  //   // db_proxy_->saveToFile(filename);
+  // }
+  SaveFileDialog dialog;
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+
+  QStringList files = dialog.selectedFiles();
+  if (files.empty()) {
+    return;
+  }
+
+  QString filename = files[0];
   
- public:
-  SaveFileDialog(QWidget *parent=0);
-  ~SaveFileDialog();
-
-  bool exportAll() const;
-  bool exportSessions() const;
-  bool exportFiltered() const;
-  bool exportSelected() const;
-  
-  bool compression() const;
-  bool sessionHeaders() const;
-  bool extendedInfo() const;
-
- private Q_SLOTS:
-  void handleFilterSelected(const QString &);
-  
- private:
-  const QString bag_filter_;
-  const QString txt_filter_;
-
-  QRadioButton *export_all_;
-  QRadioButton *export_sessions_;
-  QRadioButton *export_filtered_;
-  QRadioButton *export_selected_;
-
-  QCheckBox *compression_;
-  QCheckBox *include_session_headers_;
-  QCheckBox *include_extended_info_;
-};  // class SaveFileDialog
+  DatabaseView view;
+  if (dialog.exportAll()) {
+    view = log_list->allLogContents();
+  } else if (dialog.exportSessions()) {
+    view = log_list->sessionsLogContents();
+  } else if (dialog.exportFiltered()) {
+    view = log_list->displayedLogContents();
+  } else if (dialog.exportSelected()) {
+    view = log_list->selectedLogContents();
+  } else {
+    qWarning("No export selection, will not write bag file.");
+  }  
+}
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_SAVE_FILE_DIALOG_H_
+

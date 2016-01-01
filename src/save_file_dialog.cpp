@@ -78,18 +78,25 @@ SaveFileDialog::SaveFileDialog(
   }
   
   auto *hbox = new QHBoxLayout(options_widget);  
-  auto *selection_group = new QGroupBox("Selection");
+  auto *selection_group = new QGroupBox("Export");
   hbox->addWidget(selection_group);
   {
-    auto *vbox = new QVBoxLayout(selection_group);
-    all_logs_ = new QRadioButton("Save all logs", this);
-    all_logs_in_sessions_ = new QRadioButton("Save all logs in selected sessions", this);
-    all_logs_in_sessions_->setChecked(true);
-    selected_logs_ = new QRadioButton("Save selected logs only", this);
+    // I'm not a huge fan of having so many options, but I don't know
+    // what will be most useful yet.  I expect that
+    // all_logs_in_sessions will be the most common and useful, in
+    // which case we could maybe delete the others in favor of
+    // optimizing for that one case.
+    export_all_ = new QRadioButton("All logs in database", this);
+    export_sessions_ = new QRadioButton("Logs from selected sessions", this);
+    export_sessions_->setChecked(true);
+    export_filtered_ = new QRadioButton("Filtered logs", this);
+    export_selected_ = new QRadioButton("Selected logs", this);
 
-    vbox->addWidget(all_logs_);
-    vbox->addWidget(all_logs_in_sessions_);
-    vbox->addWidget(selected_logs_);
+    auto *vbox = new QVBoxLayout(selection_group);
+    vbox->addWidget(export_all_);
+    vbox->addWidget(export_sessions_);
+    vbox->addWidget(export_filtered_);
+    vbox->addWidget(export_selected_);
   }
   
   auto *options_group = new QGroupBox("Options");
@@ -143,19 +150,24 @@ void SaveFileDialog::handleFilterSelected(const QString &filter)
   }
 }
 
-bool SaveFileDialog::includeAll() const
+bool SaveFileDialog::exportAll() const
 {
-  return all_logs_->isChecked();
+  return export_all_->isChecked();
 }
 
-bool SaveFileDialog::includeSessions() const
+bool SaveFileDialog::exportSessions() const
 {
-  return all_logs_in_sessions_->isChecked();
+  return export_sessions_->isChecked();
 }
 
-bool SaveFileDialog::includeSelected() const
+bool SaveFileDialog::exportFiltered() const
 {
-  return selected_logs_->isChecked();
+  return export_filtered_->isChecked();
+}
+
+bool SaveFileDialog::exportSelected() const
+{
+  return export_selected_->isChecked();
 }
 
 bool SaveFileDialog::compression() const

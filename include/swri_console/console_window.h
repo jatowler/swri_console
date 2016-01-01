@@ -59,14 +59,14 @@ class ConsoleWindow : public QMainWindow {
   void createNewWindow();
   void forceNewLiveSession();
   void readBagFile(const QString &filename);
-                                                          
+  void saveLogs(LogListWidget *);
+
  public Q_SLOTS:
   void resetDatabase();
-  void saveLogs();
+  void handleSaveAction();
   void rosConnected(bool connected, const QString &master_uri);
   void nodeSelectionChanged(const std::vector<int>&);  
   
-
   void promptForBagFile();
 
  private Q_SLOTS:
@@ -76,14 +76,6 @@ class ConsoleWindow : public QMainWindow {
   void setFont(const QFont &font);
   
 private:
-  template <typename T>
-  void loadBooleanSetting(const QString& key, T* element){
-    QSettings settings;
-    bool val = settings.value(key, element->isChecked()).toBool();
-    if (val != element->isChecked()) {
-      element->setChecked(val);
-    }
-  };
   void loadSettings();
   void saveSettings();
 

@@ -571,4 +571,49 @@ void LogListModel::handleDatabaseCleared()
   blocks_.clear();
   endResetModel();
 }
+
+DatabaseView LogListModel::getModelContents() const
+{
+  DatabaseView view;
+  view.reserve(blocks_.size());
+  for (auto const &block : blocks_) {
+    if (block.rows.empty()) {
+      continue;
+    }
+
+    view.emplace_back();
+    view.back().session_id = block.session_id;
+    view.back().log_ids.reserve(block.rows.size());
+    for (auto const &row : block.rows) {
+      if (row.line_index == 0) {
+        view.back().log_ids.push_back(row.log_index);
+      }
+    }
+  }
+  return view;
+}
+
+DatabaseView LogListModel::getModelContents(const QModelIndexList &selection) const
+{
+  // assumes selection has been sorted and reduced.
+  DatabaseView view;
+
+  for (int i = 0; i < selection.size(); i++) {
+    int session_idx;
+    int row_idx;   
+    if (!decomposeModelIndex(session_idx, row_idx, selection[i])) {
+      // Should not happen
+      continue;
+    }
+    auto const &block = blocks_[session_idx];
+
+    if (view.empty() || view.back().session_id != block.session_id) {
+      view.emplace_back();
+      view.back().session_id = block.session_id;
+    }
+
+    view.back().log_ids.push_back(block.rows[row_idx].log_index);
+  }
+  return view;
+}
 }  // namespace swri_console

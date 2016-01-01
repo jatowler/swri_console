@@ -36,7 +36,6 @@
 #include <swri_console/log_database.h>
 #include <swri_console/log_filter.h>
 #include <swri_console/settings_keys.h>
-#include <swri_console/save_file_dialog.h>
 
 #include <QApplication>
 #include <QClipboard>
@@ -117,7 +116,7 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    this, SLOT(promptForBagFile()));
 
   QObject::connect(ui.action_SaveLogs, SIGNAL(triggered(bool)),
-                   this, SLOT(saveLogs()));
+                   this, SLOT(handleSaveAction()));
 
   timestamp_actions_ = new QActionGroup(this);
   timestamp_actions_->setExclusive(true);
@@ -201,19 +200,9 @@ void ConsoleWindow::resetDatabase()
   db_->clear();
 }
 
-void ConsoleWindow::saveLogs()
+void ConsoleWindow::handleSaveAction()
 {
-  // QString defaultname = QDateTime::currentDateTime().toString(Qt::ISODate) + ".bag";
-  // QString filename = QFileDialog::getSaveFileName(this,
-  //                                                 "Save Logs",
-  //                                                 QDir::homePath() + QDir::separator() + defaultname,
-  //                                                 tr("Bag Files (*.bag);;Text Files (*.txt)"));
-  // if (filename != NULL && !filename.isEmpty()) {
-  //   // db_proxy_->saveToFile(filename);
-  // }
-  SaveFileDialog dialog;
-  dialog.exec();
-  
+  Q_EMIT saveLogs(ui.logList);
 }
 
 void ConsoleWindow::rosConnected(bool connected, const QString &master_uri)
@@ -350,7 +339,8 @@ void ConsoleWindow::loadSettings()
 
   
   { // Load the filter contents.
-    loadBooleanSetting(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions);
+    bool use_re = settings.value(SettingsKeys::USE_REGEXPS, false).toBool();
+    ui.action_RegularExpressions->setChecked(use_re);
     QString includeFilter = settings.value(SettingsKeys::INCLUDE_FILTER, "").toString();
     ui.includeText->setText(includeFilter);
     QString excludeFilter = settings.value(SettingsKeys::EXCLUDE_FILTER, "").toString();

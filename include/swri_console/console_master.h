@@ -42,6 +42,7 @@ namespace swri_console
 {
 typedef std::vector<rosgraph_msgs::LogConstPtr> MessageList;
 
+class LogWriter;
 class ConsoleWindow;
 class ConsoleMaster : public QObject
 {
@@ -64,6 +65,8 @@ class ConsoleMaster : public QObject
   // cause the GUI thread to block.
   RosSource ros_source_;  
   bool connected_;
+
+  LogWriter *log_writer_;
 };  // class ConsoleMaster
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_CONSOLE_MASTER_H_

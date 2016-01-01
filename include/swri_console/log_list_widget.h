@@ -31,10 +31,12 @@
 #define SWRI_CONSOLE_LOG_LIST_WIDGET_H_
 
 #include <QWidget>
+#include <QModelIndexList>
 
 #include <unordered_map>
 
 #include <swri_console/constants.h>
+#include <swri_console/database_view.h>
 
 QT_BEGIN_NAMESPACE
 class QListView;
@@ -59,6 +61,15 @@ class LogListWidget : public QWidget
   
   bool autoScrollToBottom() const { return auto_scroll_to_bottom_; }
 
+  // Returns a view of the selected logs in the widget.
+  DatabaseView selectedLogContents() const;
+  // Returns a view of all the logs displayed by this widget.
+  DatabaseView displayedLogContents() const;
+  // Returns a view of all the logs for the sessions displayed by this widget.
+  DatabaseView sessionsLogContents() const;
+  // Returns a view of all the logs in the database.
+  DatabaseView allLogContents() const;
+  
  Q_SIGNALS:
   void autoScrollToBottomChanged(bool auto_scroll);
   
@@ -81,6 +92,8 @@ class LogListWidget : public QWidget
   void userScrolled(int);
     
  private:
+  QModelIndexList selection() const;
+  DatabaseView viewForSids(const std::vector<int> &sids) const;
   
   LogDatabase *db_;
   LogListModel *model_;

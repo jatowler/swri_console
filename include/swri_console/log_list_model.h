@@ -37,6 +37,7 @@
 #include <QAbstractListModel>
 #include <QColor>
 #include <swri_console/constants.h>
+#include <swri_console/database_view.h>
 
 namespace swri_console
 {
@@ -71,8 +72,12 @@ class LogListModel : public QAbstractListModel
   void setFatalColor(const QColor &color);
 
   void setSessionFilter(const std::vector<int> &sids);
+  const std::vector<int> &sessionFilter() const { return sids_; }
 
   void reduceIndices(QModelIndexList &indices);
+
+  DatabaseView getModelContents() const;
+  DatabaseView getModelContents(const QModelIndexList &selection) const;
   
  Q_SIGNALS:
   void messagesAdded();

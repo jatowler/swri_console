@@ -27,50 +27,24 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#ifndef SWRI_CONSOLE_SAVE_FILE_DIALOG_H_
-#define SWRI_CONSOLE_SAVE_FILE_DIALOG_H_
+#ifndef SWRI_CONSOLE_LOG_WRITER_H_
+#define SWRI_CONSOLE_LOG_WRITER_H_
 
-#include <QFileDialog>
-
-QT_BEGIN_NAMESPACE
-class QRadioButton;
-class QCheckBox;
-QT_END_NAMESPACE
+#include <QObject>
 
 namespace swri_console
 {
-class SaveFileDialog : public QFileDialog
+class LogListWidget;
+class LogWriter : public QObject
 {
   Q_OBJECT;
-  
+
  public:
-  SaveFileDialog(QWidget *parent=0);
-  ~SaveFileDialog();
+  LogWriter(QObject *parent);
+  ~LogWriter();
 
-  bool exportAll() const;
-  bool exportSessions() const;
-  bool exportFiltered() const;
-  bool exportSelected() const;
-  
-  bool compression() const;
-  bool sessionHeaders() const;
-  bool extendedInfo() const;
-
- private Q_SLOTS:
-  void handleFilterSelected(const QString &);
-  
- private:
-  const QString bag_filter_;
-  const QString txt_filter_;
-
-  QRadioButton *export_all_;
-  QRadioButton *export_sessions_;
-  QRadioButton *export_filtered_;
-  QRadioButton *export_selected_;
-
-  QCheckBox *compression_;
-  QCheckBox *include_session_headers_;
-  QCheckBox *include_extended_info_;
-};  // class SaveFileDialog
+ public Q_SLOTS:
+  void saveLogs(LogListWidget *);
+}; 
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_SAVE_FILE_DIALOG_H_
+#endif  // SWRI_CONSOLE_LOG_WRITER_H_
