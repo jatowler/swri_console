@@ -31,7 +31,6 @@
 #include <stdio.h>
 
 #include <ros/time.h>
-#include <rosbag/bag.h>
 
 #include <swri_console/log_database_proxy_model.h>
 #include <swri_console/log_database.h>
@@ -55,66 +54,4 @@ QSettings settings;
 settings.setValue(SettingsKeys::ABSOLUTE_TIMESTAMPS, display_absolute_time_);
 settings.setValue(SettingsKeys::DISPLAY_TIMESTAMPS, display_time_);
 
-void LogDatabaseProxyModel::saveToFile(const QString& filename) const
-{
-  if (filename.endsWith(".bag", Qt::CaseInsensitive)) {
-    saveBagFile(filename);
-  }
-  else {
-    saveTextFile(filename);
-  }
-}
-
-void LogDatabaseProxyModel::saveBagFile(const QString& filename) const
-{
-  rosbag::Bag bag(filename.toStdString().c_str(), rosbag::bagmode::Write);
-
-  size_t idx = 0;
-  while (idx < msg_mapping_.size()) {
-    const LineMap line_map = msg_mapping_[idx];    
-    const LogEntry &item = db_->log()[line_map.log_index];
-    
-    rosgraph_msgs::Log log;
-    log.file = item.file;
-    log.function = item.function;
-    log.header.seq = item.seq;
-    if (item.stamp < ros::TIME_MIN) {
-      // Note: I think TIME_MIN is the minimum representation of
-      // ros::Time, so this branch should be impossible.  Nonetheless,
-      // it doesn't hurt.
-      log.header.stamp = ros::Time::now();
-      qWarning("Msg with seq %d had time (%d); it's less than ros::TIME_MIN, which is invalid. "
-               "Writing 'now' instead.",
-               log.header.seq, item.stamp.sec);
-    } else {
-      log.header.stamp = item.stamp;
-    }
-    log.level = item.level;
-    log.line = item.line;
-    log.msg = item.text.join("\n").toStdString();
-    log.name = item.node;
-    bag.write("/rosout", log.header.stamp, log);
-
-    // Advance to the next line with a different log index.
-    idx++;
-    while (idx < msg_mapping_.size() && msg_mapping_[idx].log_index == line_map.log_index) {
-      idx++;
-    }
-  }
-  bag.close();
-}
-
-void LogDatabaseProxyModel::saveTextFile(const QString& filename) const
-{
-  QFile outFile(filename);
-  outFile.open(QFile::WriteOnly);
-  QTextStream outstream(&outFile);
-  for(size_t i = 0; i < msg_mapping_.size(); i++)
-  {
-    QString line = data(index(i), Qt::DisplayRole).toString();
-    outstream << line << '\n';
-  }
-  outstream.flush();
-  outFile.close();
-}
 }  // namespace swri_console

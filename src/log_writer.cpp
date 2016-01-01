@@ -29,14 +29,24 @@
 // *****************************************************************************
 #include <swri_console/log_writer.h>
 
+#include <QFile>
+#include <QTextStream>
+
 #include <swri_console/save_file_dialog.h>
 #include <swri_console/log_list_widget.h>
+#include <swri_console/log_database.h>
+#include <swri_console/session.h>
+#include <swri_console/log.h>
+
+#include <rosbag/bag.h>
+#include <rosgraph_msgs/Log.h>
 
 namespace swri_console
 {
 LogWriter::LogWriter(QObject *parent)
   :
-  QObject(parent)
+  QObject(parent),
+  db_(NULL)  
 {
 }
 
@@ -44,7 +54,18 @@ LogWriter::~LogWriter()
 {
 }
 
-void LogWriter::saveLogs(LogListWidget *log_list)
+void LogWriter::setDatabase(LogDatabase *db)
+{
+  if (db_) {
+    // We can implement this if needed, just don't have a current use case.
+    qWarning("LogWriter: Cannot change the log database.");
+    return;
+  }
+
+  db_ = db;
+}
+
+void LogWriter::save(LogListWidget *log_list)
 {
   // QString defaultname = QDateTime::currentDateTime().toString(Qt::ISODate) + ".bag";
   // QString filename = QFileDialog::getSaveFileName(this,
@@ -59,12 +80,10 @@ void LogWriter::saveLogs(LogListWidget *log_list)
     return;
   }
 
-  QStringList files = dialog.selectedFiles();
-  if (files.empty()) {
+  if (dialog.selectedFiles().empty()) {
     return;
   }
-
-  QString filename = files[0];
+  const QString filename = dialog.selectedFiles()[0];
   
   DatabaseView view;
   if (dialog.exportAll()) {
@@ -77,7 +96,97 @@ void LogWriter::saveLogs(LogListWidget *log_list)
     view = log_list->selectedLogContents();
   } else {
     qWarning("No export selection, will not write bag file.");
-  }  
+  }
+
+  if (filename.endsWith(".bag", Qt::CaseInsensitive)) {
+    saveBagFile(filename, view, dialog.sessionHeaders(), dialog.compression());
+  } else {
+    saveTextFile(filename, view, dialog.sessionHeaders(), dialog.extendedInfo());
+  }
+}
+  
+void LogWriter::saveBagFile(const QString &filename,
+                            const DatabaseView &view,
+                            bool session_header,
+                            bool compression) const
+{
+  rosbag::Bag bag(filename.toStdString().c_str(), rosbag::bagmode::Write);
+  if (compression) {
+      bag.setCompression(rosbag::compression::BZ2);
+  }
+
+  for (const SessionView &session_view : view) {
+    const Session &session = db_->session(session_view.session_id);
+    if (!session.isValid()) {
+      qWarning("saveBagFile: Skipping invalid session %d", session_view.session_id);
+    }
+
+    if (session_header) {
+      rosgraph_msgs::Log msg;
+      msg.header.seq = 0;
+      msg.header.stamp = session.minTime();
+      msg.header.frame_id = "__swri_console_session_separator__";
+      msg.level = rosgraph_msgs::Log::INFO;
+      msg.name = session.name().toStdString();
+      msg.msg = std::string("The following messages were collected from ") + session.name().toStdString();
+      msg.file = session.name().toStdString();
+      msg.function = "__swri_console_session_separator__";
+      msg.line = 0;
+      bag.write("/rosout_agg", msg.header.stamp, msg);
+    }
+
+    for (auto const &lid : session_view.log_ids) {
+      const Log& log = session.log(lid);
+
+      rosgraph_msgs::Log msg;
+      msg.header.seq = lid;
+      msg.header.stamp = log.absoluteTime();
+      msg.header.frame_id = "__swri_console__";
+      msg.level = log.severity();
+      msg.name = log.nodeName().toStdString();
+      msg.msg = log.textLines().join("\n").toStdString();
+      msg.file = log.fileName().toStdString();
+      msg.function = log.functionName().toStdString();
+      msg.line = log.lineNumber();
+      bag.write("/rosout_agg", msg.header.stamp, msg);
+    }
+  }
+  bag.close();
+}
+
+void LogWriter::saveTextFile(const QString &filename,
+                             const DatabaseView &view,
+                             bool session_header,
+                             bool extended_info) const
+{
+  QFile out_file(filename);
+  out_file.open(QFile::WriteOnly);
+  QTextStream outstream(&out_file);
+
+  for (const SessionView &session_view : view) {
+    const Session &session = db_->session(session_view.session_id);
+    if (!session.isValid()) {
+      qWarning("saveBagFile: Skipping invalid session %d", session_view.session_id);
+    }
+
+    if (session_header) {
+      outstream << "----------------------------------------\n";
+      outstream << "-- " << session.name() << "\n";
+      outstream << "----------------------------------------\n";      
+    }
+
+    for (auto const &lid : session_view.log_ids) {
+      const Log& log = session.log(lid);
+
+      if (extended_info) {
+        outstream << QString("[%1]: ").arg(log.nodeName());
+      }
+      outstream << log.textLines().join("\n") << "\n";
+    }
+  }
+
+  outstream.flush();
+  out_file.close();
 }
 }  // namespace swri_console
 

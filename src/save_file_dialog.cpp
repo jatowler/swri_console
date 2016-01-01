@@ -49,22 +49,14 @@ SaveFileDialog::SaveFileDialog(
   txt_filter_(tr("Txt Files (*.txt)"))
 {
   setOption(QFileDialog::DontUseNativeDialog);
-
+  setLabelText(QFileDialog::Accept, "Save");
+  
   {
     QString default_name =
       "console-" +
       QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") + 
       ".bag";
     selectFile(QDir::homePath() + QDir::separator() + default_name);
-  }
-
-  {
-    QStringList filters;
-    filters.append(bag_filter_);
-    filters.append(txt_filter_);
-    setNameFilters(filters);
-    QObject::connect(this, SIGNAL(filterSelected(const QString&)),
-                     this, SLOT(handleFilterSelected(const QString&)));
   }
   
   auto *options_widget = new QWidget(this);
@@ -130,7 +122,15 @@ SaveFileDialog::SaveFileDialog(
   
   hbox->addStretch(1.0);
 
-  setNameFilter(bag_filter_);
+  {
+    QStringList filters;
+    filters.append(bag_filter_);
+    filters.append(txt_filter_);
+    setNameFilters(filters);
+    QObject::connect(this, SIGNAL(filterSelected(const QString&)),
+                     this, SLOT(handleFilterSelected(const QString&)));
+  }
+  
 }
 
 SaveFileDialog::~SaveFileDialog()
@@ -139,15 +139,15 @@ SaveFileDialog::~SaveFileDialog()
 
 void SaveFileDialog::handleFilterSelected(const QString &filter)
 {
-  if (filter == bag_filter_) {
-    compression_->setEnabled(true);
-    include_session_headers_->setEnabled(true);
-    include_extended_info_->setEnabled(false);
-  } else {
-    compression_->setEnabled(false);
-    include_session_headers_->setEnabled(true);
-    include_extended_info_->setEnabled(true);
-  }
+  // if (filter == bag_filter_) {
+  //   compression_->setEnabled(true);
+  //   include_session_headers_->setEnabled(true);
+  //   include_extended_info_->setEnabled(false);
+  // } else {
+  //   compression_->setEnabled(false);
+  //   include_session_headers_->setEnabled(true);
+  //   include_extended_info_->setEnabled(true);
+  // }
 }
 
 bool SaveFileDialog::exportAll() const

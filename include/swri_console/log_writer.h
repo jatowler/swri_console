@@ -31,9 +31,11 @@
 #define SWRI_CONSOLE_LOG_WRITER_H_
 
 #include <QObject>
+#include <swri_console/database_view.h>
 
 namespace swri_console
 {
+class LogDatabase;
 class LogListWidget;
 class LogWriter : public QObject
 {
@@ -43,8 +45,23 @@ class LogWriter : public QObject
   LogWriter(QObject *parent);
   ~LogWriter();
 
+  void setDatabase(LogDatabase *db);
+
  public Q_SLOTS:
-  void saveLogs(LogListWidget *);
+  void save(LogListWidget *);
+
+ private:
+  void saveTextFile(const QString &filename,
+                    const DatabaseView &view,
+                    bool session_header,
+                    bool extended_info) const;
+  
+  void saveBagFile(const QString &filename,
+                   const DatabaseView &view,
+                   bool session_header,
+                   bool compression) const;
+  
+  LogDatabase *db_;
 }; 
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_LOG_WRITER_H_

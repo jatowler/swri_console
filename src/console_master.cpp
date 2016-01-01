@@ -44,6 +44,7 @@ ConsoleMaster::ConsoleMaster(int argc, char** argv)
   connected_(false),
   log_writer_(new LogWriter(this))
 {
+  log_writer_->setDatabase(&db_);
   ros_source_.start();
 }
 
@@ -63,8 +64,7 @@ void ConsoleMaster::createNewWindow()
 
   QObject::connect(win, SIGNAL(saveLogs(LogListWidget*)),
                    log_writer_, SLOT(save(LogListWidget*)));
-                   
-  
+                    
   QObject::connect(&ros_source_, SIGNAL(connected(bool, const QString&)),
                    win, SLOT(rosConnected(bool, const QString&)));
   win->rosConnected(ros_source_.isConnected(), ros_source_.masterUri());

@@ -32,7 +32,7 @@
 namespace swri_console
 {
 // Number of messages to read from the bag file during each operation.
-static const int CHUNK_SIZE = 100;
+static const int CHUNK_SIZE = 200;
 
 BagSourceBackend::BagSourceBackend(const QString &filename)
   :
