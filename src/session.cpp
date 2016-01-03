@@ -67,7 +67,7 @@ void Session::append(const rosgraph_msgs::LogConstPtr &msg)
   data.function = QString::fromStdString(msg->function);
   data.line = msg->line;
  
-  QStringList text = QString(msg->msg.c_str()).split('\n');
+  QStringList text = QString(msg->msg.c_str()).split(QRegExp("\n|\r\n|\r"));
   // Remove empty lines from the back.
   while(text.size() && text.back().isEmpty()) { text.pop_back(); }
   // Remove empty lines from the front.
