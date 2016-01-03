@@ -122,7 +122,7 @@ void RosSource::createNewSession()
   // callback, which would create two sessions instead of one.
   if (connected_ && session_id_ < 0) {
     QDateTime now = QDateTime::currentDateTime();
-    session_id_ = db_->createSession(QString("Live at %1").arg(now.toString("hh:mm:ss")));
+    session_id_ = db_->createSession(QString("Live at %1").arg(now.toString("yyyy-mm-dd hh:mm:ss")));
     Q_EMIT liveSessionChanged(session_id_);
   }
 }
