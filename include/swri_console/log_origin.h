@@ -27,64 +27,43 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#ifndef SWRI_CONSOLE_SESSION_H_
-#define SWRI_CONSOLE_SESSION_H_
-
-#include <deque>
-#include <unordered_map>
-
-#include <QString>
-
-#include <ros/time.h>
-#include <rosgraph_msgs/Log.h>
-
-#include <swri_console/log.h>
+#ifndef SWRI_CONSOLE_LOG_ORIGIN_H_
+#define SWRI_CONSOLE_LOG_ORIGIN_H_
 
 namespace swri_console
 {
-class LogDatabase;
-class Session
+struct LogOrigin
 {
- public:
-  int id_;
-  QString name_;
-  LogDatabase *db_;
+  std::string file;
+  std::string function;
+  uint32_t line;
+  int node_id;
+  uint8_t severity;
 
-  ros::Time min_time_;
-
-  std::unordered_map<int, size_t> node_log_counts_;
-
-  friend class Log;
-  friend class LogDatabase;
-
-  struct LogData
-  {
-    ros::Time stamp;
-    int origin_id;
-    // QStringList text_lines;
-    std::vector<std::string> text_lines;
-  };
-  std::deque<LogData> log_data_;
-    
- public:
-  Session();
-  ~Session();
-
-  bool isValid() const { return id_ >= 0; }
-  const QString& name() const { return name_; }
-  const ros::Time& minTime() const { return min_time_; }
-  const size_t nodeLogCount(int nid) const { return node_log_counts_.count(nid) ? node_log_counts_.at(nid) : 0; }
-
-  void append(const rosgraph_msgs::LogConstPtr &msg);
-
-  const int logCount() const { return static_cast<int>(log_data_.size()); }
-  Log log(int index) const {
-    if (index < 0 || index >= logCount()) {
-      return Log();
+  bool operator<(const LogOrigin &other) const {
+    // We'd like to return as quickly as possible, so the comparisons
+    // are ordered by integer components before string components.
+    // Within each class, they are ordred from most unique to least
+    // unique.    
+    if (line != other.line) {
+      return line < other.line;
     } else {
-      return Log(this, index);
-    }    
+      if (node_id != other.node_id) {
+        return node_id < other.node_id;
+      } else {
+        if (severity != other.severity) {
+          return severity < other.severity;
+        } else {
+          if (function != other.function) {
+            return function < other.function;
+          } else {
+            return file < other.file;
+          }
+        }
+      }      
+    }
   }
-};  // class Session
+};  // struct LogOrigin
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_SESSION_H_
+#endif  // SWRI_CONSOLE_LOG_ORIGIN_H_
+

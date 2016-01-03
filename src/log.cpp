@@ -53,43 +53,48 @@ ros::Time Log::relativeTime() const
 uint8_t Log::severity() const
 {
   if (!session_) { return 0xFF; }
-  return session_->log_data_[index_].severity;
+  return session_->db_->originSeverity(session_->log_data_[index_].origin_id);
 }
 
 int Log::nodeId() const
 {
   if (!session_) { return -1; }
-  return session_->log_data_[index_].node_id;
+  return session_->db_->originNodeId(session_->log_data_[index_].origin_id);
 }
 
 QString Log::nodeName() const
 {
   if (!session_) { return "invalid log"; }
-  return session_->db_->nodeName(nodeId());
+  return session_->db_->originNodeName(session_->log_data_[index_].origin_id);
 }
 
 QString Log::functionName() const
 {
   if (!session_) { return QString(); }
-  return session_->log_data_[index_].function;
+  return session_->db_->originFunction(session_->log_data_[index_].origin_id);
 }
 
 QString Log::fileName() const
 {
   if (!session_) { return QString(); }
-  return session_->log_data_[index_].file;
+  return session_->db_->originFile(session_->log_data_[index_].origin_id);
 }
 
 uint32_t Log::lineNumber() const
 {
   if (!session_) { return 0; }
-  return session_->log_data_[index_].line;
+  return session_->db_->originLine(session_->log_data_[index_].origin_id);
 }
 
 QStringList Log::textLines() const
 {
   if (!session_) { return QStringList(); }
-  return session_->log_data_[index_].text_lines;
+  const std::vector<std::string> &std_lines = session_->log_data_[index_].text_lines;
+  QStringList qt_lines;
+  for (size_t i = 0; i < std_lines.size(); i++) {
+    qt_lines.append(QString::fromStdString(std_lines[i]));
+  }
+  return qt_lines;
 }
 
 QString Log::textSingleLine() const

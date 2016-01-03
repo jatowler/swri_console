@@ -225,4 +225,88 @@ QString LogDatabase::nodeName(int nid) const
   qWarning("Request for invalid node %d", nid);
   return QString("<invalid node %1").arg(nid);
 }
+
+int LogDatabase::lookupOrigin(const int nid, const rosgraph_msgs::Log &log)
+{
+  LogOrigin origin;
+  origin.severity = log.level;
+  origin.node_id = nid;
+  origin.file = log.file;
+  origin.function = log.function;
+  origin.line = log.line;
+
+  auto it = origin_id_from_value_.find(origin);
+  if (it == origin_id_from_value_.end()) {
+    int oid = origin_value_from_id_.size();
+    while (origin_value_from_id_.count(oid) != 0) { oid++; }
+
+    origin_value_from_id_[oid] = origin;
+    origin_id_from_value_[origin] = oid;
+
+    qWarning("origin count: %zu", origin_value_from_id_.size());
+    return oid;
+  } else {
+    return it->second;
+  }    
+}
+
+uint8_t LogDatabase::originSeverity(int oid) const
+{
+  if (origin_value_from_id_.count(oid)) {
+    return origin_value_from_id_.at(oid).severity;
+  }
+
+  qWarning("Request for invalid origin %d", oid);
+  return 0xFF;
+}
+
+int LogDatabase::originNodeId(int oid) const
+{
+  if (origin_value_from_id_.count(oid)) {
+    return origin_value_from_id_.at(oid).node_id;
+  }
+
+  qWarning("Request for invalid origin %d", oid);
+  return 0xFF;
+}
+
+QString LogDatabase::originNodeName(int oid) const
+{
+  if (origin_value_from_id_.count(oid)) {
+    return nodeName(origin_value_from_id_.at(oid).node_id);
+  }
+
+  qWarning("Request for invalid origin %d", oid);
+  return QString("<Invalid origin %1").arg(oid);
+}
+
+QString LogDatabase::originFile(int oid) const
+{
+  if (origin_value_from_id_.count(oid)) {
+    return QString::fromStdString(origin_value_from_id_.at(oid).file);
+  }
+
+  qWarning("Request for invalid origin %d", oid);
+  return QString("<Invalid origin %1").arg(oid);
+}
+
+QString LogDatabase::originFunction(int oid) const
+{
+  if (origin_value_from_id_.count(oid)) {
+    return QString::fromStdString(origin_value_from_id_.at(oid).function);
+  }
+
+  qWarning("Request for invalid origin %d", oid);
+  return QString("<Invalid origin %1").arg(oid);
+}
+
+uint32_t LogDatabase::originLine(int oid) const
+{
+  if (origin_value_from_id_.count(oid)) {
+    return origin_value_from_id_.at(oid).line;
+  }
+
+  qWarning("Request for invalid origin %d", oid);
+  return 0;
+}
 }  // namespace swri_console

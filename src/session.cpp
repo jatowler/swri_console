@@ -46,7 +46,7 @@ Session::~Session()
 }
 
 void Session::append(const rosgraph_msgs::LogConstPtr &msg)
-{  
+{
   int nid = db_->lookupNode(msg->name);
   node_log_counts_[nid]++;
 
@@ -61,18 +61,19 @@ void Session::append(const rosgraph_msgs::LogConstPtr &msg)
   
   LogData data;
   data.stamp = msg->header.stamp;
-  data.severity = msg->level;
-  data.node_id = nid;
-  data.file = QString::fromStdString(msg->file);
-  data.function = QString::fromStdString(msg->function);
-  data.line = msg->line;
+  data.origin_id = db_->lookupOrigin(nid, *msg);
  
   QStringList text = QString(msg->msg.c_str()).split(QRegExp("\n|\r\n|\r"));
   // Remove empty lines from the back.
   while(text.size() && text.back().isEmpty()) { text.pop_back(); }
   // Remove empty lines from the front.
-  while(text.size() && text.front().isEmpty()) { text.pop_front(); }  
-  data.text_lines = text;
+  while(text.size() && text.front().isEmpty()) { text.pop_front(); }
+
+  data.text_lines.resize(text.size());
+  for (int i = 0; i < text.size(); i++) {
+    data.text_lines[i] = text[i].toStdString();
+  }
+  // data.text_lines = text;
 
   log_data_.push_back(data);
 }

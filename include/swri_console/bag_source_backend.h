@@ -46,6 +46,11 @@ class BagSourceBackend : public QObject
   ~BagSourceBackend();
   
  Q_SIGNALS:
+  void opened(size_t msg_count);
+  void data(const std::vector<rosgraph_msgs::Log> &msgs);
+  void finished();
+  void failed(const std::string &error);
+
   void finished(bool success, size_t msg_count, QString error_msg);
   void logRead(const rosgraph_msgs::LogConstPtr &msg);
 

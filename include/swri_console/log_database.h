@@ -41,21 +41,10 @@
 #include <rosgraph_msgs/Log.h>
 
 #include <swri_console/session.h>
+#include <swri_console/log_origin.h>
 
 namespace swri_console
 {
-struct LogEntry
-{
-  ros::Time stamp;
-  uint8_t level;  
-  std::string node;  
-  std::string file;
-  std::string function;
-  uint32_t line;
-  QStringList text;
-  uint32_t seq;
-};
-
 class LogDatabase : public QObject
 {
   Q_OBJECT;
@@ -80,6 +69,14 @@ class LogDatabase : public QObject
   int lookupNode(const std::string &name);
   QString nodeName(int nid) const;
   const std::vector<int>& nodeIds() const { return node_ids_; }
+
+  int lookupOrigin(int nid, const rosgraph_msgs::Log &log);
+  uint8_t originSeverity(int oid) const;
+  int originNodeId(int oid) const;
+  QString originNodeName(int oid) const;
+  QString originFile(int oid) const;
+  QString originFunction(int oid) const;
+  uint32_t originLine(int oid) const;
   
  Q_SIGNALS:
   void databaseCleared();
@@ -105,6 +102,9 @@ class LogDatabase : public QObject
   std::map<std::string, int> node_id_from_name_;
   std::vector<int> node_ids_;
 
+  std::unordered_map<int, LogOrigin> origin_value_from_id_;
+  std::map<LogOrigin, int> origin_id_from_value_;
+  
   friend class Session;
 };  // class LogDatabase
 }  // namespace swri_console 
