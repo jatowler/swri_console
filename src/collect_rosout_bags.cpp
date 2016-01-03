@@ -31,19 +31,21 @@
 
 #include <QCoreApplication>
 #include <QStringList>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>
 #include <QDebug>
+#include <QTime>
 
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 #include <rosgraph_msgs/Log.h>
 
 /**
- * This program collects rosout log messages from an arbitrary number
- * of bag files and put them into a single bag file.  I use to it make
- * super huge bag files that are useful for stress testing.
+ * This program extracts rosout log messages from an arbitrary number
+ * of bag files of bag files, putting them into bag files in a common
+ * directory.  Useful for stress testing.
  */
 
 bool quit = false;
@@ -109,7 +111,7 @@ QStringList sourceFilesFromText(const QString &text_filename)
   return files;
 }
 
-bool processArgs(QString &dst_file, QStringList &src_files)
+bool processArgs(QString &dst_dir, QStringList &src_files)
 {
   QStringList args = QCoreApplication::arguments();
 
@@ -118,7 +120,7 @@ bool processArgs(QString &dst_file, QStringList &src_files)
     return false;
   }
 
-  dst_file = args[1];
+  dst_dir = args[1];
   
   bool error = false;  
   for (int i = 2; i < args.size(); i++) {
@@ -147,7 +149,7 @@ bool processArgs(QString &dst_file, QStringList &src_files)
 }
 
 
-bool chooseTopic(QString &topic, rosbag::Bag &bag)
+bool chooseTopic(QString &topic, size_t &count, rosbag::Bag &bag)
 {
   QStringList topics;
   topics.append("/rosout_agg");
@@ -156,13 +158,13 @@ bool chooseTopic(QString &topic, rosbag::Bag &bag)
   topics.append("rosout");
 
   for (int i = 0; i < topics.size(); i++) {
-    auto conns = rosbag::View(bag, rosbag::TopicQuery(topics[i].toStdString())).getConnections();
-    if (conns.empty()) {
+    rosbag::View view(bag, rosbag::TopicQuery(topics[i].toStdString()));
+    if (view.getConnections().empty()) {
       continue;
     }
     
-    // Can't figure out how to get message count from c++ api?
     topic = topics[i];
+    count = view.size();
     return true;
   }
 
@@ -174,101 +176,61 @@ int main(int argc, char **argv)
   QCoreApplication app(argc, argv);
   setupSignalHandlers();
   
-  QString dst_fn;
+  QString dst_dir;
   QStringList src_fns;
-  if (!processArgs(dst_fn, src_fns)) {
+  if (!processArgs(dst_dir, src_fns)) {
     return -1;
   }
 
-  rosbag::Bag dst_bag(dst_fn.toStdString(), rosbag::bagmode::Write);
-  dst_bag.setCompression(rosbag::compression::BZ2);
+  if (!QDir().mkpath(dst_dir)) {
+    qWarning("Failed to make directory %s", qPrintable(dst_dir));
+    return -1;
+  }
 
-  bool first_ever = true;
-  ros::Time last_time(ros::TIME_MAX);
-  ros::Duration time_adjustment(0);
+  qWarning("Writing files to %s", qPrintable(dst_dir));
 
-
+  QTime timer;
+  timer.start();
+  
   size_t total_msg_count = 0;
   for (int i = 0; i < src_fns.size(); i++) {
     if (quit) { break; }
+
+    char header[1024];
+    snprintf(header, sizeof(header), "[% 11zu %04d/%04d] ",
+             total_msg_count, i+1, src_fns.size());
+        
+
     size_t msg_count = 0;
     try {
       rosbag::Bag src_bag(src_fns[i].toStdString(), rosbag::bagmode::Read);
-
+      
       QString topic;
+      size_t expected_msg_count = 0;
 
-      if (!chooseTopic(topic, src_bag)) {
-        qWarning("[% 11zu  %04d/%d] Skipping %s",
-                 total_msg_count, i+1, src_fns.size(), qPrintable(src_fns[i]));
+      if (!chooseTopic(topic, expected_msg_count, src_bag)) {
+        qWarning("%s Skipping %s", header, qPrintable(src_fns[i]));
         continue;
       }
-    
-      qWarning("[% 11zu  %04d/%d] Importing messages from %s in %s",
-               total_msg_count, i+1, src_fns.size(), qPrintable(topic), qPrintable(src_fns[i]));
       
-      bool first_in_bag = true;
+      QFileInfo src_file_info(src_fns[i]);
+      QFileInfo dst_file_info(dst_dir, "rosout-" + src_file_info.fileName());
+      QString dst_fn = dst_file_info.absoluteFilePath();
     
+      rosbag::Bag dst_bag(dst_fn.toStdString(), rosbag::bagmode::Write);
+      dst_bag.setCompression(rosbag::compression::BZ2);
+    
+      qWarning("%s Importing %zu, messages from %s in %s",
+               header, expected_msg_count, qPrintable(topic), qPrintable(src_fns[i]));
+      
       rosbag::View view(src_bag, rosbag::TopicQuery(topic.toStdString()));
       for (auto it = view.begin(); it != view.end(); it++) {
         if (quit) { break; }
         auto src_log = it->instantiate<rosgraph_msgs::Log>();
-
-        ros::Time this_time = src_log->header.stamp;
-        if (this_time == ros::Time(0)) {
-          this_time == it->getTime();
-          if (this_time == ros::Time(0)) {
-            if (first_ever) {
-              this_time = ros::Time::now();
-            } else {
-              this_time = last_time;
-            }
-          }
-        }
           
-        if (first_ever) {
-          time_adjustment = ros::Duration(0);
-        } else if (first_in_bag) {
-          // Put a 10 second gap between files.
-          time_adjustment = last_time  - this_time + ros::Duration(10.0);
-        } else {
-          ros::Time new_stamp = this_time + time_adjustment;
-          if (new_stamp - last_time > ros::Duration(5.0)) {
-            // Bound long stretches for radio silence to 1 second.        
-            time_adjustment = last_time + ros::Duration(1.0) - this_time;
-          } else if (new_stamp - last_time < ros::Duration(-0.5)) {
-            time_adjustment = last_time + ros::Duration(0.001) - this_time;
-          }
-        }
-        
-        last_time = this_time + time_adjustment;
-
-        if (first_in_bag) {
-          // Add a separator in case we want to sort out where a
-          // message came from.
-          QFileInfo file_info(src_fns[i]);
-          const std::string filename = file_info.fileName().toStdString();
-
-          rosgraph_msgs::Log dst_log;
-          dst_log.header.seq = i;
-          dst_log.header.stamp = last_time;
-          dst_log.header.frame_id = "__swri_console_session_separator__";
-          dst_log.level = rosgraph_msgs::Log::INFO;
-          dst_log.name = filename;
-          dst_log.msg = std::string("The following messages were collected from ") + filename;
-          dst_log.file = filename;
-          dst_log.function = "__swri_console_session_separator__";
-          dst_log.line = 0;
-          dst_bag.write("/rosout_agg", last_time, dst_log);
-          msg_count++;
-          total_msg_count++;
-        }        
-        
-        first_ever = false;
-        first_in_bag = false;
-
         rosgraph_msgs::Log dst_log;
         dst_log.header.seq = src_log->header.seq;
-        dst_log.header.stamp = last_time;
+        dst_log.header.stamp = src_log->header.stamp;
         dst_log.header.frame_id = src_log->header.frame_id;
         dst_log.level = src_log->level;
         dst_log.name = src_log->name;
@@ -276,15 +238,12 @@ int main(int argc, char **argv)
         dst_log.file = src_log->file;
         dst_log.function = src_log->function;
         dst_log.line = src_log->line;
-        // Ignore topics... don't know what they were thinking when they included it.
+        // Ignore topics... not useful and take up lots of space
         // dst_log.topics = src_log.topics;
-        dst_bag.write("/rosout_agg", last_time, dst_log);
+        dst_bag.write("/rosout_agg", it->getTime(), dst_log);
         msg_count++;      
         total_msg_count++;
       }
-
-      qWarning("[% 11zu  %04d/%d]   found %zu messages.",
-               total_msg_count, i+1, src_fns.size(), msg_count);
     } catch (rosbag::BagException &e) {
       qWarning("Exception occurred accessing %s after %zu messages.  Continuing to next file.",
                qPrintable(src_fns[i]), msg_count);
