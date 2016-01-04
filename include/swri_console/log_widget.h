@@ -143,14 +143,14 @@ class LogWidget : public QAbstractScrollArea
   bool event(QEvent *);
   void paintEvent(QPaintEvent *);
   void timerEvent(QTimerEvent *);
-  QVariant data(size_t session_idx, size_t row_idx, int role) const;
-  QVariant displayRole(const Log &log, int line_index) const;
+  void focusInEvent(QFocusEvent *event);
+  void focusOutEvent(QFocusEvent *event);
   QVariant toolTipRole(const Log &log, int line_index) const;
-  QVariant foregroundRole(const Log &log, int line_index) const;
-  QVariant backgroundRole(int session_idx, int row_idx) const;
   QVariant extendedLogRole(const Log &log, int line_index) const;
-  QVariant separatorData(int session_idx, int role) const;
-  
+
+  QString logText(const Log &log, int line_index) const;
+  const QColor& logColor(const Log &log) const;
+    
   void scheduleIdleProcessing();
   void updateRowCount(size_t row_count);                                      
   void updateRowHeight();

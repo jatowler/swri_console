@@ -361,108 +361,7 @@ bool LogWidget::event(QEvent *event)
   return QAbstractScrollArea::event(event);
 }
 
-void LogWidget::paintEvent(QPaintEvent *)
-{
-  QPainter painter(viewport());
-  updateRowHeight();
-    
-  if (blocks_.empty()) {
-    return;
-  }
-
-  QStyleOptionViewItemV4 option_proto = viewOptions();
-
-  int width = viewport()->rect().width();
-  int max_y = viewport()->rect().height();
-  int y = 0;
-
-  for (size_t i = 0; i < blocks_.size(); i++) {
-    auto const &block = blocks_[i];
-
-    if (y > max_y) { break; }
-    for (size_t j = 0; j < block.rows.size(); j++) {
-      QStyleOptionViewItemV4 option = option_proto;
-      option.rect = QRect(0, y, width, row_height_);      
-      fillOption(option, block, j);
-            
-      style()->drawControl(QStyle::CE_ItemViewItem, &option, &painter, this);  
-      y += row_height_;
-      if (y > max_y) { break; }
-    }
-  }      
-}
-
-QVariant LogWidget::data(size_t session_idx, size_t row_idx, int role) const
-{
-  switch (role)
-  {
-    // Currently we're only returning data for these roles, so return immediately
-    // if we're being queried for anything else.
-    case Qt::DisplayRole:
-    case Qt::ToolTipRole:
-    case Qt::ForegroundRole:
-    case Qt::BackgroundRole:
-    // case ExtendedLogRole:
-    case Qt::TextAlignmentRole:
-      break;
-    default:
-      return QVariant();
-  }
-
-  if (row_idx == 0) {
-    return separatorData(session_idx, role);
-  }
-  
-  int sid = blocks_[session_idx].session_id;
-  RowMap line_map = blocks_[session_idx].rows[row_idx];
-  size_t lid = line_map.log_index;
-  Log log = db_->session(sid).log(lid);
-  
-  if (!log.isValid()) {
-    return QVariant();
-  }
-
-  if (role == Qt::DisplayRole) {
-    return displayRole(log, line_map.line_index);
-  } else if (role == Qt::ToolTipRole) {
-    return toolTipRole(log, line_map.line_index);
-  } else if (role == Qt::ForegroundRole) {
-    return foregroundRole(log, line_map.line_index);
-  } else if (role == Qt::BackgroundRole) {
-    return backgroundRole(session_idx, row_idx);
-  // } else if (role == ExtendedLogRole) {
-  //   return extendedLogRole(log, line_map.line_index);
-  } else {
-    return QVariant();
-  }
-
-  return QVariant();
-}
-
-QVariant LogWidget::separatorData(int session_idx, int role) const
-{
-  const SessionData &data = blocks_[session_idx];
-  const Session &session = db_->session(data.session_id);
-  
-  if (role == Qt::DisplayRole) {
-    return session.name();
-  } else if (role == Qt::ToolTipRole) {
-    return session.name();
-  } else if (role == Qt::ForegroundRole) {
-    return Qt::white;
-  } else if (role == Qt::BackgroundRole) {
-    return QColor(110, 110, 110);
-    
-  // } else if (role == ExtendedLogRole) {
-  //   return QString("\n ------ %1 ----- \n").arg(session.name());
-  } else if (role == Qt::TextAlignmentRole) {
-    return Qt::AlignHCenter;
-  } else {
-    return QVariant();
-  }  
-}
-
-QVariant LogWidget::displayRole(const Log &log, int line_index) const
+QString LogWidget::logText(const Log &log, int line_index) const
 {  
   char severity = '?';
   if (log.severity() == rosgraph_msgs::Log::DEBUG) {
@@ -542,7 +441,7 @@ QVariant LogWidget::extendedLogRole(const Log &log, int line_index) const
   return text;
 }
 
-QVariant LogWidget::foregroundRole(const Log &log, int) const
+const QColor& LogWidget::logColor(const Log &log) const
 {
   switch (log.severity()) {
   case rosgraph_msgs::Log::DEBUG:
@@ -560,10 +459,6 @@ QVariant LogWidget::foregroundRole(const Log &log, int) const
   }
 }
 
-QVariant LogWidget::backgroundRole(int session_idx, int row_idx) const
-{
-}
-
 void LogWidget::updateRowHeight()
 {
   QStyleOptionViewItemV4 option = viewOptions();
@@ -576,25 +471,92 @@ void LogWidget::updateRowHeight()
   row_height_ = row_height;
 }
 
+void LogWidget::focusInEvent(QFocusEvent *event)
+{
+  QAbstractScrollArea::focusInEvent(event);
+  viewport()->update();
+}
+
+void LogWidget::focusOutEvent(QFocusEvent *event)
+{
+  QAbstractScrollArea::focusOutEvent(event);
+  viewport()->update();
+}
+
+void LogWidget::paintEvent(QPaintEvent *)
+{
+  QPainter painter(viewport());
+  updateRowHeight();
+    
+  if (blocks_.empty()) {
+    return;
+  }
+
+  QStyleOptionViewItemV4 option_proto = viewOptions();
+
+  int width = viewport()->rect().width();
+  int max_y = viewport()->rect().height();
+  int y = 0;
+
+  // const bool focus = (hasFocus() || d->viewport->hasFocus()) && current.isValid();
+  // const QStyle::State state = option.state;
+  // const QAbstractItemView::State viewState = this->state();
+  // const bool enabled = (state & QStyle::State_Enabled) != 0;
+  qDebug() << ((option_proto.state & QStyle::State_Enabled) != 0);
+  
+  for (size_t i = 0; i < blocks_.size(); i++) {
+    auto const &block = blocks_[i];
+
+    if (y > max_y) { break; }
+    for (size_t j = 0; j < block.rows.size(); j++) {
+      QStyleOptionViewItemV4 option = option_proto;
+      option.rect = QRect(0, y, width, row_height_);
+
+      // option.state |= QStyle::State_Enabled;
+
+      if (j == 5) {
+        option.state |= QStyle::State_Selected;
+      }
+
+      if (j == 3) {
+        option.state |= QStyle::State_HasFocus;
+      }
+
+      if (j == 8) {
+        option.state |= QStyle::State_MouseOver;
+      }
+
+      
+      fillOption(option, block, j);
+            
+      style()->drawControl(QStyle::CE_ItemViewItem, &option, &painter, this);  
+      y += row_height_;
+      if (y > max_y) { break; }
+    }
+  }      
+}
+
 QStyleOptionViewItemV4 LogWidget::viewOptions()
 {
   QStyleOptionViewItemV4 option;
   option.initFrom(this);
-  option.state &= ~QStyle::State_MouseOver;
   option.font = font();
+  option.state &= ~QStyle::State_MouseOver;
   option.state &= ~QStyle::State_HasFocus;
+  if (!hasFocus())
+    option.state &= ~QStyle::State_Active;
 
-  {
-    int pm = style()->pixelMetric(QStyle::PM_ListViewIconSize, 0, this);
-    option.decorationSize = QSize(pm, pm);
-  }
+  int pm = style()->pixelMetric(QStyle::PM_ListViewIconSize, 0, this);
+  option.decorationSize = QSize(pm, pm);
   
   option.decorationPosition = QStyleOptionViewItem::Left;
   option.decorationAlignment = Qt::AlignCenter;
   
   option.displayAlignment = Qt::AlignLeft | Qt::AlignVCenter;
-  option.textElideMode = Qt::ElideRight;
-  option.showDecorationSelected = false;
+  option.textElideMode = Qt::ElideNone;
+  // This has to be true or the selection/focus rect will only cover
+  // the text.
+  option.showDecorationSelected = true;
   
   option.locale = locale();
   option.locale.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -614,10 +576,14 @@ void LogWidget::fillOption(QStyleOptionViewItemV4 &option,
     option.displayAlignment = Qt::AlignHCenter | Qt::AlignTop;
   } else {
     const Session &session = db_->session(session_data.session_id);
-    
-    option.displayAlignment = Qt::AlignLeft | Qt::AlignTop;
+    RowMap line_map = session_data.rows[row_idx];
+    Log log = session.log(line_map.log_index);
+
     option.features |= QStyleOptionViewItemV2::HasDisplay;
-        
+    option.text = logText(log, line_map.line_index);
+    option.palette.setBrush(QPalette::Text, logColor(log));
+    option.displayAlignment = Qt::AlignLeft | Qt::AlignTop;
+       
     if ((row_idx - session_data.alternate_base) % 2) {
       option.backgroundBrush = QColor(240, 240, 240);
     }
