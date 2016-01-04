@@ -62,8 +62,8 @@ void ConsoleMaster::createNewWindow()
   QObject::connect(win, SIGNAL(forceNewLiveSession()),
                    &ros_source_, SLOT(resetSessionId()));
 
-  QObject::connect(win, SIGNAL(saveLogs(LogListWidget*)),
-                   log_writer_, SLOT(save(LogListWidget*)));
+  QObject::connect(win, SIGNAL(saveLogs(LogWidget*)),
+                   log_writer_, SLOT(save(LogWidget*)));
                     
   QObject::connect(&ros_source_, SIGNAL(connected(bool, const QString&)),
                    win, SLOT(rosConnected(bool, const QString&)));

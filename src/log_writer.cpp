@@ -33,7 +33,7 @@
 #include <QTextStream>
 
 #include <swri_console/save_file_dialog.h>
-#include <swri_console/log_list_widget.h>
+#include <swri_console/log_widget.h>
 #include <swri_console/log_database.h>
 #include <swri_console/session.h>
 #include <swri_console/log.h>
@@ -65,7 +65,7 @@ void LogWriter::setDatabase(LogDatabase *db)
   db_ = db;
 }
 
-void LogWriter::save(LogListWidget *log_list)
+void LogWriter::save(LogWidget *log_list)
 {
   // QString defaultname = QDateTime::currentDateTime().toString(Qt::ISODate) + ".bag";
   // QString filename = QFileDialog::getSaveFileName(this,

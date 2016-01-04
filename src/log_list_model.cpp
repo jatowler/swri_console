@@ -420,7 +420,7 @@ void LogListModel::processOldMessages()
     }
 
     for (size_t i = 0;
-         block.earliest_log_index != 0 && i < 100;
+         block.earliest_log_index != 0 && i < 10000;
          block.earliest_log_index--, i++)
     {
       const Log log = session.log(block.earliest_log_index-1);
@@ -446,9 +446,12 @@ void LogListModel::processOldMessages()
       beginInsertRows(QModelIndex(),
                       start_row + 1,
                       start_row + block.early_rows.size() - 1 + 1);
-      block.rows.insert(block.rows.begin() + 1, 
+      RowMap first = block.rows.front();
+      block.rows.pop_front();
+      block.rows.insert(block.rows.begin(), 
                         block.early_rows.begin(),
                         block.early_rows.end());
+      block.rows.push_front(first);
       block.alternate_base += block.early_rows.size();
       block.early_rows.clear();
       endInsertRows();

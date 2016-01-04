@@ -266,7 +266,7 @@
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="swri_console::LogListWidget" name="logList" native="true"/>
+         <widget class="swri_console::LogWidget" name="logList" native="true"/>
         </item>
         <item>
          <layout class="QGridLayout" name="gridLayout">
@@ -502,15 +502,15 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>swri_console::LogListWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">swri_console/log_list_widget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>swri_console::ColorWidget</class>
    <extends>QWidget</extends>
    <header location="global">swri_console/color_widget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>swri_console::LogWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">swri_console/log_widget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

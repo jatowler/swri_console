@@ -36,7 +36,7 @@
 namespace swri_console
 {
 class LogDatabase;
-class LogListWidget;
+class LogWidget;
 class LogWriter : public QObject
 {
   Q_OBJECT;
@@ -48,7 +48,7 @@ class LogWriter : public QObject
   void setDatabase(LogDatabase *db);
 
  public Q_SLOTS:
-  void save(LogListWidget *);
+  void save(LogWidget *);
 
  private:
   void saveTextFile(const QString &filename,

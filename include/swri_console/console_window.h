@@ -59,7 +59,7 @@ class ConsoleWindow : public QMainWindow {
   void createNewWindow();
   void forceNewLiveSession();
   void readBagFile(const QString &filename);
-  void saveLogs(LogListWidget *);
+  void saveLogs(LogWidget *);
 
  public Q_SLOTS:
   void resetDatabase();
