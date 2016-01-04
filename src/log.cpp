@@ -89,12 +89,25 @@ uint32_t Log::lineNumber() const
 QStringList Log::textLines() const
 {
   if (!session_) { return QStringList(); }
-  const std::vector<std::string> &std_lines = session_->log_data_[index_].text_lines;
-  QStringList qt_lines;
+  auto const &std_lines = session_->log_data_[index_].text_lines;
+
+  QStringList lines;
+  lines.reserve(std_lines.size());
   for (size_t i = 0; i < std_lines.size(); i++) {
-    qt_lines.append(QString::fromStdString(std_lines[i]));
+    QString subst_line = QString::fromStdString(session_->db_->lineText(std_lines[i].line_id));
+
+    for (size_t j = 0; j < std_lines[i].variables.size(); j++) {
+      int index = subst_line.indexOf("0");
+      if (index == -1) {
+        qWarning("Error rebuilding string: %s", qPrintable(subst_line));
+      } else {
+        subst_line.replace(index, 1, QString::fromStdString(std_lines[i].variables[j]));
+      }
+    }
+    
+    lines.append(subst_line);
   }
-  return qt_lines;
+  return lines;
 }
 
 QString Log::textSingleLine() const

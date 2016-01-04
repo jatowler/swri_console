@@ -34,11 +34,12 @@ namespace swri_console
 {
 Session::Session()
   :
+  number_re_("[-+]?\\d*\\.?\\d+([eE][-+]?\\d+)?"),
   id_(-1),
   name_("__uninitialized__"),
   db_(NULL),
   min_time_(ros::TIME_MAX)
-{  
+{
 }
 
 Session::~Session()
@@ -63,16 +64,42 @@ void Session::append(const rosgraph_msgs::LogConstPtr &msg)
   data.stamp = msg->header.stamp;
   data.origin_id = db_->lookupOrigin(nid, *msg);
  
-  QStringList text = QString(msg->msg.c_str()).split(QRegExp("\n|\r\n|\r"));
+  QStringList text = QString::fromStdString(msg->msg).split(QRegExp("\n|\r\n|\r"));
   // Remove empty lines from the back.
   while(text.size() && text.back().isEmpty()) { text.pop_back(); }
   // Remove empty lines from the front.
   while(text.size() && text.front().isEmpty()) { text.pop_front(); }
-
+  
   data.text_lines.resize(text.size());
   for (int i = 0; i < text.size(); i++) {
-    data.text_lines[i] = text[i].toStdString();
+    QString this_line = text[i];
+    QString subst_line("");
+
+    int start_idx = 0;
+    while (start_idx < this_line.size()) {
+      int match_idx = number_re_.indexIn(this_line, start_idx);
+      if (match_idx == -1) {
+        // Thing else in this string.  Copy the remainder and quit.
+        subst_line += this_line.midRef(start_idx, this_line.size() - start_idx);
+        break;
+      }
+
+      if (start_idx != match_idx) {
+        subst_line += this_line.midRef(start_idx, match_idx - start_idx);
+      }
+
+      subst_line += "0";
+      data.text_lines[i].variables.push_back(
+        this_line.mid(match_idx, number_re_.matchedLength()).toStdString());
+      start_idx = match_idx + number_re_.matchedLength();
+    }    
+    
+    data.text_lines[i].line_id = db_->lookupLine(subst_line.toStdString());
   }
+    
+  // for (int i = 0; i < text.size(); i++) {
+  //   data.text_lines[i] = text[i].toStdString();
+  // }
   // data.text_lines = text;
 
   log_data_.push_back(data);

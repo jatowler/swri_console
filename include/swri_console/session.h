@@ -34,6 +34,7 @@
 #include <unordered_map>
 
 #include <QString>
+#include <QRegExp>
 
 #include <ros/time.h>
 #include <rosgraph_msgs/Log.h>
@@ -46,6 +47,8 @@ class LogDatabase;
 class Session
 {
  public:
+  QRegExp number_re_;
+  
   int id_;
   QString name_;
   LogDatabase *db_;
@@ -57,12 +60,17 @@ class Session
   friend class Log;
   friend class LogDatabase;
 
+  struct LogLine
+  {
+    int line_id;
+    std::vector<std::string> variables;
+  };
+  
   struct LogData
   {
     ros::Time stamp;
     int origin_id;
-    // QStringList text_lines;
-    std::vector<std::string> text_lines;
+    std::vector<LogLine> text_lines;
   };
   std::deque<LogData> log_data_;
     

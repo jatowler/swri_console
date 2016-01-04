@@ -77,6 +77,9 @@ class LogDatabase : public QObject
   QString originFile(int oid) const;
   QString originFunction(int oid) const;
   uint32_t originLine(int oid) const;
+
+  int lookupLine(const std::string &text);
+  std::string lineText(int lid) const;
   
  Q_SIGNALS:
   void databaseCleared();
@@ -104,6 +107,9 @@ class LogDatabase : public QObject
 
   std::unordered_map<int, LogOrigin> origin_value_from_id_;
   std::map<LogOrigin, int> origin_id_from_value_;
+
+  std::unordered_map<int, std::string> line_text_from_id_;
+  std::map<std::string, int> line_id_from_text_;
   
   friend class Session;
 };  // class LogDatabase

@@ -309,4 +309,30 @@ uint32_t LogDatabase::originLine(int oid) const
   qWarning("Request for invalid origin %d", oid);
   return 0;
 }
+
+int LogDatabase::lookupLine(const std::string &text)
+{
+  if (line_id_from_text_.count(text) == 0) {    
+    int lid = line_text_from_id_.size();
+    while (line_text_from_id_.count(lid) != 0) { lid++; }
+
+    line_text_from_id_[lid] = text;
+    line_id_from_text_[text] = lid;
+
+    qWarning("line count: %zu", line_text_from_id_.size());
+    return lid;
+  } else {
+    return line_id_from_text_[text];
+  }
+}
+
+std::string LogDatabase::lineText(int lid) const
+{
+  if (line_text_from_id_.count(lid)) {
+    return line_text_from_id_.at(lid);
+  }
+
+  qWarning("Request for invalid line %d", lid);
+  return std::string("<invalid line>");
+}
 }  // namespace swri_console
