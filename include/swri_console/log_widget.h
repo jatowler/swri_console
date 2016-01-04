@@ -17,12 +17,12 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL Southwest Research Institute® BE LIABLE 
-// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
-// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+// ARE DISCLAIMED. IN NO EVENT SHALL Southwest Research Institute® BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 //
@@ -74,7 +74,7 @@ class LogWidget : public QAbstractScrollArea
  Q_SIGNALS:
   void autoScrollToBottomChanged(bool auto_scroll);
   void messagesAdded();
-  
+
  public Q_SLOTS:
   void setSessionFilter(const std::vector<int> &sids);
   void setAutoScrollToBottom(bool auto_scroll);
@@ -134,13 +134,19 @@ class LogWidget : public QAbstractScrollArea
   std::vector<SessionData> blocks_;
   size_t row_count_;
   int row_height_;
+  int display_row_count_;
 
+  int top_offset_px_;
+  int top_session_idx_;
+  size_t top_row_idx_;
+  
   // A list of session ids that are used to calculate the current
   // message counts.
   std::vector<int> sids_;
 
  private:  // methods
   bool event(QEvent *);
+  void resizeEvent(QResizeEvent *);
   void paintEvent(QPaintEvent *);
   void timerEvent(QTimerEvent *);
   void focusInEvent(QFocusEvent *event);
@@ -150,14 +156,18 @@ class LogWidget : public QAbstractScrollArea
 
   QString logText(const Log &log, int line_index) const;
   const QColor& logColor(const Log &log) const;
-    
+
   void scheduleIdleProcessing();
-  void updateRowCount(size_t row_count);                                      
+  void updateRowCount(size_t row_count);
   void updateRowHeight();
+
+  void updateGeometry();
 
   QStyleOptionViewItemV4 viewOptions();
   void fillOption(QStyleOptionViewItemV4 &option, const SessionData &, int row_id);
-                                      
+
+  int adjustRow(int &session_idx, size_t &row_idx, int offset);
+
  private Q_SLOTS:
   void reset();
   void allDataChanged();
@@ -165,8 +175,7 @@ class LogWidget : public QAbstractScrollArea
   void handleDatabaseCleared();
   void processNewMessages();
   void filterModified();
-
-  
+  void updateLayout();
 };  // class LogWidget
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_LOG_WIDGET_H_

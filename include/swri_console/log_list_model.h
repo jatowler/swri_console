@@ -78,7 +78,7 @@ class LogListModel : public QAbstractListModel
 
   DatabaseView getModelContents() const;
   DatabaseView getModelContents(const QModelIndexList &selection) const;
-  
+
  Q_SIGNALS:
   void messagesAdded();
 

@@ -96,12 +96,14 @@ QStringList Log::textLines() const
   for (size_t i = 0; i < std_lines.size(); i++) {
     QString subst_line = QString::fromStdString(session_->db_->lineText(std_lines[i].line_id));
 
+    int offset = 0;
     for (size_t j = 0; j < std_lines[i].variables.size(); j++) {
-      int index = subst_line.indexOf("0");
+      int index = subst_line.indexOf("0", offset);
       if (index == -1) {
         qWarning("Error rebuilding string: %s", qPrintable(subst_line));
       } else {
         subst_line.replace(index, 1, QString::fromStdString(std_lines[i].variables[j]));
+        offset = index + std_lines[i].variables[j].size();
       }
     }
     
