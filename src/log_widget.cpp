@@ -35,6 +35,7 @@
 #include <QScrollBar>
 #include <QStyle>
 #include <QStyleOptionViewItemV4>
+#include <QTime>
 #include <QTimer>
 
 #include <swri_console/log.h>
@@ -248,6 +249,8 @@ void LogWidget::processOldMessages()
   //
   // Also, we iterate through the blocks backwards for this to get
   // better behavior when follow latest messages is selected.
+  QTime process_time;
+  process_time.start();
   for (size_t i = 0; i < blocks_.size(); i++) {
     SessionData &block = blocks_[blocks_.size()-i-1];
 
@@ -262,22 +265,28 @@ void LogWidget::processOldMessages()
       continue;
     }
 
-    for (size_t i = 0;
-         block.earliest_log_index != 0 && i < 100;
-         block.earliest_log_index--, i++)
-    {
-      const Log log = session.log(block.earliest_log_index-1);
-      if (!filter_->accept(log)) {
-         continue;
-      }
+    size_t count = 0;
+    while (process_time.elapsed() < 20) {
+      for (size_t i = 0;
+           block.earliest_log_index != 0 && i < 100;
+           block.earliest_log_index--, i++)
+      {
+        count++;
+        const Log log = session.log(block.earliest_log_index-1);
+        if (!filter_->accept(log)) {
+          continue;
+        }
 
-      QStringList text_lines = log.textLines();
-      for (int r = 0; r < text_lines.size(); r++) {
-        // Note that we have to add the lines backwards to maintain the proper order.
-        block.early_rows.push_front(RowMap(block.earliest_log_index-1,
-                                            text_lines.size()-1-r));
+        QStringList text_lines = log.textLines();
+        for (int r = 0; r < text_lines.size(); r++) {
+          // Note that we have to add the lines backwards to maintain the proper order.
+          block.early_rows.push_front(RowMap(block.earliest_log_index-1,
+                                             text_lines.size()-1-r));
+        }
       }
     }
+
+    qWarning("intermediate processed %d messages in %d ms", count, process_time.elapsed());
 
     if ((block.earliest_log_index == 0 && block.early_rows.size()) ||
         block.early_rows.size() > 200) {
@@ -295,6 +304,7 @@ void LogWidget::processOldMessages()
       Q_EMIT messagesAdded();
       viewport()->update();
     }
+    qWarning("finished processing %d messages in %d ms", count, process_time.elapsed());
 
     // Don't process any more blocks.
     break;
