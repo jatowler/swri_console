@@ -101,7 +101,7 @@ class LogWidget : public QAbstractScrollArea
   QColor warn_color_;
   QColor error_color_;
   QColor fatal_color_;
-
+    
   // We store the displayed logs as individual lines for performance
   // reasons (much easier/faster to treat the contents as a collection
   // of uniform items).  The RowMap struct is used to map our row
@@ -135,9 +135,16 @@ class LogWidget : public QAbstractScrollArea
   int row_height_;
   int display_row_count_;
 
+  struct RowIndex {
+    int session_idx;
+    size_t row_idx;
+    RowIndex() : session_idx(-1), row_idx(0) {}
+    RowIndex(int session_idx, size_t row_idx) : session_idx(session_idx), row_idx(row_idx) {}
+    bool isValid() const { return session_idx >= 0; }
+  };
+  
   int top_offset_px_;
-  int top_session_idx_;
-  size_t top_row_idx_;
+  RowIndex top_row_;
   
   // A list of session ids that are used to calculate the current
   // message counts.
@@ -165,7 +172,7 @@ class LogWidget : public QAbstractScrollArea
   QStyleOptionViewItemV4 viewOptions();
   void fillOption(QStyleOptionViewItemV4 &option, const SessionData &, int row_id);
 
-  int adjustRow(int &session_idx, size_t &row_idx, int offset);
+  int adjustRow(RowIndex &row, int offset);
 
  private Q_SLOTS:
   void reset();

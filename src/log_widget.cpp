@@ -492,21 +492,21 @@ void LogWidget::updateLayout()
 {
   if (blocks_.empty()) {
     top_offset_px_ = 0;
-    top_session_idx_ = 0;
-    top_row_idx_ = 0;
+    top_row_.session_idx = 0;
+    top_row_.row_idx = 0;
     return;
   }
    
   QScrollBar *vbar = verticalScrollBar();
   if (vbar->maximum() - vbar->minimum() == 0) {
     top_offset_px_ = 0;
-    top_session_idx_ = 0;
-    top_row_idx_ = 0;    
+    top_row_.session_idx = 0;
+    top_row_.row_idx = 0;    
   } else if (vbar->value() == vbar->maximum()) {
     top_offset_px_ = 0;
-    top_session_idx_ = blocks_.size()-1;
-    top_row_idx_ = blocks_.back().rows.size()-1;
-    int count = adjustRow(top_session_idx_, top_row_idx_, -(display_row_count_));
+    top_row_.session_idx = blocks_.size()-1;
+    top_row_.row_idx = blocks_.back().rows.size()-1;
+    int count = adjustRow(top_row_, -(display_row_count_));
     if (count == display_row_count_) {
       top_offset_px_ = row_height_*(display_row_count_+1) - viewport()->size().height();
     }
@@ -524,17 +524,17 @@ void LogWidget::updateLayout()
     if (session_idx < 0) {
       qWarning("Error in update layout");
       top_offset_px_ = 0;
-      top_session_idx_ = 0;
-      top_row_idx_ = 0;
+      top_row_.session_idx = 0;
+      top_row_.row_idx = 0;
     } else {
       top_offset_px_ = 0;
-      top_session_idx_ = session_idx;
-      top_row_idx_ = row_idx;
+      top_row_.session_idx = session_idx;
+      top_row_.row_idx = row_idx;
     }    
   }
 
   // qWarning("align pixel: %d align_session: %d align_row: %zu",
-  //          top_offset_px_, top_session_idx_, top_row_idx_);
+  //          top_offset_px_, top_row_.session_idx, top_row_.row_idx);
 }
 
 void LogWidget::paintEvent(QPaintEvent *)
@@ -557,12 +557,11 @@ void LogWidget::paintEvent(QPaintEvent *)
   // qDebug() << ((option_proto.state & QStyle::State_Enabled) != 0);
 
   int y = -top_offset_px_;
-  int session_idx = top_session_idx_;
-  size_t row_idx = top_row_idx_;
+  RowIndex row = top_row_;
 
   int j = 0;
   while (y < max_y) {
-    auto const &block = blocks_[session_idx];
+    auto const &block = blocks_[row.session_idx];
     QStyleOptionViewItemV4 option = option_proto;
     option.rect = QRect(0, y, width, row_height_);
 
@@ -578,13 +577,12 @@ void LogWidget::paintEvent(QPaintEvent *)
     
     if (j == 8) {
       option.state |= QStyle::State_MouseOver;
-    }
+    }    
     
-    
-    fillOption(option, block, row_idx);
+    fillOption(option, block, row.row_idx);
     
     style()->drawControl(QStyle::CE_ItemViewItem, &option, &painter, this);
-    if (!adjustRow(session_idx, row_idx, 1)) {
+    if (!adjustRow(row, 1)) {
       break;
     }
     y += row_height_;
@@ -646,41 +644,41 @@ void LogWidget::fillOption(QStyleOptionViewItemV4 &option,
   }
 }
 
-int LogWidget::adjustRow(int &session_idx, size_t &row_idx, int offset)
+int LogWidget::adjustRow(RowIndex &row, int offset)
 {
-  if (session_idx >= blocks_.size()) {
+  if (row.session_idx >= blocks_.size()) {
     return 0; 
-  } else if (row_idx >= blocks_[session_idx].rows.size()) {
+  } else if (row.row_idx >= blocks_[row.session_idx].rows.size()) {
     return 0;
   }
   
   int count = 0;
   if (offset < 0) {
     while (offset < 0) {
-      if (row_idx == 0) {
-        if (session_idx == 0) {
+      if (row.row_idx == 0) {
+        if (row.session_idx == 0) {
           break;
         } else {
-          session_idx--;
-          row_idx = blocks_[session_idx].rows.size()-1;
+          row.session_idx--;
+          row.row_idx = blocks_[row.session_idx].rows.size()-1;
         }
       } else {
-        row_idx--;
+        row.row_idx--;
       }
       count++;
       offset++;
     }
   } else {
     while (offset > 0) {
-      if (row_idx+1 == blocks_[session_idx].rows.size()) {
-        if (session_idx+1 == blocks_.size()) {
+      if (row.row_idx+1 == blocks_[row.session_idx].rows.size()) {
+        if (row.session_idx+1 == blocks_.size()) {
           break;
         } else {
-          session_idx++;
-          row_idx = 0;
+          row.session_idx++;
+          row.row_idx = 0;
             }
       } else {
-        row_idx++;
+        row.row_idx++;
       }
       count++;
       offset--;
