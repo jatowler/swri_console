@@ -53,73 +53,73 @@ ros::Time Log::relativeTime() const
 uint8_t Log::severity() const
 {
   if (!session_) { return 0xFF; }
-  return session_->db_->originSeverity(session_->log_data_[index_].origin_id);
+  return session_->db_->prototypeSeverity(session_->log_data_[index_].proto_id);
 }
 
 int Log::nodeId() const
 {
   if (!session_) { return -1; }
-  return session_->db_->originNodeId(session_->log_data_[index_].origin_id);
+  return session_->db_->prototypeNodeId(session_->log_data_[index_].proto_id);
 }
 
 QString Log::nodeName() const
 {
   if (!session_) { return "invalid log"; }
-  return session_->db_->originNodeName(session_->log_data_[index_].origin_id);
+  return session_->db_->prototypeNodeName(session_->log_data_[index_].proto_id);
 }
 
 QString Log::functionName() const
 {
   if (!session_) { return QString(); }
-  return session_->db_->originFunction(session_->log_data_[index_].origin_id);
+  return session_->db_->prototypeFunction(session_->log_data_[index_].proto_id);
 }
 
 QString Log::fileName() const
 {
   if (!session_) { return QString(); }
-  return session_->db_->originFile(session_->log_data_[index_].origin_id);
+  return session_->db_->prototypeFile(session_->log_data_[index_].proto_id);
 }
 
 uint32_t Log::lineNumber() const
 {
   if (!session_) { return 0; }
-  return session_->db_->originLine(session_->log_data_[index_].origin_id);
+  return session_->db_->prototypeLine(session_->log_data_[index_].proto_id);
 }
 
 size_t Log::lineCount() const
 {
   if (!session_) { return 0; }
-  return session_->log_data_[index_].text_lines.size();
+  QString text = session_->db_->prototypeText(session_->log_data_[index_].proto_id);
+  return 1+text.count('\n');
 }
 
-QStringList Log::textLines() const
+ QStringList Log::textLines() const
 {
-  if (!session_) { return QStringList(); }
-  auto const &std_lines = session_->log_data_[index_].text_lines;
+  return text().split('\n');
+}
 
-  QStringList lines;
-  lines.reserve(std_lines.size());
-  for (size_t i = 0; i < std_lines.size(); i++) {
-    QString subst_line = QString::fromStdString(session_->db_->lineText(std_lines[i].line_id));
+QString Log::textLine(size_t index) const
+{
+  return text().split('\n')[index];
+}
 
-    int offset = 0;
-    for (size_t j = 0; j < std_lines[i].variables.size(); j++) {
-      int index = subst_line.indexOf("0", offset);
-      if (index == -1) {
-        qWarning("Error rebuilding string: %s", qPrintable(subst_line));
-      } else {
-        subst_line.replace(index, 1, QString::fromStdString(std_lines[i].variables[j]));
-        offset = index + std_lines[i].variables[j].size();
-      }
+QString Log::text() const
+{
+  if (!session_) { return QString(); }  
+  QStringList variables = QString::fromStdString(session_->log_data_[index_].variables).split(' ');
+  QString text = session_->db_->prototypeText(session_->log_data_[index_].proto_id);
+  
+  int offset = 0;
+  for (int j = 0; j < variables.size(); j++) {
+    int index = text.indexOf("0", offset);
+    if (index == -1) {
+      qWarning("Error rebuilding string: %s", qPrintable(text));
+    } else {
+      text.replace(index, 1, variables[j]);
+      offset = index + variables[j].size();
     }
-    
-    lines.append(subst_line);
   }
-  return lines;
-}
-
-QString Log::textSingleLine() const
-{
-  return textLines().join(" ");
+  
+  return text;
 }
 }  // namespace swri_console

@@ -242,7 +242,7 @@ QVariant LogListModel::displayRole(const Log &log, int line_index) const
     header.fill(' ');
   }
     
-  return QString(header) + log.textLines()[line_index];
+  return QString(header) + log.textLines(line_index);
 }
 
 QVariant LogListModel::toolTipRole(const Log &log, int line_index) const
@@ -427,9 +427,9 @@ void LogListModel::processOldMessages()
       if (!filter_->accept(log)) {
          continue;
       }
-      
-      QStringList text_lines = log.textLines();
-      for (int r = 0; r < text_lines.size(); r++) {
+
+      size_t line_count = log.lineCount();
+      for (int r = 0; r < line_count; r++) {
         // Note that we have to add the lines backwards to maintain the proper order.
         block.early_rows.push_front(RowMap(block.earliest_log_index-1,
                                             text_lines.size()-1-r));
@@ -486,8 +486,8 @@ void LogListModel::processNewMessages()
         continue;
       }
 
-      QStringList text_lines = log.textLines();
-      for (int r = 0; r < text_lines.size(); r++) {
+      size_t line_count = log.lineCount();
+      for (int r = 0; r < line_count; r++) {
         new_items.push_back(RowMap(block.latest_log_index, r));
       }
     }

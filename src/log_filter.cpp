@@ -55,7 +55,7 @@ bool LogFilter::accept(const Log& log) const
 
   if (!include_regexp_.isEmpty() ||
       !exclude_regexp_.isEmpty()) {
-    QString text = log.textSingleLine();
+    QString text = log.text();
 
     if (include_regexp_.indexIn(text) < 0) {
       return false;

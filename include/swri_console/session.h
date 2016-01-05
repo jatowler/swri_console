@@ -59,18 +59,12 @@ class Session
 
   friend class Log;
   friend class LogDatabase;
-
-  struct LogLine
-  {
-    int line_id;
-    std::vector<std::string> variables;
-  };
   
   struct LogData
   {
     ros::Time stamp;
-    int origin_id;
-    std::vector<LogLine> text_lines;
+    int proto_id;
+    std::string variables;
   };
   std::deque<LogData> log_data_;
     

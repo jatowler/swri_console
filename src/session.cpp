@@ -59,49 +59,48 @@ void Session::append(const rosgraph_msgs::LogConstPtr &msg)
     // QObjects.
     Q_EMIT db_->sessionMinTimeChanged(id_);
   }
+
+  QStringList text_lines = QString::fromStdString(msg->msg).split(QRegExp("\n|\r\n|\r"));
+  // Remove empty lines from the back.
+  while(text_lines.size() && text_lines.back().trimmed().isEmpty()) { text_lines.pop_back(); }
+  // Remove empty lines from the front.
+  while(text_lines.size() && text_lines.front().trimmed().isEmpty()) { text_lines.pop_front(); }
+  QString text = text_lines.join("\n");
+
+  QString proto_text;
+  QStringList variables;
   
+  int start_idx = 0;
+  while (start_idx < text.size()) {
+    int match_idx = number_re_.indexIn(text, start_idx);
+    if (match_idx == -1) {
+      // Thing else in this string.  Copy the remainder and quit.
+      proto_text += text.midRef(start_idx, text.size() - start_idx);
+      break;
+    }
+
+    if (start_idx != match_idx) {
+      proto_text += text.midRef(start_idx, match_idx - start_idx);
+    }
+
+    proto_text += "0";
+    variables.append(
+      text.mid(match_idx, number_re_.matchedLength()));
+    start_idx = match_idx + number_re_.matchedLength();
+  }    
+
+  LogPrototype prototype;
+  prototype.severity = msg->level;
+  prototype.node_id = nid;
+  prototype.file = msg->file;
+  prototype.function = msg->function;
+  prototype.line = msg->line;
+  prototype.text = proto_text.toStdString();
+
   LogData data;
   data.stamp = msg->header.stamp;
-  data.origin_id = db_->lookupOrigin(nid, *msg);
- 
-  QStringList text = QString::fromStdString(msg->msg).split(QRegExp("\n|\r\n|\r"));
-  // Remove empty lines from the back.
-  while(text.size() && text.back().isEmpty()) { text.pop_back(); }
-  // Remove empty lines from the front.
-  while(text.size() && text.front().isEmpty()) { text.pop_front(); }
-  
-  data.text_lines.resize(text.size());
-  for (int i = 0; i < text.size(); i++) {
-    QString this_line = text[i];
-    QString subst_line("");
-
-    int start_idx = 0;
-    while (start_idx < this_line.size()) {
-      int match_idx = number_re_.indexIn(this_line, start_idx);
-      if (match_idx == -1) {
-        // Thing else in this string.  Copy the remainder and quit.
-        subst_line += this_line.midRef(start_idx, this_line.size() - start_idx);
-        break;
-      }
-
-      if (start_idx != match_idx) {
-        subst_line += this_line.midRef(start_idx, match_idx - start_idx);
-      }
-
-      subst_line += "0";
-      data.text_lines[i].variables.push_back(
-        this_line.mid(match_idx, number_re_.matchedLength()).toStdString());
-      start_idx = match_idx + number_re_.matchedLength();
-    }    
-    
-    data.text_lines[i].line_id = db_->lookupLine(subst_line.toStdString());
-  }
-    
-  // for (int i = 0; i < text.size(); i++) {
-  //   data.text_lines[i] = text[i].toStdString();
-  // }
-  // data.text_lines = text;
-
+  data.proto_id = db_->lookupPrototype(nid, prototype);
+  data.variables = variables.join(" ").toStdString();
   log_data_.push_back(data);
 }
 }  // namespace swri_console

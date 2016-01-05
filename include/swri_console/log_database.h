@@ -41,7 +41,7 @@
 #include <rosgraph_msgs/Log.h>
 
 #include <swri_console/session.h>
-#include <swri_console/log_origin.h>
+#include <swri_console/log_prototype.h>
 
 namespace swri_console
 {
@@ -70,16 +70,14 @@ class LogDatabase : public QObject
   QString nodeName(int nid) const;
   const std::vector<int>& nodeIds() const { return node_ids_; }
 
-  int lookupOrigin(int nid, const rosgraph_msgs::Log &log);
-  uint8_t originSeverity(int oid) const;
-  int originNodeId(int oid) const;
-  QString originNodeName(int oid) const;
-  QString originFile(int oid) const;
-  QString originFunction(int oid) const;
-  uint32_t originLine(int oid) const;
-
-  int lookupLine(const std::string &text);
-  std::string lineText(int lid) const;
+  int lookupPrototype(int nid, const LogPrototype &proto);
+  uint8_t prototypeSeverity(int pid) const;
+  int prototypeNodeId(int pid) const;
+  QString prototypeNodeName(int pid) const;
+  QString prototypeFile(int pid) const;
+  QString prototypeFunction(int pid) const;
+  uint32_t prototypeLine(int pid) const;
+  QString prototypeText(int pid) const;
   
  Q_SIGNALS:
   void databaseCleared();
@@ -105,11 +103,8 @@ class LogDatabase : public QObject
   std::map<std::string, int> node_id_from_name_;
   std::vector<int> node_ids_;
 
-  std::unordered_map<int, LogOrigin> origin_value_from_id_;
-  std::map<LogOrigin, int> origin_id_from_value_;
-
-  std::unordered_map<int, std::string> line_text_from_id_;
-  std::map<std::string, int> line_id_from_text_;
+  std::unordered_map<int, LogPrototype> prototype_value_from_id_;
+  std::map<LogPrototype, int> prototype_id_from_value_;
   
   friend class Session;
 };  // class LogDatabase

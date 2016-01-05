@@ -27,20 +27,21 @@
 // DAMAGE.
 //
 // *****************************************************************************
-#ifndef SWRI_CONSOLE_LOG_ORIGIN_H_
-#define SWRI_CONSOLE_LOG_ORIGIN_H_
+#ifndef SWRI_CONSOLE_LOG_PROTOTYPE_H_
+#define SWRI_CONSOLE_LOG_PROTOTYPE_H_
 
 namespace swri_console
 {
-struct LogOrigin
+struct LogPrototype
 {
+  std::string text;
   std::string file;
   std::string function;
   uint32_t line;
   int node_id;
   uint8_t severity;
 
-  bool operator<(const LogOrigin &other) const {
+  bool operator<(const LogPrototype &other) const {
     // We'd like to return as quickly as possible, so the comparisons
     // are ordered by integer components before string components.
     // Within each class, they are ordred from most unique to least
@@ -54,16 +55,20 @@ struct LogOrigin
         if (severity != other.severity) {
           return severity < other.severity;
         } else {
-          if (function != other.function) {
-            return function < other.function;
+          if (text != other.text) {
+            return text < other.text;
           } else {
-            return file < other.file;
+            if (function != other.function) {
+              return function < other.function;
+            } else {
+              return file < other.file;
+            }
           }
         }
       }      
     }
   }
-};  // struct LogOrigin
+};  // struct LogPrototype
 }  // namespace swri_console
-#endif  // SWRI_CONSOLE_LOG_ORIGIN_H_
+#endif  // SWRI_CONSOLE_LOG_PROTOTYPE_H_
 

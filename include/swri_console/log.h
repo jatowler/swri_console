@@ -66,7 +66,8 @@ class Log
 
   size_t lineCount() const;
   QStringList textLines() const;
-  QString textSingleLine() const;  
+  QString textLine(size_t index) const;
+  QString text() const;
 };  // class Log
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_LOG_H_

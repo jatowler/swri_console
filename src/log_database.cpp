@@ -226,113 +226,90 @@ QString LogDatabase::nodeName(int nid) const
   return QString("<invalid node %1").arg(nid);
 }
 
-int LogDatabase::lookupOrigin(const int nid, const rosgraph_msgs::Log &log)
+int LogDatabase::lookupPrototype(const int nid, const LogPrototype &proto)
 {
-  LogOrigin origin;
-  origin.severity = log.level;
-  origin.node_id = nid;
-  origin.file = log.file;
-  origin.function = log.function;
-  origin.line = log.line;
+  auto it = prototype_id_from_value_.find(proto);
+  if (it == prototype_id_from_value_.end()) {
+    int pid = prototype_value_from_id_.size();
+    while (prototype_value_from_id_.count(pid) != 0) { pid++; }
 
-  auto it = origin_id_from_value_.find(origin);
-  if (it == origin_id_from_value_.end()) {
-    int oid = origin_value_from_id_.size();
-    while (origin_value_from_id_.count(oid) != 0) { oid++; }
+    prototype_value_from_id_[pid] = proto;
+    prototype_id_from_value_[proto] = pid;
 
-    origin_value_from_id_[oid] = origin;
-    origin_id_from_value_[origin] = oid;
-
-    qWarning("origin count: %zu", origin_value_from_id_.size());
-    return oid;
+    qWarning("prototype count: %zu", prototype_value_from_id_.size());
+    return pid;
   } else {
     return it->second;
   }    
 }
 
-uint8_t LogDatabase::originSeverity(int oid) const
+uint8_t LogDatabase::prototypeSeverity(int pid) const
 {
-  if (origin_value_from_id_.count(oid)) {
-    return origin_value_from_id_.at(oid).severity;
+  if (prototype_value_from_id_.count(pid)) {
+    return prototype_value_from_id_.at(pid).severity;
   }
 
-  qWarning("Request for invalid origin %d", oid);
+  qWarning("Request for invalid prototype %d", pid);
   return 0xFF;
 }
 
-int LogDatabase::originNodeId(int oid) const
+int LogDatabase::prototypeNodeId(int pid) const
 {
-  if (origin_value_from_id_.count(oid)) {
-    return origin_value_from_id_.at(oid).node_id;
+  if (prototype_value_from_id_.count(pid)) {
+    return prototype_value_from_id_.at(pid).node_id;
   }
 
-  qWarning("Request for invalid origin %d", oid);
+  qWarning("Request for invalid prototype %d", pid);
   return 0xFF;
 }
 
-QString LogDatabase::originNodeName(int oid) const
+QString LogDatabase::prototypeNodeName(int pid) const
 {
-  if (origin_value_from_id_.count(oid)) {
-    return nodeName(origin_value_from_id_.at(oid).node_id);
+  if (prototype_value_from_id_.count(pid)) {
+    return nodeName(prototype_value_from_id_.at(pid).node_id);
   }
 
-  qWarning("Request for invalid origin %d", oid);
-  return QString("<Invalid origin %1").arg(oid);
+  qWarning("Request for invalid prototype %d", pid);
+  return QString("<Invalid prototype %1").arg(pid);
 }
 
-QString LogDatabase::originFile(int oid) const
+QString LogDatabase::prototypeFile(int pid) const
 {
-  if (origin_value_from_id_.count(oid)) {
-    return QString::fromStdString(origin_value_from_id_.at(oid).file);
+  if (prototype_value_from_id_.count(pid)) {
+    return QString::fromStdString(prototype_value_from_id_.at(pid).file);
   }
 
-  qWarning("Request for invalid origin %d", oid);
-  return QString("<Invalid origin %1").arg(oid);
+  qWarning("Request for invalid prototype %d", pid);
+  return QString("<Invalid prototype %1").arg(pid);
 }
 
-QString LogDatabase::originFunction(int oid) const
+QString LogDatabase::prototypeFunction(int pid) const
 {
-  if (origin_value_from_id_.count(oid)) {
-    return QString::fromStdString(origin_value_from_id_.at(oid).function);
+  if (prototype_value_from_id_.count(pid)) {
+    return QString::fromStdString(prototype_value_from_id_.at(pid).function);
   }
 
-  qWarning("Request for invalid origin %d", oid);
-  return QString("<Invalid origin %1").arg(oid);
+  qWarning("Request for invalid prototype %d", pid);
+  return QString("<Invalid prototype %1").arg(pid);
 }
 
-uint32_t LogDatabase::originLine(int oid) const
+uint32_t LogDatabase::prototypeLine(int pid) const
 {
-  if (origin_value_from_id_.count(oid)) {
-    return origin_value_from_id_.at(oid).line;
+  if (prototype_value_from_id_.count(pid)) {
+    return prototype_value_from_id_.at(pid).line;
   }
 
-  qWarning("Request for invalid origin %d", oid);
+  qWarning("Request for invalid prototype %d", pid);
   return 0;
 }
 
-int LogDatabase::lookupLine(const std::string &text)
+QString LogDatabase::prototypeText(int pid) const
 {
-  if (line_id_from_text_.count(text) == 0) {    
-    int lid = line_text_from_id_.size();
-    while (line_text_from_id_.count(lid) != 0) { lid++; }
-
-    line_text_from_id_[lid] = text;
-    line_id_from_text_[text] = lid;
-
-    qWarning("line count: %zu", line_text_from_id_.size());
-    return lid;
-  } else {
-    return line_id_from_text_[text];
-  }
-}
-
-std::string LogDatabase::lineText(int lid) const
-{
-  if (line_text_from_id_.count(lid)) {
-    return line_text_from_id_.at(lid);
+  if (prototype_value_from_id_.count(pid)) {
+    return QString::fromStdString(prototype_value_from_id_.at(pid).text);
   }
 
-  qWarning("Request for invalid line %d", lid);
-  return std::string("<invalid line>");
+  qWarning("Request for invalid prototype %d", pid);
+  return QString("<Invalid prototype %1").arg(pid);
 }
 }  // namespace swri_console

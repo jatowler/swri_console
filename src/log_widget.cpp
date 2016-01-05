@@ -326,8 +326,8 @@ void LogWidget::processNewMessages()
         continue;
       }
 
-      QStringList text_lines = log.textLines();
-      for (int r = 0; r < text_lines.size(); r++) {
+      size_t line_count = log.lineCount();
+      for (int r = 0; r < line_count; r++) {
         new_items.push_back(RowMap(block.latest_log_index, r));
       }
     }
@@ -418,7 +418,7 @@ QString LogWidget::logText(const Log &log, int line_index) const
     header.fill(' ');
   }
 
-  return QString(header) + log.textLines()[line_index];
+  return QString(header) + log.textLine(line_index);
 }
 
 QVariant LogWidget::toolTipRole(const Log &log, int line_index) const
