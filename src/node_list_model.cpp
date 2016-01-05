@@ -30,6 +30,7 @@
 
 #include <swri_console/node_list_model.h>
 
+#include <QLocale>
 #include <vector>
 
 #include <swri_console/log_database.h>
@@ -96,7 +97,7 @@ QVariant NodeListModel::data(const QModelIndex &index, int role) const
   if (role == Qt::DisplayRole) {
     return QString("%1 (%2)")
       .arg(db_->nodeName(nid))
-      .arg(count);
+      .arg(QLocale(QLocale::English).toString(count));
   } else if (role == Qt::ForegroundRole) {
     if (count == 0) {
       // Un-emphasize nodes with no messages.

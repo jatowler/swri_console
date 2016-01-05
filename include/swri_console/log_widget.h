@@ -31,6 +31,7 @@
 #define SWRI_CONSOLE_LOG_WIDGET_H_
 
 #include <deque>
+#include <set>
 #include <vector>
 
 #include <QAbstractScrollArea>
@@ -122,12 +123,9 @@ class LogWidget : public QAbstractScrollArea
 
     size_t earliest_log_index;
 
-    // This is what some people might call "too pedantic", but using
-    // the built in list view's alternating color caused irritating
-    // flashing while old messages were being added to the front of
-    // the list.  To get around this, we explicitly track a fixed
-    // point and base our own alternating colors off it to get stable
-    // coloring.
+    // To get stable background colors as rows are added to the end or
+    // front of each session, we track an explicit row to use as the
+    // basis for alternating the colors.
     int alternate_base;
   };
   std::vector<SessionData> blocks_;
@@ -141,10 +139,22 @@ class LogWidget : public QAbstractScrollArea
     RowIndex() : session_idx(-1), row_idx(0) {}
     RowIndex(int session_idx, size_t row_idx) : session_idx(session_idx), row_idx(row_idx) {}
     bool isValid() const { return session_idx >= 0; }
+    bool operator==(const RowIndex &other) const {
+      return session_idx == other.session_idx && row_idx == other.row_idx;
+    }        
+    bool operator!=(const RowIndex &other) const { return !(*this == other); }
+    bool operator<(const RowIndex &other) const {
+      if (session_idx == other.session_idx) { return row_idx < other.row_idx; }
+      else { return session_idx < other.session_idx; }
+    }
   };
   
   int top_offset_px_;
   RowIndex top_row_;
+
+  RowIndex current_row_;
+
+  std::set<RowIndex> selection_;
   
   // A list of session ids that are used to calculate the current
   // message counts.
@@ -157,6 +167,8 @@ class LogWidget : public QAbstractScrollArea
   void timerEvent(QTimerEvent *);
   void focusInEvent(QFocusEvent *event);
   void focusOutEvent(QFocusEvent *event);
+  void mousePressEvent(QMouseEvent *event);
+  void keyPressEvent(QKeyEvent *event);
   QVariant toolTipRole(const Log &log, int line_index) const;
   QVariant extendedLogRole(const Log &log, int line_index) const;
 
@@ -172,7 +184,8 @@ class LogWidget : public QAbstractScrollArea
   QStyleOptionViewItemV4 viewOptions();
   void fillOption(QStyleOptionViewItemV4 &option, const SessionData &, int row_id);
 
-  int adjustRow(RowIndex &row, int offset);
+  RowIndex indexAt(const QPoint &pos) const;
+  int adjustRow(RowIndex &row, int offset) const;
 
  private Q_SLOTS:
   void reset();

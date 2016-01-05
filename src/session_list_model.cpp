@@ -32,6 +32,7 @@
 
 #include <QMimeData>
 #include <QDebug>
+#include <QLocale>
 
 #include <swri_console/session_list_model.h>
 #include <swri_console/log_database.h>
@@ -119,7 +120,7 @@ QVariant SessionListModel::data(const QModelIndex &index, int role) const
   if (role == Qt::DisplayRole) {
     return QString("%1 (%2)")
       .arg(session.name())
-      .arg(session.logCount());
+      .arg(QLocale(QLocale::English).toString(session.logCount()));
   } else if (role == Qt::EditRole) {
     return session.name();
   } else {

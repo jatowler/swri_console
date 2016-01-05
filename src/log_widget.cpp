@@ -37,6 +37,8 @@
 #include <QStyleOptionViewItemV4>
 #include <QTime>
 #include <QTimer>
+#include <QMouseEvent>
+#include <QKeyEvent>
 
 #include <swri_console/log.h>
 #include <swri_console/log_database.h>
@@ -209,7 +211,16 @@ void LogWidget::reset()
     block.alternate_base = 0;
   }
   updateRowCount(blocks_.size());
+
+  if (blocks_.size()) {
+    current_row_ = RowIndex(blocks_.size()-1, 0);
+  } else {
+    current_row_ = RowIndex();
+  }
+  selection_.clear();
+  
   scheduleIdleProcessing();
+  viewport()->update();
 }
 
 void LogWidget::handleDatabaseCleared()
@@ -483,8 +494,9 @@ void LogWidget::updateGeometry()
   } else {    
     display_row_count_ = std::floor(static_cast<double>(viewport()->size().height()) / row_height_);
   }
-             
+
   verticalScrollBar()->setRange(0, std::max(0uL, row_count_ - display_row_count_));
+  verticalScrollBar()->setPageStep(display_row_count_);
   updateLayout();
 }
 
@@ -492,7 +504,7 @@ void LogWidget::updateLayout()
 {
   if (blocks_.empty()) {
     top_offset_px_ = 0;
-    top_row_.session_idx = 0;
+    top_row_.session_idx = -1;
     top_row_.row_idx = 0;
     return;
   }
@@ -550,34 +562,25 @@ void LogWidget::paintEvent(QPaintEvent *)
   int width = viewport()->rect().width();
   int max_y = viewport()->rect().height();
 
-  // const bool focus = (hasFocus() || d->viewport->hasFocus()) && current.isValid();
-  // const QStyle::State state = option.state;
-  // const QAbstractItemView::State viewState = this->state();
-  // const bool enabled = (state & QStyle::State_Enabled) != 0;
-  // qDebug() << ((option_proto.state & QStyle::State_Enabled) != 0);
+  const bool focus = (hasFocus() || viewport()->hasFocus()) && current_row_.isValid();
 
   int y = -top_offset_px_;
   RowIndex row = top_row_;
 
-  int j = 0;
   while (y < max_y) {
     auto const &block = blocks_[row.session_idx];
     QStyleOptionViewItemV4 option = option_proto;
     option.rect = QRect(0, y, width, row_height_);
 
     // option.state |= QStyle::State_Enabled;
-    
-    if (j == 5) {
-      option.state |= QStyle::State_Selected;
-    }
-    
-    if (j == 3) {
+
+    if (focus && current_row_ == row) {
       option.state |= QStyle::State_HasFocus;
     }
-    
-    if (j == 8) {
-      option.state |= QStyle::State_MouseOver;
-    }    
+
+    if (selection_.count(row)) {
+      option.state |= QStyle::State_Selected;
+    }
     
     fillOption(option, block, row.row_idx);
     
@@ -586,7 +589,6 @@ void LogWidget::paintEvent(QPaintEvent *)
       break;
     }
     y += row_height_;
-    j++;
   }
 }
 
@@ -644,7 +646,7 @@ void LogWidget::fillOption(QStyleOptionViewItemV4 &option,
   }
 }
 
-int LogWidget::adjustRow(RowIndex &row, int offset)
+int LogWidget::adjustRow(RowIndex &row, int offset) const
 {
   if (row.session_idx >= blocks_.size()) {
     return 0; 
@@ -685,5 +687,69 @@ int LogWidget::adjustRow(RowIndex &row, int offset)
     }
   }
   return count;      
+}
+
+LogWidget::RowIndex LogWidget::indexAt(const QPoint &pos) const
+{
+  if (!top_row_.isValid()) {
+    return RowIndex();
+  }
+
+  double y = pos.y() + top_offset_px_;
+  int display_line = y / row_height_;
+
+  RowIndex row = top_row_;
+  int adjusted = adjustRow(row, display_line);
+  if (adjusted != display_line) {
+    return RowIndex();
+  } else {
+    return row;
+  }
+}
+
+void LogWidget::mousePressEvent(QMouseEvent *event)
+{
+  RowIndex row = indexAt(event->pos());
+  if (!row.isValid()) {
+    return;
+  }
+
+  if (row != current_row_) {
+    current_row_ = row;
+    selection_.clear();
+    selection_.insert(current_row_);
+    viewport()->update();
+  }
+}
+
+void LogWidget::keyPressEvent(QKeyEvent *event)
+{
+  if (blocks_.empty()) {
+    return;
+  }
+  
+  if (event->key() == Qt::Key_Down) {
+    if (!current_row_.isValid()) {
+      current_row_ = RowIndex(blocks_.size()-1, blocks_.back().rows.size()-1);
+    } else {
+      adjustRow(current_row_, 1);
+      selection_.clear();
+      selection_.insert(current_row_);
+    }
+    event->accept();
+    viewport()->update();
+  } else if (event->key() == Qt::Key_Up) {
+    if (!current_row_.isValid()) {
+      current_row_ = RowIndex(blocks_.size()-1, blocks_.back().rows.size()-1);
+    } else {
+      adjustRow(current_row_, -1);
+      selection_.clear();
+      selection_.insert(current_row_);
+    }
+    event->accept();
+    viewport()->update();
+  } else {
+    event->ignore();
+  }
 }
 }  // namespace swri_console
