@@ -53,14 +53,17 @@ bool LogFilter::accept(const Log& log) const
     return false;
   }
 
-  QString text = log.textSingleLine();
+  if (!include_regexp_.isEmpty() ||
+      !exclude_regexp_.isEmpty()) {
+    QString text = log.textSingleLine();
 
-  if (include_regexp_.indexIn(text) < 0) {
-    return false;
-  }
+    if (include_regexp_.indexIn(text) < 0) {
+      return false;
+    }
 
-  if (!exclude_regexp_.isEmpty() && exclude_regexp_.indexIn(text) >= 0) {
-    return false;
+    if (!exclude_regexp_.isEmpty() && exclude_regexp_.indexIn(text) >= 0) {
+      return false;
+    }
   }
   
   return true;

@@ -86,6 +86,12 @@ uint32_t Log::lineNumber() const
   return session_->db_->originLine(session_->log_data_[index_].origin_id);
 }
 
+size_t Log::lineCount() const
+{
+  if (!session_) { return 0; }
+  return session_->log_data_[index_].text_lines.size();
+}
+
 QStringList Log::textLines() const
 {
   if (!session_) { return QStringList(); }

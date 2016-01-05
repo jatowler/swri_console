@@ -121,7 +121,6 @@ class LogWidget : public QAbstractScrollArea
     std::deque<RowMap> rows;
 
     size_t earliest_log_index;
-    std::deque<RowMap> early_rows;
 
     // This is what some people might call "too pedantic", but using
     // the built in list view's alternating color caused irritating

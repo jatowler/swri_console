@@ -63,7 +63,8 @@ class Log
   QString fileName() const;
 
   uint32_t lineNumber() const;
-  
+
+  size_t lineCount() const;
   QStringList textLines() const;
   QString textSingleLine() const;  
 };  // class Log

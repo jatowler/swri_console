@@ -232,23 +232,10 @@ void LogWidget::scheduleIdleProcessing()
 
 void LogWidget::processOldMessages()
 {
-  // We process old messages in two steps.  First, we process the
-  // remaining messages in chunks and store them in a early_rows
-  // buffer if they pass all the filters.  When the early mapping
-  // buffer is large enough (or we have processed everything for that
-  // session), then we merge the early_rows buffer in the main
-  // buffer.  This approach allows us to process very large logs
-  // without causing major lag for the user.
-  //
-  // Unlike processNewMessages, we only process old messages for one
-  // session at time.  This is because the number of unprocess old
-  // messages is bounded, so we will eventually get through all of
-  // them.  We could process all of them, but then each processing
-  // time chunk would be grow with how many sessions are selected, and
-  // we risk making the GUI unresponsive is a lot of sessions are active.
-  //
-  // Also, we iterate through the blocks backwards for this to get
-  // better behavior when follow latest messages is selected.
+  // When processing old logs, we iterate backwards through the blocks
+  // and their logs to get better behavior when follow latest messages
+  // is selected (ie, most recent messages are added first).
+  size_t count = 0;
   QTime process_time;
   process_time.start();
   for (size_t i = 0; i < blocks_.size(); i++) {
@@ -259,14 +246,15 @@ void LogWidget::processOldMessages()
       continue;
     }
 
+    std::vector<RowMap> early_rows;
+    
     const Session &session = db_->session(block.session_id);
     if (!session.isValid()) {
       qWarning("Invalid session in %s?", __PRETTY_FUNCTION__);
       continue;
     }
 
-    size_t count = 0;
-    while (process_time.elapsed() < 20) {
+    while (block.earliest_log_index != 0 && process_time.elapsed() < 20) {
       for (size_t i = 0;
            block.earliest_log_index != 0 && i < 100;
            block.earliest_log_index--, i++)
@@ -277,37 +265,32 @@ void LogWidget::processOldMessages()
           continue;
         }
 
-        QStringList text_lines = log.textLines();
-        for (int r = 0; r < text_lines.size(); r++) {
+        size_t line_count = log.lineCount();
+        for (int r = 0; r < line_count; r++) {
           // Note that we have to add the lines backwards to maintain the proper order.
-          block.early_rows.push_front(RowMap(block.earliest_log_index-1,
-                                             text_lines.size()-1-r));
+          early_rows.push_back(RowMap(block.earliest_log_index-1,
+                                      line_count-1-r));
         }
       }
     }
 
-    qWarning("intermediate processed %d messages in %d ms", count, process_time.elapsed());
+    // qWarning("intermediate processed %d msgs, kept %zu in %d ms",
+    //          count, early_rows.size(), process_time.elapsed());
 
-    if ((block.earliest_log_index == 0 && block.early_rows.size()) ||
-        block.early_rows.size() > 200) {
+    if (early_rows.size()) {
       size_t start_row = 0;
       for (size_t r = 0; r < i; r++) {
         start_row += blocks_[r].rows.size();
       }
 
       block.rows.insert(block.rows.begin() + 1,
-                        block.early_rows.begin(),
-                        block.early_rows.end());
-      block.alternate_base += block.early_rows.size();
-      updateRowCount(row_count_ + block.early_rows.size());
-      block.early_rows.clear();
+                        early_rows.rbegin(),
+                        early_rows.rend());
+      block.alternate_base += early_rows.size();
+      updateRowCount(row_count_ + early_rows.size());
       Q_EMIT messagesAdded();
       viewport()->update();
     }
-    qWarning("finished processing %d messages in %d ms", count, process_time.elapsed());
-
-    // Don't process any more blocks.
-    break;
   }
 
   scheduleIdleProcessing();
@@ -550,8 +533,8 @@ void LogWidget::updateLayout()
     }    
   }
 
-  qWarning("align pixel: %d align_session: %d align_row: %zu",
-           top_offset_px_, top_session_idx_, top_row_idx_);
+  // qWarning("align pixel: %d align_session: %d align_row: %zu",
+  //          top_offset_px_, top_session_idx_, top_row_idx_);
 }
 
 void LogWidget::paintEvent(QPaintEvent *)
@@ -571,7 +554,7 @@ void LogWidget::paintEvent(QPaintEvent *)
   // const QStyle::State state = option.state;
   // const QAbstractItemView::State viewState = this->state();
   // const bool enabled = (state & QStyle::State_Enabled) != 0;
-  qDebug() << ((option_proto.state & QStyle::State_Enabled) != 0);
+  // qDebug() << ((option_proto.state & QStyle::State_Enabled) != 0);
 
   int y = -top_offset_px_;
   int session_idx = top_session_idx_;
