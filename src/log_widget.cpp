@@ -737,6 +737,7 @@ void LogWidget::mousePressEvent(QMouseEvent *event)
     current_row_ = row;
     selection_.clear();
     selection_.insert(current_row_);
+    scrollToIndex(current_row_);
     viewport()->update();
   }
 }
