@@ -110,7 +110,7 @@ target_link_libraries(swri_console
   ${catkin_LIBRARIES}
 )
 set_target_properties(swri_console
-  PROPERTIES COMPILE_FLAGS "-std=c++0x -Wall")
+  PROPERTIES COMPILE_FLAGS "-std=c++0x -Wall -fno-diagnostics-show-caret")
 
 add_executable(collect_rosout_bags src/collect_rosout_bags.cpp)
 target_link_libraries(collect_rosout_bags

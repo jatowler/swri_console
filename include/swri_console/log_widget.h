@@ -42,6 +42,7 @@
 
 QT_BEGIN_NAMESPACE;
 class QStyleOptionViewItemV4;
+class QHelpEvent;
 QT_END_NAMESPACE;
 
 namespace swri_console
@@ -173,8 +174,9 @@ class LogWidget : public QAbstractScrollArea
   void focusOutEvent(QFocusEvent *event);
   void mousePressEvent(QMouseEvent *event);
   void keyPressEvent(QKeyEvent *event);
-  QVariant toolTipRole(const Log &log, int line_index) const;
-  QVariant extendedLogRole(const Log &log, int line_index) const;
+  void toolTipEvent(QHelpEvent *event);
+  QString toolTip(const RowIndex &row) const;
+  QString extendedLogRole(const Log &log) const;
 
   QString logText(const Log &log, int line_index) const;
   const QColor& logColor(const Log &log) const;

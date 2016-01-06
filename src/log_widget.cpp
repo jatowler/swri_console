@@ -38,7 +38,9 @@
 #include <QTime>
 #include <QTimer>
 #include <QMouseEvent>
+#include <QHelpEvent>
 #include <QKeyEvent>
+#include <QToolTip>
 
 #include <swri_console/log.h>
 #include <swri_console/log_database.h>
@@ -176,7 +178,7 @@ void LogWidget::setFatalColor(const QColor &color)
 
 void LogWidget::allDataChanged()
 {
-  // repaint
+  viewport()->update();
 }
 
 void LogWidget::selectAll()
@@ -365,7 +367,20 @@ void LogWidget::updateRowCount(size_t row_count)
 
 bool LogWidget::event(QEvent *event)
 {
+  if (event->type() == QEvent::ToolTip) {
+    toolTipEvent(static_cast<QHelpEvent*>(event));
+    return true;
+  }
+  
   return QAbstractScrollArea::event(event);
+}
+
+void LogWidget::toolTipEvent(QHelpEvent *event)
+{
+  RowIndex row = indexAt(event->pos());
+  if (row.isValid()) {    
+    QToolTip::showText(event->globalPos(), toolTip(row), this);
+  }
 }
 
 QString LogWidget::logText(const Log &log, int line_index) const
@@ -421,15 +436,19 @@ QString LogWidget::logText(const Log &log, int line_index) const
   return QString(header) + log.textLine(line_index);
 }
 
-QVariant LogWidget::toolTipRole(const Log &log, int line_index) const
+QString LogWidget::toolTip(const RowIndex &row) const
 {
+  const SessionData &session_data = blocks_[row.session_idx];
+  const Session &session = db_->session(session_data.session_id);
+  RowMap line_map = session_data.rows[row.row_idx];
+  Log log = session.log(line_map.log_index);
   QString text("<p style='white-space:pre'>");
-  text += extendedLogRole(log, line_index).toString();
+  text += extendedLogRole(log);
   text += QString("</p>");
   return text;
 }
 
-QVariant LogWidget::extendedLogRole(const Log &log, int line_index) const
+QString LogWidget::extendedLogRole(const Log &log) const
 {
   char stamp[128];
   snprintf(stamp, sizeof(stamp),
