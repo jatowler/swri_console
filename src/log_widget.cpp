@@ -727,29 +727,73 @@ void LogWidget::keyPressEvent(QKeyEvent *event)
   if (blocks_.empty()) {
     return;
   }
-  
+
+  RowIndex start_row = current_row_;
+  if (!start_row.isValid()) {
+    start_row = top_row_;
+  }    
+
+  RowIndex end_row = start_row;
   if (event->key() == Qt::Key_Down) {
-    if (!current_row_.isValid()) {
-      current_row_ = RowIndex(blocks_.size()-1, blocks_.back().rows.size()-1);
-    } else {
-      adjustRow(current_row_, 1);
-      selection_.clear();
-      selection_.insert(current_row_);
-    }
-    event->accept();
-    viewport()->update();
+    adjustRow(end_row, 1);
   } else if (event->key() == Qt::Key_Up) {
-    if (!current_row_.isValid()) {
-      current_row_ = RowIndex(blocks_.size()-1, blocks_.back().rows.size()-1);
-    } else {
-      adjustRow(current_row_, -1);
-      selection_.clear();
-      selection_.insert(current_row_);
-    }
+    adjustRow(end_row, -1);
+  } else if (event->key() == Qt::Key_PageDown) {
+    adjustRow(end_row, display_row_count_-1);
+  } else if (event->key() == Qt::Key_PageUp) {
+    adjustRow(end_row, -(display_row_count_-1));
+  } else if (event->key() == Qt::Key_Home) {
+    // todo: home should go to start of current session, or start of
+    // previous session if current row is top of current session.
+    end_row = RowIndex(0,0);
+  } else if (event->key() == Qt::Key_End) {
+    // todo: end should go to end of current session, or end of next
+    // session if current row is end of current session.
+    end_row = RowIndex(blocks_.size()-1,
+                       blocks_.back().rows.size()-1);
+  }
+
+  if (start_row != end_row) {
+    current_row_ = end_row;
+    selection_.clear();
+    selection_.insert(current_row_);
+    scrollToIndex(current_row_);
     event->accept();
     viewport()->update();
-  } else {
-    event->ignore();
+    return;
   }
+
+  event->ignore();
+}
+
+void LogWidget::scrollToIndex(const RowIndex &row)
+{
+  // If the row is currently visible, do nothing. If the row is above
+  // the top row, scroll so that it becomes the top row. If the row is
+  // below the bottom row, scroll so that it becomes the bottom row.
+
+  // assume top row is valid.
+
+  RowIndex bottom_row = top_row_;
+  adjustRow(bottom_row, display_row_count_-1);
+
+  if (row < top_row_) {
+    size_t idx = displayIndexForRow(row);
+    verticalScrollBar()->setValue(idx);
+  } else if (bottom_row < row) {
+    size_t idx = displayIndexForRow(row);
+    verticalScrollBar()->setValue(idx-(display_row_count_-1));    
+  } else {
+    // Nothing to do.
+  }  
+}
+
+size_t LogWidget::displayIndexForRow(const RowIndex &row) const
+{
+  size_t index = row.row_idx;
+  for (size_t i = 0; i < row.session_idx; i++) {
+    index += blocks_[i].rows.size();
+  }
+  return index;
 }
 }  // namespace swri_console

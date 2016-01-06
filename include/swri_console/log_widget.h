@@ -147,6 +147,10 @@ class LogWidget : public QAbstractScrollArea
       if (session_idx == other.session_idx) { return row_idx < other.row_idx; }
       else { return session_idx < other.session_idx; }
     }
+    bool operator<=(const RowIndex &other) const {
+      if (session_idx == other.session_idx) { return row_idx <= other.row_idx; }
+      else { return session_idx < other.session_idx; }
+    }
   };
   
   int top_offset_px_;
@@ -186,6 +190,8 @@ class LogWidget : public QAbstractScrollArea
 
   RowIndex indexAt(const QPoint &pos) const;
   int adjustRow(RowIndex &row, int offset) const;
+  void scrollToIndex(const RowIndex &row);
+  size_t displayIndexForRow(const RowIndex &row) const;
 
  private Q_SLOTS:
   void reset();

@@ -106,7 +106,8 @@ QString Log::textLine(size_t index) const
 QString Log::text() const
 {
   if (!session_) { return QString(); }  
-  QStringList variables = QString::fromStdString(session_->log_data_[index_].variables).split(' ');
+  QStringList variables = QString::fromStdString(session_->log_data_[index_].variables)
+    .split(' ', QString::SkipEmptyParts);
   QString text = session_->db_->prototypeText(session_->log_data_[index_].proto_id);
   
   int offset = 0;
