@@ -67,7 +67,7 @@ LogWidget::LogWidget(QWidget *parent)
   QObject::connect(filter_, SIGNAL(filterModified()),
                    this, SLOT(filterModified()));
   QObject::connect(verticalScrollBar(), SIGNAL(valueChanged(int)),
-                   this, SLOT(updateLayout()));
+                   this, SLOT(handleScrollChanged()));
 }
 
 LogWidget::~LogWidget()
@@ -134,9 +134,9 @@ void LogWidget::setAutoScrollToBottom(bool auto_scroll)
   auto_scroll_to_bottom_ = auto_scroll;
   Q_EMIT autoScrollToBottomChanged(auto_scroll_to_bottom_);
 
-  // if (auto_scroll_to_bottom_) {
-  //   list_view_->scrollToBottom();
-  // }
+  if (auto_scroll_to_bottom_) {
+    verticalScrollBar()->setValue(verticalScrollBar()->maximum());
+  }
 }
 
 void LogWidget::setStampFormat(const StampFormat &format)
@@ -514,8 +514,13 @@ void LogWidget::updateGeometry()
     display_row_count_ = std::floor(static_cast<double>(viewport()->size().height()) / row_height_);
   }
 
+  bool blocked = verticalScrollBar()->blockSignals(true);
   verticalScrollBar()->setRange(0, std::max(0uL, row_count_ - display_row_count_));
   verticalScrollBar()->setPageStep(display_row_count_);
+  if (auto_scroll_to_bottom_) {
+    verticalScrollBar()->setValue(verticalScrollBar()->maximum());
+  }
+  verticalScrollBar()->blockSignals(blocked);
   updateLayout();
 }
 
@@ -815,5 +820,19 @@ size_t LogWidget::displayIndexForRow(const RowIndex &row) const
     index += blocks_[i].rows.size();
   }
   return index;
+}
+
+void LogWidget::handleScrollChanged()
+{
+  if (auto_scroll_to_bottom_) {
+    if (verticalScrollBar()->value() < verticalScrollBar()->maximum()) {
+      setAutoScrollToBottom(false);
+    }
+  } else {
+    if (verticalScrollBar()->value() == verticalScrollBar()->maximum()) {
+      setAutoScrollToBottom(true);
+    }
+  }
+  updateLayout();
 }
 }  // namespace swri_console

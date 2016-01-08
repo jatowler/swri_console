@@ -203,6 +203,7 @@ class LogWidget : public QAbstractScrollArea
   void processNewMessages();
   void filterModified();
   void updateLayout();
+  void handleScrollChanged();
 };  // class LogWidget
 }  // namespace swri_console
 #endif  // SWRI_CONSOLE_LOG_WIDGET_H_
