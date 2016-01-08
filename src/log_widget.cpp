@@ -217,6 +217,34 @@ void LogWidget::copyLogsToClipboard()
 
 void LogWidget::copyExtendedLogsToClipboard()
 {
+  if (!selection_start_.isValid()) {
+    return;
+  }
+
+  RowIndex begin_row = std::min(selection_start_, selection_stop_);
+  RowIndex end_row = std::max(selection_start_, selection_stop_);
+
+  int last_session_idx = -1;
+  int last_log_idx = -1;
+  
+  QStringList buffer;
+  for (RowIndex row = begin_row; row <= end_row; adjustRow(row, 1)) {
+    const SessionData &session_data = blocks_[row.session_idx];
+    const Session &session = db_->session(session_data.session_id);
+    RowMap line_map = session_data.rows[row.row_idx];
+    
+    if (last_session_idx == row.session_idx && last_log_idx == line_map.log_index) {
+      continue;
+    }
+    last_session_idx = row.session_idx;
+    last_log_idx = line_map.log_index;
+    
+    Log log = session.log(line_map.log_index);
+    buffer.append(extendedLogRole(log));
+  }
+
+  QString separator = tr("\n\n========================================\n\n");
+  QApplication::clipboard()->setText(buffer.join(separator));  
 }
 
 void LogWidget::reset()
