@@ -97,22 +97,107 @@ void LogWidget::setDatabase(LogDatabase *db)
 
 DatabaseView LogWidget::selectedLogContents() const
 {
-  return DatabaseView();
+  DatabaseView view;
+
+  if (!selection_start_.isValid()) {
+    return view;
+  }
+
+  RowIndex begin_row = std::min(selection_start_, selection_stop_);
+  RowIndex end_row = std::max(selection_start_, selection_stop_);
+
+  int last_session_idx = -1;
+  int last_log_idx = -1;
+  
+  QStringList buffer;
+  for (RowIndex row = begin_row; row <= end_row; adjustRow(row, 1)) {
+    const SessionData &session_data = blocks_[row.session_idx];
+        
+    if (last_session_idx != row.session_idx) {
+      view.emplace_back();
+      view.back().session_id = session_data.session_id;
+    }
+
+    // Skip the header
+    if (row.row_idx == 0) {
+      continue;
+    }
+    
+    RowMap line_map = session_data.rows[row.row_idx];
+    
+    if (last_session_idx == row.session_idx && last_log_idx == line_map.log_index) {
+      continue;
+    }
+    last_session_idx = row.session_idx;
+    last_log_idx = line_map.log_index;
+
+    view.back().log_ids.push_back(last_log_idx);
+  }
+  
+  return view;
 }
 
 DatabaseView LogWidget::displayedLogContents() const
 {
-    return DatabaseView();
+  DatabaseView view;
+
+  for (auto const &session_data : blocks_) {
+    view.emplace_back();
+    view.back().session_id = session_data.session_id;
+
+    bool first = true;
+    int last_log_idx = -1;
+    for (auto const &item : session_data.rows) {
+      if (item.log_index == last_log_idx) {
+        continue;
+      }
+      // Skip the header
+      if (first) {
+        first = false;
+        continue;
+      }
+      last_log_idx = item.log_index;
+      view.back().log_ids.push_back(item.log_index);
+    }
+  }
+  return view;
 }
 
 DatabaseView LogWidget::sessionsLogContents() const
 {
-    return DatabaseView();
+  DatabaseView view;
+
+  for (auto const &session_data : blocks_) {
+    view.emplace_back();
+    view.back().session_id = session_data.session_id;
+    const Session &session = db_->session(session_data.session_id);
+
+    for (size_t i = 0; i < session.logCount(); i++) {
+      view.back().log_ids.push_back(i);
+    }
+  }  
+  return view;
 }
 
 DatabaseView LogWidget::allLogContents() const
 {
-    return DatabaseView();
+  DatabaseView view;
+
+  if (!selection_start_.isValid()) {
+    return view;
+  }
+
+  std::vector<int> session_ids = db_->sessionIds();  
+  for (auto const &session_id : session_ids) {
+    view.emplace_back();
+    view.back().session_id = session_id;
+    const Session &session = db_->session(session_id);
+
+    for (size_t i = 0; i < session.logCount(); i++) {
+      view.back().log_ids.push_back(i);
+    }
+  }
+  return view;
 }
 
 void LogWidget::setSessionFilter(const std::vector<int> &sids)
@@ -185,7 +270,6 @@ void LogWidget::allDataChanged()
 
 void LogWidget::selectAll()
 {
-  qWarning("select all");
   if (!blocks_.empty()) {
     selection_start_ = RowIndex(0,0);
     selection_stop_ = RowIndex(blocks_.size()-1, blocks_.back().rows.size()-1);

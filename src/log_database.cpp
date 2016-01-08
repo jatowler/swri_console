@@ -236,7 +236,7 @@ int LogDatabase::lookupPrototype(const int nid, const LogPrototype &proto)
     prototype_value_from_id_[pid] = proto;
     prototype_id_from_value_[proto] = pid;
 
-    qWarning("prototype count: %zu", prototype_value_from_id_.size());
+    // qWarning("prototype count: %zu", prototype_value_from_id_.size());
     return pid;
   } else {
     return it->second;
