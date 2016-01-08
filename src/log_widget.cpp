@@ -29,6 +29,8 @@
 // *****************************************************************************
 #include <swri_console/log_widget.h>
 
+#include <QApplication>
+#include <QClipboard>
 #include <QDebug>
 #include <QEvent>
 #include <QPainter>
@@ -193,6 +195,24 @@ void LogWidget::selectAll()
 
 void LogWidget::copyLogsToClipboard()
 {
+  if (!selection_start_.isValid()) {
+    return;
+  }
+
+  RowIndex begin_row = std::min(selection_start_, selection_stop_);
+  RowIndex end_row = std::max(selection_start_, selection_stop_);
+
+  QStringList buffer;
+  for (RowIndex row = begin_row; row <= end_row; adjustRow(row, 1)) {
+    const SessionData &session_data = blocks_[row.session_idx];
+    const Session &session = db_->session(session_data.session_id);
+    RowMap line_map = session_data.rows[row.row_idx];
+    Log log = session.log(line_map.log_index);
+    
+    buffer.append(logText(log, line_map.line_index));    
+  }
+
+  QApplication::clipboard()->setText(buffer.join(tr("\n")));  
 }
 
 void LogWidget::copyExtendedLogsToClipboard()
