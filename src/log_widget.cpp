@@ -183,6 +183,12 @@ void LogWidget::allDataChanged()
 
 void LogWidget::selectAll()
 {
+  qWarning("select all");
+  if (!blocks_.empty()) {
+    selection_start_ = RowIndex(0,0);
+    selection_stop_ = RowIndex(blocks_.size()-1, blocks_.back().rows.size()-1);
+    viewport()->update();
+  }
 }
 
 void LogWidget::copyLogsToClipboard()
@@ -219,7 +225,7 @@ void LogWidget::reset()
   } else {
     current_row_ = RowIndex();
   }
-  selection_.clear();
+  clearSelection();
   
   scheduleIdleProcessing();
   viewport()->update();
@@ -602,7 +608,7 @@ void LogWidget::paintEvent(QPaintEvent *)
       option.state |= QStyle::State_HasFocus;
     }
 
-    if (selection_.count(row)) {
+    if (isSelected(row)) {
       option.state |= QStyle::State_Selected;
     }
     
@@ -733,18 +739,32 @@ LogWidget::RowIndex LogWidget::indexAt(const QPoint &pos) const
 
 void LogWidget::mousePressEvent(QMouseEvent *event)
 {
-  RowIndex row = indexAt(event->pos());
-  if (!row.isValid()) {
+  if (event->button() == Qt::LeftButton) {  
+    RowIndex row = indexAt(event->pos());
+    if (!row.isValid()) {
+      return;
+    }
+
+    if (row != current_row_) { 
+      current_row_ = row;
+
+      if (event->modifiers() == Qt::ShiftModifier) {
+        if (!selection_start_.isValid()) {
+          setSelection(current_row_);
+        } else {
+          selection_stop_ = current_row_;
+        }      
+      } else {
+        setSelection(current_row_);
+      }
+      scrollToIndex(current_row_);
+      viewport()->update();    
+    }
+    event->accept();
     return;
   }
-
-  if (row != current_row_) {
-    current_row_ = row;
-    selection_.clear();
-    selection_.insert(current_row_);
-    scrollToIndex(current_row_);
-    viewport()->update();
-  }
+  
+  QAbstractScrollArea::mousePressEvent(event);
 }
 
 void LogWidget::keyPressEvent(QKeyEvent *event)
@@ -780,15 +800,30 @@ void LogWidget::keyPressEvent(QKeyEvent *event)
 
   if (start_row != end_row) {
     current_row_ = end_row;
-    selection_.clear();
-    selection_.insert(current_row_);
+
+    if (event->modifiers() != Qt::ShiftModifier) {
+      setSelection(current_row_);
+    } else {
+      if (!selection_start_.isValid()) {
+        selection_start_ = current_row_;
+      }
+      selection_stop_ = current_row_;
+    }
+    
     scrollToIndex(current_row_);
     event->accept();
     viewport()->update();
     return;
   }
 
-  event->ignore();
+  if (event->key() == Qt::Key_A && (event->modifiers() == Qt::ControlModifier)) {
+    selectAll();
+    event->accept();
+    viewport()->update();
+    return;
+  }
+
+  QAbstractScrollArea::keyPressEvent(event);
 }
 
 void LogWidget::scrollToIndex(const RowIndex &row)
@@ -834,5 +869,28 @@ void LogWidget::handleScrollChanged()
     }
   }
   updateLayout();
+}
+
+void LogWidget::clearSelection()
+{
+  selection_start_ = RowIndex();
+  selection_stop_ = RowIndex();
+}
+
+void LogWidget::setSelection(const RowIndex &index)
+{
+  selection_start_ = index;
+  selection_stop_ = index;
+}
+
+bool LogWidget::isSelected(const RowIndex &index) const
+{
+  if (!selection_start_.isValid()) { return false; }
+
+  if (selection_start_ <= selection_stop_) {
+    return (selection_start_ <= index && index <= selection_stop_);
+  } else {
+    return (selection_stop_ <= index && index <= selection_start_);
+  }
 }
 }  // namespace swri_console

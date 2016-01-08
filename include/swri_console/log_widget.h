@@ -159,6 +159,8 @@ class LogWidget : public QAbstractScrollArea
 
   RowIndex current_row_;
 
+  RowIndex selection_start_;
+  RowIndex selection_stop_;
   std::set<RowIndex> selection_;
   
   // A list of session ids that are used to calculate the current
@@ -195,6 +197,10 @@ class LogWidget : public QAbstractScrollArea
   void scrollToIndex(const RowIndex &row);
   size_t displayIndexForRow(const RowIndex &row) const;
 
+  void clearSelection();
+  void setSelection(const RowIndex &index);
+  bool isSelected(const RowIndex &index) const;                                                    
+                                                      
  private Q_SLOTS:
   void reset();
   void allDataChanged();
