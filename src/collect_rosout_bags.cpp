@@ -197,7 +197,7 @@ int main(int argc, char **argv)
     if (quit) { break; }
 
     char header[1024];
-    snprintf(header, sizeof(header), "[% 11zu %04d/%04d] ",
+    snprintf(header, sizeof(header), "[%11zu %04d/%04d] ",
              total_msg_count, i+1, src_fns.size());
         
 

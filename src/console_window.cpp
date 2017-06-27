@@ -316,11 +316,11 @@ void ConsoleWindow::loadSettings()
   
   { // Load button colors.
     QColor color;
-    color = settings.value(SettingsKeys::DEBUG_COLOR, Qt::gray).value<QColor>();
+    color = settings.value(SettingsKeys::DEBUG_COLOR, QColor(Qt::gray)).value<QColor>();
     ui.debugColor->setColor(color);
     ui.logList->setDebugColor(color);
 
-    color = settings.value(SettingsKeys::INFO_COLOR, Qt::black).value<QColor>();
+    color = settings.value(SettingsKeys::INFO_COLOR, QColor(Qt::black)).value<QColor>();
     ui.infoColor->setColor(color);
     ui.logList->setInfoColor(color);
 
@@ -328,11 +328,11 @@ void ConsoleWindow::loadSettings()
     ui.warnColor->setColor(color);
     ui.logList->setWarnColor(color);
 
-    color = settings.value(SettingsKeys::ERROR_COLOR, Qt::red).value<QColor>();
+    color = settings.value(SettingsKeys::ERROR_COLOR, QColor(Qt::red)).value<QColor>();
     ui.errorColor->setColor(color);
     ui.logList->setErrorColor(color);
 
-    color = settings.value(SettingsKeys::FATAL_COLOR, Qt::magenta).value<QColor>();
+    color = settings.value(SettingsKeys::FATAL_COLOR, QColor(Qt::magenta)).value<QColor>();
     ui.fatalColor->setColor(color);
     ui.logList->setFatalColor(color);
   }

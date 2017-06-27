@@ -37,10 +37,12 @@
 
 namespace swri_console
 {
-RosSource::RosSource(LogDatabase *db)
+RosSource::RosSource(int argc, char** argv, LogDatabase *db)
   :
   backend_(NULL),
   connected_(false),
+  argc_(argc),
+  argv_(argv),
   db_(db),
   session_id_(-1)
 {
@@ -69,7 +71,7 @@ void RosSource::start()
 
   // Using the threading approach recommended in the following URL.
   // https://mayaposch.wordpress.com/2011/11/01/how-to-really-truly-use-qthreads-the-full-explanation/
-  backend_ = new RosSourceBackend();
+  backend_ = new RosSourceBackend(argc_, argv_);
   backend_->moveToThread(&ros_thread_);
 
   // The backend should delete itself once the thread has finished.

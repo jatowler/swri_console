@@ -30,6 +30,7 @@
 
 #include <swri_console/node_list_model.h>
 
+#include <QColor>
 #include <QLocale>
 #include <vector>
 
@@ -101,7 +102,7 @@ QVariant NodeListModel::data(const QModelIndex &index, int role) const
   } else if (role == Qt::ForegroundRole) {
     if (count == 0) {
       // Un-emphasize nodes with no messages.
-      return Qt::gray;
+      return QColor(Qt::gray);
     } else {
       // Use default color
       return QVariant();

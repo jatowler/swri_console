@@ -40,7 +40,7 @@ namespace swri_console
 {
 ConsoleMaster::ConsoleMaster(int argc, char** argv)
   :
-  ros_source_(&db_),
+  ros_source_(argc, argv, &db_),
   connected_(false),
   log_writer_(new LogWriter(this))
 {

@@ -643,7 +643,7 @@ void LogWidget::resizeEvent(QResizeEvent *event)
 
 void LogWidget::updateGeometry()
 {
-  QStyleOptionViewItemV4 option = viewOptions();
+  QStyleOptionViewItem option = viewOptions();
   row_height_ = style()->sizeFromContents(QStyle::CT_ItemViewItem, &option, QSize(), this).height();
 
   if (row_height_ == 0) {

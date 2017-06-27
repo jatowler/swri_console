@@ -54,7 +54,7 @@ class RosSource : public QObject
    * setup signal/slot connections before anything can change behind
    * the scenes.
    */
-  RosSource(LogDatabase *db);
+  RosSource(int argc, char** argv, LogDatabase *db);
 
   /*
    * Destroys the ROS source.  Will call shutdown() if the source is
@@ -119,6 +119,8 @@ class RosSource : public QObject
   bool connected_;
   QString master_uri_;
 
+  int argc_;
+  char** argv_;
   LogDatabase *db_;
   int session_id_;
 };  // class RosSource

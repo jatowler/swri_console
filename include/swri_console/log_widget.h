@@ -41,8 +41,8 @@
 #include <swri_console/constants.h>
 
 QT_BEGIN_NAMESPACE;
-class QStyleOptionViewItemV4;
 class QHelpEvent;
+class QStyleOptionViewItem;
 QT_END_NAMESPACE;
 
 namespace swri_console
@@ -189,8 +189,8 @@ class LogWidget : public QAbstractScrollArea
 
   void updateGeometry();
 
-  QStyleOptionViewItemV4 viewOptions();
-  void fillOption(QStyleOptionViewItemV4 &option, const SessionData &, int row_id);
+  QStyleOptionViewItem viewOptions();
+  void fillOption(QStyleOptionViewItem &option, const SessionData &, int row_id);
 
   RowIndex indexAt(const QPoint &pos) const;
   int adjustRow(RowIndex &row, int offset) const;

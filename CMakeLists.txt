@@ -43,12 +43,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(src)
 
 # Add Qt Designer UI files to this list.
-file (GLOB SRC_FILES 
+file (GLOB UI_FILES 
   ui/console_window.ui
   )
 
 # Add header files containing Q_OBJECT declaration to this list.
-file (GLOB SRC_FILES
+file (GLOB HEADER_FILES
   include/swri_console/bag_source.h
   include/swri_console/bag_source_backend.h
   include/swri_console/color_widget.h
@@ -114,7 +114,9 @@ set_target_properties(swri_console
 
 add_executable(collect_rosout_bags src/collect_rosout_bags.cpp)
 target_link_libraries(collect_rosout_bags
-  ${QT_LIBRARIES}
+  ${Qt5Core_LIBRARIES}
+  ${Qt5Gui_LIBRARIES}
+  ${Qt5Widgets_LIBRARIES}
   ${catkin_LIBRARIES}
   )
 set_target_properties(collect_rosout_bags
