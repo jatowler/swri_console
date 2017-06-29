@@ -266,9 +266,7 @@
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="swri_console::LogWidget" name="logList" native="true">
-          <zorder></zorder>
-         </widget>
+         <widget class="swri_console::LogWidget" name="logList" native="true"/>
         </item>
         <item>
          <layout class="QGridLayout" name="gridLayout">
@@ -276,6 +274,13 @@
            <widget class="QLabel" name="includeLabel">
             <property name="text">
              <string>Include</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="excludeLabel">
+            <property name="text">
+             <string>Exclude</string>
             </property>
            </widget>
           </item>
@@ -289,13 +294,6 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="excludeLabel">
-            <property name="text">
-             <string>Exclude</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QLineEdit" name="excludeText">
             <property name="toolTip">
@@ -303,14 +301,38 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="searchText">
-            <property name="toolTip">
-             <string>Filter for messages that don't include substrings. Separate substrings with a semicolon.</string>
-            </property>
-           </widget>
+          <item row="3" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLineEdit" name="searchText">
+              <property name="toolTip">
+               <string>Filter for messages that don't include substrings. Separate substrings with a semicolon.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="searchPrevButton">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Previous</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="searchNextButton">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Next</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="searchLabel">
             <property name="text">
              <string>Search</string>

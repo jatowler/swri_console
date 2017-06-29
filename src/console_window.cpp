@@ -179,6 +179,10 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
 
   QObject::connect(ui.searchText, SIGNAL(textEdited(const QString &)),
                    this, SLOT(processSearchText()));
+  QObject::connect(ui.searchNextButton, SIGNAL(clicked()),
+                   this, SLOT(nextSearchResult()));
+  QObject::connect(ui.searchPrevButton, SIGNAL(clicked()),
+                   this, SLOT(prevSearchResult()));
  
   QList<int> sizes;
   sizes.append(100);
@@ -439,6 +443,30 @@ void ConsoleWindow::processFilterText()
 void ConsoleWindow::processSearchText()
 {
   // TODO: implement
+  qDebug() << "Searched for " << ui.searchText->text();
+
+  if (ui.searchText->text().isEmpty())
+  {
+    ui.searchNextButton->setEnabled(false);
+    ui.searchPrevButton->setEnabled(false);
+  }
+  else
+  {
+    ui.searchNextButton->setEnabled(true);
+    ui.searchPrevButton->setEnabled(true);
+  }
+}
+
+void ConsoleWindow::nextSearchResult()
+{
+  // TODO: implement
+  qDebug() << "Next button clicked";
+}
+
+void ConsoleWindow::prevSearchResult()
+{
+  // TODO: implement
+  qDebug() << "Prev button clicked";
 }
 
 void ConsoleWindow::handleTimestampActions()

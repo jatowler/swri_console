@@ -71,7 +71,11 @@ class ConsoleWindow : public QMainWindow {
 
  private Q_SLOTS:
   void processFilterText();
+
   void processSearchText();
+  void nextSearchResult();
+  void prevSearchResult();
+
   void handleTimestampActions();
   void selectFont();
   void setFont(const QFont &font);
