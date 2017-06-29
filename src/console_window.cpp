@@ -176,6 +176,9 @@ ConsoleWindow::ConsoleWindow(LogDatabase *db)
                    this, SLOT(processFilterText()));
   QObject::connect(ui.action_RegularExpressions, SIGNAL(toggled(bool)),
                    this, SLOT(processFilterText()));
+
+  QObject::connect(ui.searchText, SIGNAL(textEdited(const QString &)),
+                   this, SLOT(processSearchText()));
  
   QList<int> sizes;
   sizes.append(100);
@@ -261,6 +264,7 @@ void ConsoleWindow::setFont(const QFont &font)
   data_font_ = font;
   ui.includeText->setFont(data_font_);
   ui.excludeText->setFont(data_font_);
+  ui.searchText->setFont(data_font_);
   ui.sessionList->setFont(data_font_);
   ui.nodeList->setFont(data_font_);
   ui.logList->setFont(data_font_);
@@ -347,6 +351,12 @@ void ConsoleWindow::loadSettings()
     ui.excludeText->setText(excludeFilter);
     processFilterText();
   }
+
+  { // Load search contents
+    QString searchText = settings.value(SettingsKeys::SEARCH_TEXT, "").toString();
+    ui.searchText->setText(searchText);
+    // TODO: do search
+  }
 }
 
 void ConsoleWindow::saveSettings()
@@ -359,6 +369,7 @@ void ConsoleWindow::saveSettings()
   settings.setValue(SettingsKeys::USE_REGEXPS, ui.action_RegularExpressions->isChecked());
   settings.setValue(SettingsKeys::INCLUDE_FILTER, ui.includeText->text());
   settings.setValue(SettingsKeys::EXCLUDE_FILTER, ui.excludeText->text());
+  settings.setValue(SettingsKeys::SEARCH_TEXT, ui.searchText->text());
 
   settings.setValue(SettingsKeys::DEBUG_COLOR, ui.debugColor->color());
   settings.setValue(SettingsKeys::INFO_COLOR, ui.infoColor->color());
@@ -423,6 +434,11 @@ void ConsoleWindow::processFilterText()
   } else {
     ui.excludeLabel->setStyleSheet("QLabel { background-color : red; color : white; }");
   }  
+}
+
+void ConsoleWindow::processSearchText()
+{
+  // TODO: implement
 }
 
 void ConsoleWindow::handleTimestampActions()

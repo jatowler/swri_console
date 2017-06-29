@@ -40,6 +40,8 @@ const QString SettingsKeys::USE_REGEXPS = "Filters/UseRegexps";
 const QString SettingsKeys::INCLUDE_FILTER = "Filters/IncludeFilter";
 const QString SettingsKeys::EXCLUDE_FILTER = "Filters/ExcludeFilter";
 
+const QString SettingsKeys::SEARCH_TEXT = "Search/SearchText";
+
 const QString SettingsKeys::SHOW_DEBUG = "Severity/ShowDebug";
 const QString SettingsKeys::SHOW_INFO = "Severity/ShowInfo";
 const QString SettingsKeys::SHOW_WARN = "Severity/ShowWarn";

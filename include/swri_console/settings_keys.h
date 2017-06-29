@@ -52,6 +52,8 @@ class SettingsKeys
   static const QString INCLUDE_FILTER;
   static const QString EXCLUDE_FILTER;
 
+  static const QString SEARCH_TEXT;
+
   static const QString SHOW_DEBUG;
   static const QString SHOW_INFO;
   static const QString SHOW_WARN;
